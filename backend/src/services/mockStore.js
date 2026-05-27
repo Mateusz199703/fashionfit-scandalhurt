@@ -85,6 +85,14 @@ function getMockClientById(clientId) {
   return clientsById.get(clientId) || null;
 }
 
+function getMockClientByApiKey(apiKey) {
+  if (!apiKey) return null;
+  for (const client of clientsById.values()) {
+    if (client.api_key === apiKey) return client;
+  }
+  return null;
+}
+
 function hasMockClients() {
   return clientsById.size > 0;
 }
@@ -261,6 +269,7 @@ module.exports = {
   createMockClient,
   getMockClientByEmail,
   getMockClientById,
+  getMockClientByApiKey,
   listMockShops,
   createMockShop,
   getMockShop,

@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const config = require('../config');
 const { supabase } = require('../services/supabase');
+const { isMockBackendEnabled, getMockClientByApiKey } = require('../services/mockStore');
 const { ApiError } = require('./errorHandler');
 
 // Dashboard auth: validates a JWT issued at login/registration.
@@ -23,6 +24,14 @@ function authenticateJWT(req, res, next) {
 async function authenticateApiKey(req, res, next) {
   const apiKey = req.headers['x-api-key'];
   if (!apiKey) return next(new ApiError(401, 'Missing X-API-Key header'));
+
+  if (isMockBackendEnabled()) {
+    const mockClient = getMockClientByApiKey(String(apiKey));
+    if (!mockClient) return next(new ApiError(401, 'Invalid API key'));
+    req.clientId = mockClient.id;
+    req.client = { id: mockClient.id, status: mockClient.status, plan: mockClient.plan };
+    return next();
+  }
 
   const { data, error } = await supabase
     .from('clients')
