@@ -8,6 +8,7 @@ export interface Client {
   email: string;
   name: string;
   companyName?: string | null;
+  companyNip?: string | null;
   plan: Plan;
   status: ClientStatus;
   apiKey?: string;

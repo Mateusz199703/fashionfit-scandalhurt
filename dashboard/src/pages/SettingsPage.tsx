@@ -35,11 +35,12 @@ export function SettingsPage() {
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.2fr_1fr]">
         <Card className="space-y-4 p-5">
-          <h2 className="ff-section-title">Konto</h2>
-          <Field label="Imię i nazwisko" value={client.name} />
-          <Field label="E-mail" value={client.email} />
-          {client.companyName && <Field label="Firma" value={client.companyName} />}
-          <div>
+        <h2 className="ff-section-title">Konto</h2>
+        <Field label="Imię i nazwisko" value={client.name} />
+        <Field label="E-mail" value={client.email} />
+        {client.companyName && <Field label="Firma" value={client.companyName} />}
+        {client.companyNip && <Field label="NIP" value={client.companyNip} />}
+        <div>
             <span className="ff-label">Plan</span>
             <div className="flex items-center gap-2">
               <PlanBadge plan={client.plan} />

@@ -12,7 +12,7 @@ export function RegisterPage() {
   const [searchParams] = useSearchParams();
   const queryPlan = String(searchParams.get('plan') || '').toUpperCase();
   const initialPlan = ['STARTER', 'GROWTH', 'SCALE'].includes(queryPlan) ? (queryPlan as Plan) : '';
-  const [form, setForm] = useState({ name: '', email: '', password: '', company_name: '' });
+  const [form, setForm] = useState({ name: '', email: '', password: '', company_name: '', company_nip: '' });
   const [selectedPlan, setSelectedPlan] = useState<Plan | ''>(initialPlan);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
@@ -25,6 +25,8 @@ export function RegisterPage() {
     if (form.name.trim().length < 2) next.name = 'Podaj imię lub nazwę';
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) next.email = 'Podaj poprawny adres e-mail';
     if (form.password.length < 8) next.password = 'Hasło musi mieć co najmniej 8 znaków';
+    const nipDigits = form.company_nip.replace(/\D/g, '');
+    if (form.company_nip.trim() && nipDigits.length !== 10) next.company_nip = 'NIP musi mieć 10 cyfr';
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -39,6 +41,7 @@ export function RegisterPage() {
         email: form.email,
         password: form.password,
         company_name: form.company_name || undefined,
+        company_nip: form.company_nip || undefined,
         plan: selectedPlan || undefined,
       });
       if (checkoutUrl) {
@@ -110,6 +113,11 @@ export function RegisterPage() {
             <div>
               <label className="ff-label" htmlFor="company">Nazwa firmy (opcjonalnie)</label>
               <input id="company" className="ff-input" value={form.company_name} onChange={set('company_name')} />
+            </div>
+            <div>
+              <label className="ff-label" htmlFor="nip">NIP firmy (opcjonalnie)</label>
+              <input id="nip" className="ff-input" value={form.company_nip} onChange={set('company_nip')} />
+              {errors.company_nip && <p className="mt-1 text-xs text-red-600">{errors.company_nip}</p>}
             </div>
             <div>
               <label className="ff-label" htmlFor="email">E-mail</label>

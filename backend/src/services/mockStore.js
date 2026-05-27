@@ -57,12 +57,13 @@ function loadState() {
   }
 }
 
-function createMockClient({ email, name, company_name, passwordHash }) {
+function createMockClient({ email, name, company_name, company_nip, passwordHash }) {
   const client = {
     id: uuidv4(),
     email,
     name,
     company_name: company_name || null,
+    company_nip: company_nip || null,
     password_hash: passwordHash,
     plan: 'STARTER',
     status: 'trial',

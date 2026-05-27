@@ -30,17 +30,45 @@ function toClientResponse(client) {
     email: client.email,
     name: client.name,
     companyName: client.company_name || null,
+    companyNip: client.company_nip || null,
     plan: client.plan,
     status: client.status,
     trialEndsAt: client.trial_ends_at || null,
   };
 }
 
+function normalizeNip(value) {
+  if (!value) return null;
+  const digits = String(value).replace(/\D/g, '');
+  return digits || null;
+}
+
+function isValidPolishNip(nip) {
+  if (!/^\d{10}$/.test(nip)) return false;
+  const weights = [6, 5, 7, 2, 3, 4, 5, 6, 7];
+  let sum = 0;
+  for (let i = 0; i < 9; i += 1) sum += Number(nip[i]) * weights[i];
+  const checksum = sum % 11;
+  return checksum !== 10 && checksum === Number(nip[9]);
+}
+
 // POST /api/auth/register → create client, return JWT + api_key
 router.post('/register', authLimiter, async (req, res) => {
-  const { email, password, name, company_name, plan, shop_domain } = req.body || {};
+  const {
+    email,
+    password,
+    name,
+    company_name,
+    company_nip,
+    plan,
+    shop_domain,
+  } = req.body || {};
   if (!email || !password || !name) {
     throw new ApiError(400, 'email, password and name are required');
+  }
+  const normalizedNip = normalizeNip(company_nip);
+  if (normalizedNip && !isValidPolishNip(normalizedNip)) {
+    throw new ApiError(400, 'Invalid NIP format');
   }
   const selectedPlan = plan ? String(plan).toUpperCase() : null;
   if (selectedPlan && !config.planLimits[selectedPlan]) {
@@ -52,7 +80,13 @@ router.post('/register', authLimiter, async (req, res) => {
     if (existing) throw new ApiError(409, 'A client with this email already exists');
 
     const passwordHash = await bcrypt.hash(password, 10);
-    const client = createMockClient({ email, name, company_name, passwordHash });
+    const client = createMockClient({
+      email,
+      name,
+      company_name,
+      company_nip: normalizedNip,
+      passwordHash,
+    });
 
     const checkoutUrl = selectedPlan
       ? `${config.frontendUrl}/billing?status=success&plan=${selectedPlan.toLowerCase()}`
@@ -79,7 +113,11 @@ router.post('/register', authLimiter, async (req, res) => {
   // Create a Stripe customer up-front; non-fatal if billing isn't configured.
   let stripeCustomerId = null;
   try {
-    const customer = await stripeService.createCustomer({ email, name });
+    const customer = await stripeService.createCustomer({
+      email,
+      name,
+      companyNip: normalizedNip,
+    });
     stripeCustomerId = customer.id;
   } catch (e) {
     console.warn('Stripe customer creation skipped:', e.message);
@@ -91,10 +129,11 @@ router.post('/register', authLimiter, async (req, res) => {
       email,
       name,
       company_name: company_name || null,
+      company_nip: normalizedNip,
       password_hash: passwordHash,
       stripe_customer_id: stripeCustomerId,
     })
-    .select('id, email, name, company_name, plan, status, api_key, trial_ends_at')
+    .select('id, email, name, company_name, company_nip, plan, status, api_key, trial_ends_at')
     .single();
   if (error) throw error;
 
@@ -104,7 +143,11 @@ router.post('/register', authLimiter, async (req, res) => {
     if (!priceId) throw new ApiError(400, `Plan ${selectedPlan} is not available for checkout`);
 
     if (!stripeCustomerId) {
-      const customer = await stripeService.createCustomer({ email, name });
+      const customer = await stripeService.createCustomer({
+        email,
+        name,
+        companyNip: normalizedNip,
+      });
       stripeCustomerId = customer.id;
       await supabase.from('clients').update({ stripe_customer_id: stripeCustomerId }).eq('id', data.id);
     }
@@ -129,6 +172,7 @@ router.post('/register', authLimiter, async (req, res) => {
       email: data.email,
       name: data.name,
       companyName: data.company_name,
+      companyNip: data.company_nip,
       plan: data.plan,
       status: data.status,
       trialEndsAt: data.trial_ends_at,
@@ -205,7 +249,7 @@ router.get('/me', authenticateJWT, async (req, res) => {
 
   const { data, error } = await supabase
     .from('clients')
-    .select('id, email, name, company_name, plan, status, api_key, trial_ends_at, stripe_customer_id')
+    .select('id, email, name, company_name, company_nip, plan, status, api_key, trial_ends_at, stripe_customer_id')
     .eq('id', req.clientId)
     .maybeSingle();
   if (error) throw error;
@@ -217,6 +261,7 @@ router.get('/me', authenticateJWT, async (req, res) => {
       email: data.email,
       name: data.name,
       companyName: data.company_name,
+      companyNip: data.company_nip,
       plan: data.plan,
       status: data.status,
       apiKey: data.api_key,

@@ -11,8 +11,38 @@ function isWebhookSecretConfigured() {
   return Boolean(config.stripe.webhookSecret);
 }
 
-async function createCustomer({ email, name }) {
-  return stripe.customers.create({ email, name });
+function normalizeCompanyNip(nip) {
+  if (!nip) return null;
+  const digits = String(nip).replace(/\D/g, '');
+  if (digits.length !== 10) return null;
+  return digits;
+}
+
+async function upsertCustomerTaxId(customerId, nip) {
+  const normalized = normalizeCompanyNip(nip);
+  if (!customerId || !normalized) return null;
+
+  const taxValue = `PL${normalized}`;
+  const existing = await stripe.customers.listTaxIds(customerId, { limit: 100 });
+  const hasAlready = (existing.data || []).some((item) => item.type === 'eu_vat' && item.value === taxValue);
+  if (hasAlready) return null;
+
+  return stripe.customers.createTaxId(customerId, {
+    type: 'eu_vat',
+    value: taxValue,
+  });
+}
+
+async function createCustomer({ email, name, companyNip }) {
+  const customer = await stripe.customers.create({ email, name });
+  if (companyNip) {
+    try {
+      await upsertCustomerTaxId(customer.id, companyNip);
+    } catch (err) {
+      console.warn('Stripe tax ID creation skipped:', err.message);
+    }
+  }
+  return customer;
 }
 
 function constructEvent(rawBody, signature) {
@@ -65,4 +95,6 @@ module.exports = {
   getSubscription,
   isStripeSecretConfigured,
   isWebhookSecretConfigured,
+  normalizeCompanyNip,
+  upsertCustomerTaxId,
 };

@@ -75,8 +75,10 @@ The API will be available at `http://localhost:3001`.
 
 1. Customer registers in `/register` (trial account is created instantly).
 2. Optional: a paid plan can be selected at registration, then backend returns a Stripe Checkout URL.
-3. Stripe webhook (`/api/webhooks/stripe`) is the source of truth for activation.
-4. On `checkout.session.completed` and subscription updates:
+3. Optional `company_nip` can be provided at registration for invoice onboarding.
+4. Customer tax ID is synchronized to Stripe when possible.
+5. Stripe webhook (`/api/webhooks/stripe`) is the source of truth for activation.
+6. On `checkout.session.completed` and subscription updates:
    - client status is activated/deactivated,
    - plan is synchronized from Stripe,
    - subscription period is stored in `subscriptions`,

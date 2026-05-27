@@ -17,7 +17,7 @@ router.use(authenticateJWT);
 async function getClient(clientId) {
   const { data, error } = await supabase
     .from('clients')
-    .select('id, email, name, plan, status, trial_ends_at, stripe_customer_id')
+    .select('id, email, name, company_nip, plan, status, trial_ends_at, stripe_customer_id')
     .eq('id', clientId)
     .maybeSingle();
   if (error) throw error;
@@ -122,9 +122,20 @@ router.post('/checkout', async (req, res) => {
   const client = await getClient(req.clientId);
   let customerId = client.stripe_customer_id;
   if (!customerId) {
-    const customer = await stripeService.createCustomer({ email: client.email, name: client.name });
+    const customer = await stripeService.createCustomer({
+      email: client.email,
+      name: client.name,
+      companyNip: client.company_nip,
+    });
     customerId = customer.id;
     await supabase.from('clients').update({ stripe_customer_id: customerId }).eq('id', req.clientId);
+  }
+  if (client.company_nip) {
+    try {
+      await stripeService.upsertCustomerTaxId(customerId, client.company_nip);
+    } catch (err) {
+      console.warn('Stripe tax ID sync skipped:', err.message);
+    }
   }
 
   const session = await stripeService.createCheckoutSession({
