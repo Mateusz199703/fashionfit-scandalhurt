@@ -23,7 +23,7 @@ import { formatPercent } from '../utils';
 
 type Range = '7d' | '30d' | '90d' | 'custom';
 const PRESETS: Range[] = ['7d', '30d', '90d'];
-const COLORS = ['#111111', '#6B6B6B'];
+const COLORS = ['#111111', '#7B7B7B'];
 
 export function AnalyticsPage() {
   const { id = '' } = useParams();
@@ -34,7 +34,6 @@ export function AnalyticsPage() {
 
   useEffect(() => {
     setLoading(true);
-    // For custom ranges we pull the 90d window and filter client-side.
     const period = range === 'custom' ? '90d' : range;
     api
       .get<AnalyticsOverview>('/api/analytics/overview', { params: { shopId: id, period } })
@@ -93,15 +92,16 @@ export function AnalyticsPage() {
     ? [
         { label: 'Otwarcia widgetu', value: view.funnel.opens },
         { label: 'Rozpoczęte przymiarki', value: view.funnel.starts },
-        { label: 'Ukończone', value: view.funnel.completions },
-        { label: 'Dodano do koszyka', value: view.funnel.carts },
+        { label: 'Ukończone przymiarki', value: view.funnel.completions },
+        { label: 'Dodane do koszyka', value: view.funnel.carts },
       ]
     : [];
+
   const funnelMax = Math.max(1, ...funnelSteps.map((s) => s.value));
   const kpi = view
     ? [
         { label: 'Przymiarki', value: view.funnel.completions, icon: Activity },
-        { label: 'Do koszyka', value: view.funnel.carts, icon: ShoppingCart },
+        { label: 'Koszyk', value: view.funnel.carts, icon: ShoppingCart },
         { label: 'Zakupy', value: view.purchases, icon: Wallet },
         { label: 'Kupujący', value: view.buyers, icon: Users },
         { label: 'Konwersja', value: formatPercent(view.conversion), icon: CircleGauge },
@@ -111,44 +111,40 @@ export function AnalyticsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="ff-card flex flex-wrap items-center justify-between gap-3 p-5 sm:p-6">
+      <section className="ff-hero-panel">
         <div>
-          <Link to={`/shops/${id}`} className="mb-1 inline-flex items-center gap-1 text-sm text-ink/55 hover:text-ink">
+          <Link to={`/shops/${id}`} className="mb-2 inline-flex items-center gap-1 text-sm text-ink/55 hover:text-ink">
             <ArrowLeft size={15} /> Sklep
           </Link>
-          <p className="text-xs uppercase tracking-[0.14em] text-ink/45">Analytics Intelligence</p>
-          <h1 className="text-3xl font-bold">Analityka</h1>
-          <p className="mt-1 text-sm text-ink/60">Trendy przymiarek, konwersji i zachowań klientów w czasie.</p>
+          <p className="ff-kicker">Analytics</p>
+          <h1 className="ff-page-title">Analityka konwersji</h1>
+          <p className="mt-2 text-sm text-ink/65">Pełny obraz: od wejścia do widgetu aż po zakup po przymiarce.</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {PRESETS.map((p) => (
             <button
               key={p}
               onClick={() => setRange(p)}
-              className={`rounded-xl px-3 py-1.5 text-sm font-semibold ${
-                range === p ? 'bg-gradient-to-r from-primary to-primary-700 text-white shadow' : 'border border-ink/15 bg-white/80 text-ink/70'
-              }`}
+              className={range === p ? 'ff-range ff-range-active' : 'ff-range ff-range-idle'}
             >
               {p}
             </button>
           ))}
           <button
             onClick={() => setRange('custom')}
-            className={`rounded-xl px-3 py-1.5 text-sm font-semibold ${
-              range === 'custom' ? 'bg-gradient-to-r from-primary to-primary-700 text-white shadow' : 'border border-ink/15 bg-white/80 text-ink/70'
-            }`}
+            className={range === 'custom' ? 'ff-range ff-range-active' : 'ff-range ff-range-idle'}
           >
             Zakres
           </button>
         </div>
-      </div>
+      </section>
 
       {range === 'custom' && (
         <Card className="flex flex-wrap items-center gap-3 p-4">
           <input type="date" className="ff-input w-auto" value={custom.from} onChange={(e) => setCustom({ ...custom, from: e.target.value })} />
           <span className="text-ink/45">—</span>
           <input type="date" className="ff-input w-auto" value={custom.to} onChange={(e) => setCustom({ ...custom, to: e.target.value })} />
-          <span className="text-xs text-ink/45">(z ostatnich 90 dni)</span>
+          <span className="text-xs text-ink/45">(zakres z ostatnich 90 dni)</span>
         </Card>
       )}
 
@@ -158,45 +154,47 @@ export function AnalyticsPage() {
         <>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3 xl:grid-cols-6">
             {kpi.map(({ label, value, icon: Icon }) => (
-              <Card key={label} className="p-5">
+              <Card key={label} className="ff-kpi-card p-5">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-ink/65">{label}</span>
-                  <span className="rounded-xl bg-primary/10 p-2 text-primary-800"><Icon size={16} /></span>
+                  <span className="text-xs uppercase tracking-[0.1em] text-ink/50">{label}</span>
+                  <span className="rounded-full border border-ink/15 bg-white p-2 text-ink"><Icon size={16} /></span>
                 </div>
-                <div className="mt-2 text-3xl font-bold tracking-tight">{value}</div>
+                <div className="mt-2 text-3xl font-bold tracking-tight text-ink">{value}</div>
               </Card>
             ))}
           </div>
 
           <Card className="p-5">
             <div className="flex items-center justify-between">
-              <h2 className="font-semibold">Przychód z klientów po przymiarce</h2>
-              <span className="text-xs text-ink/60">atrybucja event `purchase`</span>
+              <h2 className="ff-section-title">Przychód z klientów po przymiarce</h2>
+              <span className="text-xs text-ink/60">event `purchase`</span>
             </div>
-            <div className="mt-3 text-3xl font-bold tracking-tight">{new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(view.revenue || 0)}</div>
+            <div className="mt-3 text-4xl font-bold tracking-tight text-ink">
+              {new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(view.revenue || 0)}
+            </div>
           </Card>
 
           <Card className="p-5">
             <div className="mb-4 flex items-center justify-between gap-3">
-              <h2 className="font-semibold">Przymiarki i konwersje w czasie</h2>
-              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary-800">
+              <h2 className="ff-section-title">Trend: przymiarki, koszyk, zakupy</h2>
+              <span className="inline-flex items-center gap-1 rounded-full border border-ink/15 bg-white px-2.5 py-1 text-xs font-medium text-ink/70">
                 <Sparkles size={13} /> Live trend
               </span>
             </div>
             <div className="h-72 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={view.daily} margin={{ top: 5, right: 10, bottom: 0, left: -20 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#d9d9d9" />
-                  <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#666666' }} />
-                  <YAxis tick={{ fontSize: 11, fill: '#666666' }} allowDecimals={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e3e3e3" />
+                  <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#585858' }} />
+                  <YAxis tick={{ fontSize: 11, fill: '#585858' }} allowDecimals={false} />
                   <Tooltip
-                    contentStyle={{ borderRadius: 12, border: '1px solid rgba(16,33,45,0.12)', background: 'rgba(255,255,255,0.94)' }}
+                    contentStyle={{ borderRadius: 12, border: '1px solid rgba(17,17,17,0.12)', background: 'rgba(255,255,255,0.97)' }}
                     labelStyle={{ color: '#111111', fontWeight: 600 }}
                   />
                   <Legend />
                   <Line type="monotone" dataKey="tryon_completions" name="Przymiarki" stroke="#111111" strokeWidth={3} dot={false} />
-                  <Line type="monotone" dataKey="add_to_carts" name="Koszyk" stroke="#6B6B6B" strokeWidth={3} dot={false} />
-                  <Line type="monotone" dataKey="purchases" name="Zakupy" stroke="#2f2f2f" strokeWidth={2} strokeDasharray="5 4" dot={false} />
+                  <Line type="monotone" dataKey="add_to_carts" name="Koszyk" stroke="#6e6e6e" strokeWidth={3} dot={false} />
+                  <Line type="monotone" dataKey="purchases" name="Zakupy" stroke="#2a2a2a" strokeWidth={2} strokeDasharray="5 4" dot={false} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -204,7 +202,7 @@ export function AnalyticsPage() {
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <Card className="p-5">
-              <h2 className="mb-4 font-semibold">Photo AI vs Live AR</h2>
+              <h2 className="ff-section-title mb-4">Photo AI vs Live AR</h2>
               {pieData.every((d) => d.value === 0) ? (
                 <p className="py-12 text-center text-sm text-ink/45">Brak danych przymiarek.</p>
               ) : (
@@ -225,16 +223,16 @@ export function AnalyticsPage() {
             </Card>
 
             <Card className="p-5">
-              <h2 className="mb-4 font-semibold">Lejek konwersji</h2>
+              <h2 className="ff-section-title mb-4">Lejek konwersji</h2>
               <div className="space-y-3">
                 {funnelSteps.map((s) => (
                   <div key={s.label}>
                     <div className="mb-1 flex justify-between text-sm">
                       <span className="text-ink/70">{s.label}</span>
-                      <span className="font-medium">{s.value}</span>
+                      <span className="font-semibold text-ink">{s.value}</span>
                     </div>
-                    <div className="h-2.5 w-full rounded-full bg-ink/10">
-                      <div className="h-full rounded-full bg-gradient-to-r from-primary to-secondary" style={{ width: `${(s.value / funnelMax) * 100}%` }} />
+                    <div className="h-2.5 w-full rounded-full bg-black/10">
+                      <div className="h-full rounded-full bg-black" style={{ width: `${(s.value / funnelMax) * 100}%` }} />
                     </div>
                   </div>
                 ))}
@@ -245,27 +243,25 @@ export function AnalyticsPage() {
           </div>
 
           <Card className="p-5">
-            <h2 className="mb-4 font-semibold">Top 10 produktów</h2>
+            <h2 className="ff-section-title mb-4">Top 10 produktów</h2>
             {data && data.top_products.length > 0 ? (
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[620px] text-sm">
-                  <thead className="text-left text-xs uppercase text-ink/55">
+                <table className="ff-table min-w-[620px]">
+                  <thead>
                     <tr>
-                      <th className="py-2">Produkt</th>
-                      <th className="py-2">Przymiarki</th>
-                      <th className="py-2">Konwersja</th>
-                      <th className="py-2">Zakupy</th>
+                      <th>Produkt</th>
+                      <th>Przymiarki</th>
+                      <th>Konwersja</th>
+                      <th>Zakupy</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-ink/10">
+                  <tbody>
                     {data.top_products.map((p) => (
-                      <tr key={p.product_id} className="hover:bg-white/65">
-                        <td className="py-2 font-medium">{p.name || p.product_id}</td>
-                        <td className="py-2">{p.tryon_completions}</td>
-                        <td className="py-2">
-                          {p.tryon_completions ? formatPercent(p.add_to_carts / p.tryon_completions) : '—'}
-                        </td>
-                        <td className="py-2">{p.purchases || 0}</td>
+                      <tr key={p.product_id}>
+                        <td className="font-semibold text-ink">{p.name || p.product_id}</td>
+                        <td>{p.tryon_completions}</td>
+                        <td>{p.tryon_completions ? formatPercent(p.add_to_carts / p.tryon_completions) : '—'}</td>
+                        <td>{p.purchases || 0}</td>
                       </tr>
                     ))}
                   </tbody>

@@ -14,11 +14,11 @@ export function Modal({
 }) {
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={onClose}>
-      <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 backdrop-blur" onClick={onClose}>
+      <div className="w-full max-w-md rounded-2xl border border-black/15 bg-[#f7f7f7] p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-lg font-semibold">{title}</h3>
-          <button onClick={onClose} className="rounded-md p-1 text-gray-400 hover:bg-gray-100" aria-label="Zamknij">
+          <h3 className="font-display text-3xl leading-none text-ink">{title}</h3>
+          <button onClick={onClose} className="rounded-full p-1.5 text-ink/45 hover:bg-black/5" aria-label="Zamknij">
             <X size={18} />
           </button>
         </div>

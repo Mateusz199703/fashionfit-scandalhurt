@@ -24,54 +24,58 @@ export function SettingsPage() {
   const maskedKey = client.apiKey ? `${client.apiKey.slice(0, 6)}${'•'.repeat(20)}${client.apiKey.slice(-4)}` : '—';
 
   return (
-    <div className="max-w-2xl space-y-6">
-      <h1 className="text-2xl font-bold">Ustawienia</h1>
-
-      <Card className="space-y-4 p-5">
-        <h2 className="font-semibold">Konto</h2>
-        <Field label="Imię i nazwisko" value={client.name} />
-        <Field label="E-mail" value={client.email} />
-        {client.companyName && <Field label="Firma" value={client.companyName} />}
+    <div className="space-y-6">
+      <section className="ff-hero-panel">
         <div>
-          <span className="ff-label">Plan</span>
-          <div className="flex items-center gap-2">
-            <PlanBadge plan={client.plan} />
-            <StatusBadge status={client.status} />
+          <p className="ff-kicker">Account Settings</p>
+          <h1 className="ff-page-title">Ustawienia</h1>
+          <p className="mt-2 text-sm text-ink/65">Dane konta i klucze integracyjne dla WordPress i widgetu.</p>
+        </div>
+      </section>
+
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.2fr_1fr]">
+        <Card className="space-y-4 p-5">
+          <h2 className="ff-section-title">Konto</h2>
+          <Field label="Imię i nazwisko" value={client.name} />
+          <Field label="E-mail" value={client.email} />
+          {client.companyName && <Field label="Firma" value={client.companyName} />}
+          <div>
+            <span className="ff-label">Plan</span>
+            <div className="flex items-center gap-2">
+              <PlanBadge plan={client.plan} />
+              <StatusBadge status={client.status} />
+            </div>
           </div>
-        </div>
-      </Card>
+        </Card>
 
-      <Card className="space-y-3 p-5">
-        <h2 className="font-semibold">Klucz API</h2>
-        <p className="text-sm text-gray-500">Używany przez wtyczkę i widget do komunikacji z FashionFit.</p>
-        <div className="flex items-center gap-2">
-          <code className="flex-1 truncate rounded-lg bg-gray-100 px-3 py-2 text-sm">
-            {revealed ? client.apiKey : maskedKey}
-          </code>
-          <button className="ff-btn-secondary" onClick={() => setRevealed((v) => !v)}>
-            {revealed ? <EyeOff size={15} /> : <Eye size={15} />}
-          </button>
-          <button className="ff-btn-secondary" onClick={copyKey}>
-            {copied ? <Check size={15} /> : <Copy size={15} />}
-          </button>
-        </div>
-      </Card>
+        <Card className="space-y-4 p-5">
+          <h2 className="ff-section-title">Klucz API</h2>
+          <p className="text-sm text-ink/60">Używany przez wtyczkę oraz widget do komunikacji z backendem FashionFit.</p>
+          <div className="flex items-center gap-2">
+            <code className="flex-1 truncate rounded-xl border border-ink/15 bg-white px-3 py-2 text-sm text-ink">
+              {revealed ? client.apiKey : maskedKey}
+            </code>
+            <button className="ff-btn-secondary" onClick={() => setRevealed((v) => !v)}>
+              {revealed ? <EyeOff size={15} /> : <Eye size={15} />}
+            </button>
+            <button className="ff-btn-secondary" onClick={copyKey}>
+              {copied ? <Check size={15} /> : <Copy size={15} />}
+            </button>
+          </div>
 
-      <Card className="flex items-center justify-between p-5">
-        <div>
-          <h2 className="font-semibold">Wyloguj</h2>
-          <p className="text-sm text-gray-500">Zakończ sesję w tej przeglądarce.</p>
-        </div>
-        <button
-          className="ff-btn-secondary"
-          onClick={() => {
-            logout();
-            navigate('/login');
-          }}
-        >
-          <LogOut size={15} /> Wyloguj
-        </button>
-      </Card>
+          <div className="pt-4">
+            <button
+              className="ff-btn-secondary"
+              onClick={() => {
+                logout();
+                navigate('/login');
+              }}
+            >
+              <LogOut size={15} /> Wyloguj
+            </button>
+          </div>
+        </Card>
+      </div>
     </div>
   );
 }
@@ -80,7 +84,7 @@ function Field({ label, value }: { label: string; value: string }) {
   return (
     <div>
       <span className="ff-label">{label}</span>
-      <div className="text-sm text-gray-800">{value}</div>
+      <div className="text-sm text-ink">{value}</div>
     </div>
   );
 }

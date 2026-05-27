@@ -6,12 +6,12 @@
 
 @layer base {
   :root {
-    --ff-bg-a: #f7f7f7;
+    --ff-bg-a: #f4f4f3;
     --ff-bg-b: #ffffff;
     --ff-text: #111111;
     --ff-muted: #666666;
-    --ff-card: rgba(255, 255, 255, 0.78);
-    --ff-border: rgba(255, 255, 255, 0.65);
+    --ff-card: rgba(255, 255, 255, 0.86);
+    --ff-border: rgba(17, 17, 17, 0.12);
   }
 
   html,
@@ -19,7 +19,7 @@
     @apply text-ink antialiased;
     background:
       radial-gradient(55rem 32rem at -10% -20%, #ececec 10%, transparent 70%),
-      radial-gradient(45rem 28rem at 110% 0%, #f0f0f0 8%, transparent 68%),
+      radial-gradient(45rem 28rem at 110% 0%, #f1f1f1 8%, transparent 68%),
       linear-gradient(165deg, var(--ff-bg-a), var(--ff-bg-b));
     font-family: 'Sora', system-ui, -apple-system, sans-serif;
     min-height: 100%;
@@ -38,51 +38,217 @@
 }
 
 @layer components {
-  .ff-card {
-    @apply rounded-2xl border shadow-xl;
+  .font-display {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    letter-spacing: -0.02em;
+  }
+
+  .ff-card,
+  .ff-surface {
+    @apply rounded-2xl border;
     background: var(--ff-card);
     border-color: var(--ff-border);
     box-shadow:
-      0 18px 45px -24px rgba(0, 0, 0, 0.18),
-      0 8px 20px -12px rgba(0, 0, 0, 0.16);
+      0 20px 40px -26px rgba(0, 0, 0, 0.22),
+      0 10px 20px -16px rgba(0, 0, 0, 0.18);
     backdrop-filter: blur(14px);
-    animation: ff-fade-up 0.45s ease both;
+    animation: ff-fade-up 0.35s ease both;
   }
+
+  .ff-kpi-card {
+    background:
+      radial-gradient(36rem 13rem at 100% 0%, rgba(0, 0, 0, 0.03) 0%, transparent 65%),
+      rgba(255, 255, 255, 0.94);
+  }
+
   .ff-btn {
     @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
   }
+
   .ff-btn-primary {
     @apply ff-btn text-white;
-    background: linear-gradient(120deg, #111111, #1f1f1f 55%, #333333);
-    box-shadow: 0 14px 28px -16px rgba(0, 0, 0, 0.55);
+    background: linear-gradient(120deg, #0c0c0c, #1b1b1b 55%, #2b2b2b);
+    box-shadow: 0 14px 28px -16px rgba(0, 0, 0, 0.58);
   }
+
   .ff-btn-primary:hover {
     transform: translateY(-1px);
-    box-shadow: 0 18px 30px -16px rgba(0, 0, 0, 0.65);
+    box-shadow: 0 18px 30px -16px rgba(0, 0, 0, 0.68);
   }
+
   .ff-btn-secondary {
     @apply ff-btn border text-ink;
-    background: rgba(255, 255, 255, 0.76);
-    border-color: rgba(16, 33, 45, 0.12);
+    background: rgba(255, 255, 255, 0.82);
+    border-color: rgba(0, 0, 0, 0.14);
   }
+
   .ff-btn-secondary:hover {
-    background: rgba(255, 255, 255, 0.95);
-    border-color: rgba(16, 33, 45, 0.18);
+    background: rgba(255, 255, 255, 0.96);
+    border-color: rgba(0, 0, 0, 0.24);
   }
+
   .ff-input {
     @apply w-full rounded-xl border px-3 py-2.5 text-sm text-ink outline-none transition-all;
-    background: rgba(255, 255, 255, 0.82);
+    background: rgba(255, 255, 255, 0.92);
     border-color: rgba(0, 0, 0, 0.16);
   }
+
   .ff-input:focus {
     border-color: rgba(0, 0, 0, 0.55);
-    box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.08);
   }
+
   .ff-label {
-    @apply mb-1.5 block text-sm font-medium text-ink;
+    @apply mb-1.5 block text-xs font-semibold uppercase tracking-[0.08em] text-ink/70;
   }
-  .ff-muted {
-    color: var(--ff-muted);
+
+  .ff-app-shell {
+    background:
+      radial-gradient(42rem 21rem at 100% 0%, rgba(255, 255, 255, 0.45) 0%, transparent 70%),
+      linear-gradient(180deg, #ededed 0%, #f5f5f5 45%, #fafafa 100%);
+  }
+
+  .ff-main-wrap {
+    border-radius: 30px;
+    border: 1px solid rgba(255, 255, 255, 0.65);
+    background:
+      radial-gradient(34rem 22rem at 100% 0%, rgba(0, 0, 0, 0.03) 0%, transparent 68%),
+      rgba(250, 250, 250, 0.88);
+    box-shadow: 0 35px 75px -55px rgba(0, 0, 0, 0.4);
+    padding: clamp(0.95rem, 2vw, 1.5rem);
+  }
+
+  .ff-nav-link {
+    @apply flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all;
+  }
+
+  .ff-nav-link-active {
+    background: #ffffff;
+    color: #0f0f0f;
+    box-shadow: 0 10px 20px -14px rgba(0, 0, 0, 0.55);
+  }
+
+  .ff-nav-link-idle {
+    color: rgba(255, 255, 255, 0.72);
+  }
+
+  .ff-nav-link-idle:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #ffffff;
+  }
+
+  .ff-hero-panel {
+    @apply ff-surface flex flex-wrap items-center justify-between gap-4 p-5 sm:p-6;
+    background:
+      radial-gradient(30rem 12rem at 100% 0%, rgba(0, 0, 0, 0.03), transparent 70%),
+      rgba(255, 255, 255, 0.92);
+  }
+
+  .ff-kicker {
+    margin: 0;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(17, 17, 17, 0.48);
+    font-weight: 700;
+  }
+
+  .ff-page-title {
+    margin: 0.2rem 0 0;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: clamp(2.2rem, 4.2vw, 3.35rem);
+    line-height: 0.95;
+    font-weight: 600;
+    color: #101010;
+  }
+
+  .ff-section-title {
+    margin: 0;
+    font-family: 'Space Grotesk', 'Sora', system-ui, sans-serif;
+    font-size: 1.02rem;
+    font-weight: 700;
+    color: #111;
+  }
+
+  .ff-tabbar {
+    display: flex;
+    gap: 0.35rem;
+    padding: 0.3rem;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.88);
+    width: fit-content;
+  }
+
+  .ff-tab {
+    border-radius: 10px;
+    padding: 0.52rem 0.95rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    transition: 0.2s ease;
+  }
+
+  .ff-tab-active {
+    background: #111;
+    color: #fff;
+  }
+
+  .ff-tab-idle {
+    color: rgba(17, 17, 17, 0.6);
+  }
+
+  .ff-tab-idle:hover {
+    color: #111;
+  }
+
+  .ff-range {
+    border-radius: 11px;
+    padding: 0.5rem 0.82rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    transition: 0.2s ease;
+  }
+
+  .ff-range-active {
+    background: #111;
+    color: #fff;
+  }
+
+  .ff-range-idle {
+    border: 1px solid rgba(0, 0, 0, 0.13);
+    background: #fff;
+    color: rgba(17, 17, 17, 0.7);
+  }
+
+  .ff-range-idle:hover {
+    border-color: rgba(0, 0, 0, 0.24);
+    color: #111;
+  }
+
+  .ff-table {
+    width: 100%;
+    font-size: 0.88rem;
+  }
+
+  .ff-table thead th {
+    text-align: left;
+    font-size: 0.68rem;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: rgba(17, 17, 17, 0.5);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.09);
+    padding: 0.75rem 1rem;
+    background: rgba(255, 255, 255, 0.78);
+  }
+
+  .ff-table tbody td {
+    padding: 0.85rem 1rem;
+    color: rgba(17, 17, 17, 0.72);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  }
+
+  .ff-table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.65);
   }
 
   .ff-auth-shell {
@@ -317,12 +483,17 @@
   .ff-auth-metrics {
     grid-template-columns: 1fr;
   }
+
+  .ff-main-wrap {
+    border-radius: 18px;
+    padding: 0.85rem;
+  }
 }
 
 @keyframes ff-fade-up {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(6px);
   }
   to {
     opacity: 1;

@@ -79,20 +79,23 @@ export function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div className="ff-card flex flex-wrap items-center justify-between gap-3 p-5 sm:p-6">
+      <section className="ff-hero-panel">
         <div>
-          <p className="text-xs uppercase tracking-[0.14em] text-ink/45">Overview</p>
-          <h1 className="text-3xl font-bold leading-tight">Witaj, {client?.name}</h1>
+          <p className="ff-kicker">Client Command Center</p>
+          <h1 className="ff-page-title">Witaj, {client?.name}</h1>
+          <p className="mt-2 max-w-2xl text-sm text-ink/65">
+            To tutaj śledzisz, ilu klientów kupiło po wirtualnej przymiarce i jak rośnie skuteczność Twoich produktów.
+          </p>
         </div>
         <Link to="/shops" className="ff-btn-primary">
           <Plus size={16} /> Dodaj sklep
         </Link>
-      </div>
+      </section>
 
       {client?.status === 'trial' && days !== null && (
-        <Card className="flex flex-wrap items-center justify-between gap-3 border-secondary/30 bg-secondary-50 p-4">
-          <span className="text-sm text-secondary-700">
-            {days} {days === 1 ? 'dzień' : 'dni'} do końca okresu próbnego.
+        <Card className="flex flex-wrap items-center justify-between gap-3 border-ink/20 bg-white p-4">
+          <span className="text-sm text-ink/70">
+            Trial kończy się za {days} {days === 1 ? 'dzień' : 'dni'}.
           </span>
           <Link to="/billing" className="ff-btn-primary">Wybierz plan</Link>
         </Card>
@@ -101,53 +104,62 @@ export function DashboardPage() {
       {loading ? (
         <MetricGridSkeleton />
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-          <MetricCard label="Przymiarki (30 dni)" value={totals.completions} icon={<Shirt size={18} />} />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <MetricCard label="Przymiarki 30 dni" value={totals.completions} icon={<Shirt size={18} />} />
           <MetricCard label="Dodane do koszyka" value={totals.addToCarts} icon={<ShoppingCart size={18} />} />
           <MetricCard label="Zakupy po przymiarce" value={totals.purchases} icon={<Wallet size={18} />} />
           <MetricCard label="Kupujący klienci" value={totals.buyers} icon={<Users size={18} />} />
           <MetricCard label="Przychód z przymiarek" value={formatMoney(totals.revenue)} icon={<Wallet size={18} />} />
-          <MetricCard label="Sklepy aktywne" value={activeShops} icon={<Store size={18} />} />
-          <MetricCard label="Pozostałe try-ony" value={remaining === null ? '—' : remaining} hint={billing ? `z ${billing.usage.limit} / mies.` : undefined} icon={<Gauge size={18} />} />
+          <MetricCard label="Aktywne sklepy" value={activeShops} icon={<Store size={18} />} />
+          <MetricCard
+            label="Pozostałe try-ony"
+            value={remaining === null ? '—' : remaining}
+            hint={billing ? `z ${billing.usage.limit} / mies.` : undefined}
+            icon={<Gauge size={18} />}
+          />
         </div>
       )}
 
-      <div>
-        <h2 className="mb-3 text-lg font-semibold">Twoje sklepy</h2>
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="ff-section-title">Twoje sklepy</h2>
+          <Link to="/shops" className="text-sm font-medium text-ink/60 hover:text-ink">Zobacz wszystkie</Link>
+        </div>
+
         {loading ? (
           <RowsSkeleton />
         ) : stats.length === 0 ? (
           <Card className="p-8 text-center">
-            <p className="text-sm text-gray-500">Nie masz jeszcze żadnego sklepu.</p>
+            <p className="text-sm text-ink/60">Nie masz jeszcze żadnego sklepu.</p>
             <Link to="/shops" className="ff-btn-primary mt-4 inline-flex">
               <Plus size={16} /> Dodaj pierwszy sklep
             </Link>
           </Card>
         ) : (
-          <Card className="divide-y divide-gray-100">
+          <Card className="overflow-hidden p-1">
             {stats.map(({ shop, completions, conversion }) => (
               <button
                 key={shop.id}
                 onClick={() => navigate(`/shops/${shop.id}`)}
-                className="flex w-full items-center justify-between gap-4 p-4 text-left transition-colors hover:bg-white/80"
+                className="flex w-full items-center justify-between gap-4 rounded-xl px-4 py-4 text-left transition hover:bg-black/[0.03]"
               >
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="truncate font-medium">{shop.name || shop.domain}</span>
+                    <span className="truncate font-semibold text-ink">{shop.name || shop.domain}</span>
                     <StatusBadge status={shop.is_active ? 'active' : 'inactive'} />
                   </div>
-                  <div className="truncate text-sm text-ink/60">{shop.domain}</div>
+                  <div className="truncate text-sm text-ink/55">{shop.domain}</div>
                 </div>
-                <div className="hidden text-right text-sm text-ink/80 sm:block">
-                  <div className="font-medium">{completions} przymiarek</div>
+                <div className="hidden text-right text-sm sm:block">
+                  <div className="font-semibold text-ink">{completions} przymiarek</div>
                   <div className="text-ink/55">konwersja {formatPercent(conversion)}</div>
                 </div>
-                <ArrowRight size={18} className="text-ink/40" />
+                <ArrowRight size={18} className="text-ink/35" />
               </button>
             ))}
           </Card>
         )}
-      </div>
+      </section>
     </div>
   );
 }

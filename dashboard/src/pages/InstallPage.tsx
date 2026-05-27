@@ -45,38 +45,46 @@ export function InstallPage() {
   };
 
   const steps = [
-    { n: 1, title: 'Pobierz wtyczkę' },
+    { n: 1, title: 'Pobierz fashionfit.zipwtyczkę' },
     { n: 2, title: 'Wklej snippet' },
     { n: 3, title: 'Zweryfikuj instalację' },
   ];
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
-      <h1 className="text-2xl font-bold">Instalacja widgetu</h1>
+    <div className="mx-auto max-w-3xl space-y-6">
+      <section className="ff-hero-panel">
+        <div>
+          <p className="ff-kicker">Setup Wizard</p>
+          <h1 className="ff-page-title">Instalacja widgetu</h1>
+          <p className="mt-2 text-sm text-ink/65">3 kroki i sklep jest gotowy do zbierania konwersji z przymiarek.</p>
+        </div>
+      </section>
 
-      <div className="flex items-center justify-between">
-        {steps.map((s, i) => (
-          <React.Fragment key={s.n}>
-            <div className="flex flex-col items-center">
-              <div
-                className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold ${
-                  step >= s.n ? 'bg-primary text-white' : 'bg-gray-200 text-gray-500'
-                }`}
-              >
-                {s.n}
+      <Card className="p-5">
+        <div className="flex items-center justify-between gap-2">
+          {steps.map((s, i) => (
+            <React.Fragment key={s.n}>
+              <div className="flex flex-col items-center">
+                <div
+                  className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold ${
+                    step >= s.n ? 'bg-black text-white' : 'bg-black/10 text-black/50'
+                  }`}
+                >
+                  {s.n}
+                </div>
+                <span className="mt-1 text-[11px] text-ink/55">{s.title}</span>
               </div>
-              <span className="mt-1 text-xs text-gray-500">{s.title}</span>
-            </div>
-            {i < steps.length - 1 && <div className={`mx-2 h-0.5 flex-1 ${step > s.n ? 'bg-primary' : 'bg-gray-200'}`} />}
-          </React.Fragment>
-        ))}
-      </div>
+              {i < steps.length - 1 && <div className={`mx-2 h-0.5 flex-1 ${step > s.n ? 'bg-black' : 'bg-black/15'}`} />}
+            </React.Fragment>
+          ))}
+        </div>
+      </Card>
 
       {step === 1 && (
         <Card className="space-y-4 p-6">
-          <h2 className="text-lg font-semibold">1. Pobierz wtyczkę WordPress</h2>
-          <p className="text-sm text-gray-500">
-            Pobierz paczkę wtyczki FashionFit i zainstaluj ją w panelu WordPress (Wtyczki → Dodaj nową → Wyślij wtyczkę).
+          <h2 className="ff-section-title">1. Pobierz wtyczkę WordPress</h2>
+          <p className="text-sm text-ink/60">
+            Pobierz paczkę i zainstaluj ją w WordPress: Wtyczki, potem Dodaj nową i Wyślij wtyczkę.
           </p>
           <a className="ff-btn-primary w-fit" href={PLUGIN_URL} download>
             <Download size={16} /> Pobierz fashionfit.zip
@@ -89,11 +97,11 @@ export function InstallPage() {
 
       {step === 2 && (
         <Card className="space-y-4 p-6">
-          <h2 className="text-lg font-semibold">2. Wklej kod instalacyjny</h2>
-          <p className="text-sm text-gray-500">
-            Jeśli nie korzystasz z wtyczki, wklej poniższy kod w nagłówku motywu. Wtyczka robi to automatycznie.
+          <h2 className="ff-section-title">2. Wklej kod instalacyjny</h2>
+          <p className="text-sm text-ink/60">
+            Jeśli nie korzystasz z wtyczki, wklej kod ręcznie do motywu. Przy wtyczce ten krok jest automatyczny.
           </p>
-          <pre className="overflow-x-auto rounded-lg bg-gray-900 p-4 text-xs text-gray-100">
+          <pre className="overflow-x-auto rounded-xl bg-black p-4 text-xs text-gray-100">
             <code>{snippet}</code>
           </pre>
           <button className="ff-btn-secondary w-fit" onClick={copy}>
@@ -108,18 +116,18 @@ export function InstallPage() {
 
       {step === 3 && (
         <Card className="space-y-4 p-6">
-          <h2 className="text-lg font-semibold">3. Zweryfikuj instalację</h2>
-          <p className="text-sm text-gray-500">
-            Po zainstalowaniu wtyczki lub wklejeniu kodu sprawdź, czy widget komunikuje się z FashionFit.
+          <h2 className="ff-section-title">3. Zweryfikuj instalację</h2>
+          <p className="text-sm text-ink/60">
+            Po instalacji sprawdź połączenie sklepu z backendem FashionFit.
           </p>
 
           {verified === true && (
-            <div className="flex items-center gap-2 rounded-lg border border-ink/10 bg-white/80 p-3 text-sm text-ink">
-              <CheckCircle2 size={18} /> Połączenie potwierdzone — wszystko działa!
+            <div className="flex items-center gap-2 rounded-xl border border-black/15 bg-white p-3 text-sm text-ink">
+              <CheckCircle2 size={18} /> Połączenie potwierdzone - wszystko działa.
             </div>
           )}
           {verified === false && (
-            <div className="flex items-center gap-2 rounded-lg border border-ink/10 bg-white/80 p-3 text-sm text-ink/70">
+            <div className="flex items-center gap-2 rounded-xl border border-black/15 bg-white p-3 text-sm text-ink/70">
               <XCircle size={18} /> Brak aktywności. Zsynchronizuj produkty i odwiedź stronę produktu.
             </div>
           )}

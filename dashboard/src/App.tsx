@@ -23,10 +23,10 @@ function App() {
           toastOptions={{
             duration: 3000,
             style: {
-              background: 'rgba(16, 33, 45, 0.94)',
+              background: 'rgba(10, 10, 10, 0.94)',
               color: '#ffffff',
               borderRadius: '14px',
-              border: '1px solid rgba(255,255,255,0.16)',
+              border: '1px solid rgba(255,255,255,0.22)',
             },
           }}
         />

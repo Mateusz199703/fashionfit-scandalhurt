@@ -2,32 +2,32 @@ import React from 'react';
 import { Plan, ClientStatus } from '../types';
 
 export function Card({ children, className = '' }: { children: React.ReactNode; className?: string }) {
-  return <div className={`ff-card ${className}`}>{children}</div>;
+  return <div className={`ff-surface ${className}`}>{children}</div>;
 }
 
 const PLAN_STYLES: Record<Plan, string> = {
-  STARTER: 'bg-white text-ink border border-ink/15',
-  GROWTH: 'bg-primary-50 text-primary-800 border border-primary/20',
-  SCALE: 'bg-secondary-50 text-secondary-700 border border-secondary/20',
+  STARTER: 'bg-white text-ink border border-ink/20',
+  GROWTH: 'bg-ink text-white border border-ink',
+  SCALE: 'bg-gradient-to-r from-ink to-black text-white border border-black',
 };
 
 export function PlanBadge({ plan }: { plan: Plan }) {
   return (
-    <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${PLAN_STYLES[plan]}`}>
+    <span className={`inline-flex rounded-full px-3 py-1 text-[11px] font-semibold tracking-[0.08em] uppercase ${PLAN_STYLES[plan]}`}>
       {plan}
     </span>
   );
 }
 
 const STATUS_STYLES: Record<ClientStatus | string, string> = {
-  trial: 'bg-secondary-50 text-secondary-700',
-  active: 'bg-primary-50 text-primary-800',
-  inactive: 'bg-white text-ink/60 border border-ink/15',
+  trial: 'bg-white text-ink border border-ink/20',
+  active: 'bg-ink text-white border border-ink',
+  inactive: 'bg-secondary-100 text-ink/70 border border-ink/10',
 };
 
 export function StatusBadge({ status }: { status: string }) {
   return (
-    <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_STYLES[status] || 'bg-gray-100 text-gray-600'}`}>
+    <span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold tracking-[0.07em] uppercase ${STATUS_STYLES[status] || 'bg-secondary-100 text-ink/70 border border-ink/10'}`}>
       {status}
     </span>
   );
@@ -45,13 +45,13 @@ export function MetricCard({
   icon?: React.ReactNode;
 }) {
   return (
-    <Card className="p-5">
+    <Card className="ff-kpi-card p-5">
       <div className="flex items-center justify-between">
-        <span className="text-sm text-ink/65">{label}</span>
-        {icon && <span className="text-primary-700">{icon}</span>}
+        <span className="text-xs uppercase tracking-[0.12em] text-ink/50">{label}</span>
+        {icon && <span className="text-ink/60">{icon}</span>}
       </div>
-      <div className="mt-2 text-2xl font-bold tracking-tight">{value}</div>
-      {hint && <div className="mt-1 text-xs text-ink/50">{hint}</div>}
+      <div className="mt-2 text-3xl font-bold leading-none tracking-tight text-ink">{value}</div>
+      {hint && <div className="mt-2 text-xs text-ink/55">{hint}</div>}
     </Card>
   );
 }
@@ -59,9 +59,9 @@ export function MetricCard({
 export function EmptyState({ title, description, action }: { title: string; description?: string; action?: React.ReactNode }) {
   return (
     <Card className="p-10 text-center">
-      <h3 className="text-base font-semibold text-ink">{title}</h3>
-      {description && <p className="mt-1 text-sm text-ink/65">{description}</p>}
-      {action && <div className="mt-4 flex justify-center">{action}</div>}
+      <h3 className="font-display text-3xl text-ink">{title}</h3>
+      {description && <p className="mx-auto mt-2 max-w-xl text-sm text-ink/65">{description}</p>}
+      {action && <div className="mt-5 flex justify-center">{action}</div>}
     </Card>
   );
 }

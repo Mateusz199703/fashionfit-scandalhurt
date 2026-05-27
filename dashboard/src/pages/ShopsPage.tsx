@@ -78,28 +78,28 @@ export function ShopsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="ff-card flex flex-wrap items-center justify-between gap-3 p-5 sm:p-6">
+      <section className="ff-hero-panel">
         <div>
-          <p className="text-xs uppercase tracking-[0.14em] text-ink/45">Connected Stores</p>
-          <h1 className="text-3xl font-bold">Sklepy</h1>
-          <p className="mt-1 text-sm text-ink/60">Zarządzaj integracjami i przechodź szybko do konfiguracji widgetu.</p>
+          <p className="ff-kicker">Store Network</p>
+          <h1 className="ff-page-title">Sklepy</h1>
+          <p className="mt-2 text-sm text-ink/65">Każdy sklep ma osobne statystyki, konfigurację widgetu i wdrożenie.</p>
         </div>
         <div className="flex items-center gap-2">
-          <span className="hidden rounded-full bg-primary/12 px-3 py-1 text-xs font-medium text-primary-800 sm:inline-flex">
-            <Sparkles size={14} className="mr-1" /> {shops.length} aktywnych przestrzeni
+          <span className="hidden rounded-full border border-ink/15 bg-white px-3 py-1 text-xs font-medium text-ink/70 sm:inline-flex">
+            <Sparkles size={13} className="mr-1" /> {shops.length} przestrzeni
           </span>
           <button className="ff-btn-primary" onClick={() => setModalOpen(true)}>
             <Plus size={16} /> Dodaj sklep
           </button>
         </div>
-      </div>
+      </section>
 
       {loading ? (
         <RowsSkeleton rows={3} />
       ) : shops.length === 0 ? (
         <EmptyState
           title="Brak sklepów"
-          description="Dodaj swój pierwszy sklep, aby rozpocząć."
+          description="Dodaj pierwszy sklep, aby uruchomić widget i zbierać dane konwersji."
           action={
             <button className="ff-btn-primary" onClick={() => setModalOpen(true)}>
               <Plus size={16} /> Dodaj sklep
@@ -111,35 +111,35 @@ export function ShopsPage() {
           {shops.map((shop) => {
             const stat = statsById[shop.id];
             return (
-              <Card key={shop.id} className="flex flex-col p-5 transition-transform duration-200 hover:-translate-y-0.5">
-                <div className="flex items-start justify-between">
+              <Card key={shop.id} className="flex flex-col p-5">
+                <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <h3 className="truncate font-semibold">{shop.name || shop.domain}</h3>
-                    <p className="truncate text-sm text-ink/60">{shop.domain}</p>
+                    <h3 className="truncate font-semibold text-ink">{shop.name || shop.domain}</h3>
+                    <p className="truncate text-sm text-ink/55">{shop.domain}</p>
                   </div>
                   <StatusBadge status={shop.is_active ? 'active' : 'inactive'} />
                 </div>
 
-                <span className="mt-3 inline-flex w-fit rounded-full border border-ink/12 bg-white/80 px-2.5 py-1 text-xs font-medium text-ink/70">
+                <span className="mt-3 inline-flex w-fit rounded-full border border-ink/15 bg-white px-2.5 py-1 text-xs font-medium text-ink/70">
                   {PLATFORM_LABEL[shop.platform]}
                 </span>
 
                 <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-                  <div className="rounded-xl border border-ink/10 bg-white/70 p-3">
-                    <div className="text-xs text-ink/50">Przymiarki</div>
-                    <div className="font-semibold">{stat ? stat.completions : '—'}</div>
+                  <div className="rounded-xl border border-ink/12 bg-white p-3">
+                    <div className="text-[11px] uppercase tracking-[0.08em] text-ink/50">Przymiarki</div>
+                    <div className="mt-1 text-xl font-bold leading-none text-ink">{stat ? stat.completions : '—'}</div>
                   </div>
-                  <div className="rounded-xl border border-ink/10 bg-white/70 p-3">
-                    <div className="text-xs text-ink/50">Konwersja</div>
-                    <div className="font-semibold">{stat ? formatPercent(stat.conversion) : '—'}</div>
+                  <div className="rounded-xl border border-ink/12 bg-white p-3">
+                    <div className="text-[11px] uppercase tracking-[0.08em] text-ink/50">Konwersja</div>
+                    <div className="mt-1 text-xl font-bold leading-none text-ink">{stat ? formatPercent(stat.conversion) : '—'}</div>
                   </div>
                 </div>
 
-                <div className="mt-5 flex gap-2">
-                  <button className="ff-btn-secondary flex-1" onClick={() => navigate(`/shops/${shop.id}`)}>
+                <div className="mt-5 grid grid-cols-2 gap-2">
+                  <button className="ff-btn-secondary" onClick={() => navigate(`/shops/${shop.id}`)}>
                     <SettingsIcon size={15} /> Ustawienia
                   </button>
-                  <button className="ff-btn-secondary flex-1" onClick={() => navigate(`/install/${shop.id}`)}>
+                  <button className="ff-btn-secondary" onClick={() => navigate(`/install/${shop.id}`)}>
                     <Download size={15} /> Instalacja
                   </button>
                 </div>
