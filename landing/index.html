@@ -4,12 +4,13 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>FashionFit — Wirtualna przymierzalnia dla WooCommerce</title>
-  <meta name="description" content="Wirtualna przymierzalnia dla sklepow WooCommerce. Szybka instalacja, wyzsza konwersja i mniej zwrotow." />
+  <meta name="description" content="FashionFit: wirtualna przymierzalnia dla WooCommerce. Mniej zwrotów, więcej konwersji, premium doświadczenie klienta." />
   <meta property="og:title" content="FashionFit — Wirtualna przymierzalnia" />
-  <meta property="og:description" content="Klienci przymierzaja ubrania zanim kupia. Integracja z WooCommerce w kilka minut." />
+  <meta property="og:description" content="Klienci przymierzają ubrania zanim kupią. Integracja WooCommerce i panel analityczny premium." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://fashionfit.app" />
   <link rel="canonical" href="https://fashionfit.app" />
+
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -24,61 +25,113 @@
     }
   }
   </script>
+
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
+
     :root {
-      --bg: #070707;
-      --bg-soft: #101010;
-      --card: #0f0f0f;
-      --line: #2a2a2a;
-      --text: #f5f5f5;
-      --muted: #b8b8b8;
-      --black: #000;
-      --white: #fff;
-      --radius: 18px;
-      --shadow: 0 30px 90px rgba(0, 0, 0, .55);
-      --max: 1180px;
+      --bg: #f4f4f3;
+      --bg-soft: #efefee;
+      --ink: #111111;
+      --muted: #636363;
+      --line: rgba(17, 17, 17, 0.14);
+      --card: rgba(255, 255, 255, 0.9);
+      --radius-xl: 30px;
+      --radius-lg: 20px;
+      --radius-md: 14px;
+      --shadow-lg: 0 40px 80px -52px rgba(0, 0, 0, 0.45);
+      --shadow-md: 0 24px 42px -34px rgba(0, 0, 0, 0.32);
+      --maxw: 1220px;
     }
 
     * { box-sizing: border-box; }
-    html, body { margin: 0; padding: 0; }
+
+    html,
     body {
-      font-family: "Inter", "SF Pro Text", "Segoe UI", sans-serif;
-      color: var(--text);
-      background:
-        radial-gradient(circle at 10% -10%, #1b1b1b 0%, transparent 48%),
-        radial-gradient(circle at 88% 3%, #131313 0%, transparent 42%),
-        linear-gradient(180deg, #090909 0%, #050505 100%);
-      line-height: 1.55;
+      margin: 0;
+      padding: 0;
     }
 
-    h1, h2, h3 {
+    body {
+      font-family: 'Manrope', system-ui, -apple-system, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(46rem 22rem at 0% -10%, #e8e8e8 0%, transparent 70%),
+        radial-gradient(36rem 18rem at 100% 0%, #ececec 0%, transparent 72%),
+        linear-gradient(165deg, var(--bg-soft), var(--bg));
+      line-height: 1.62;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    h1,
+    h2,
+    h3 {
       margin: 0;
-      font-family: "Playfair Display", Georgia, serif;
-      letter-spacing: .02em;
-      line-height: 1.1;
-      color: var(--white);
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      line-height: 0.95;
     }
 
     p { margin: 0; color: var(--muted); }
     a { color: inherit; text-decoration: none; }
 
-    .wrap { width: min(var(--max), 92vw); margin: 0 auto; }
+    .wrap {
+      width: min(var(--maxw), 92vw);
+      margin: 0 auto;
+    }
 
     .topbar {
       position: sticky;
       top: 0;
-      z-index: 30;
+      z-index: 40;
       backdrop-filter: blur(12px);
-      background: rgba(10, 10, 10, .72);
-      border-bottom: 1px solid rgba(255, 255, 255, .08);
+      background: rgba(244, 244, 243, 0.74);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.6);
     }
+
     .topbar-inner {
       display: flex;
-      justify-content: space-between;
       align-items: center;
+      justify-content: space-between;
       padding: 14px 0;
+      gap: 14px;
     }
-    .logo { font-size: 1.3rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-mark {
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #111;
+      color: #fff;
+      font-weight: 800;
+      font-size: 13px;
+      letter-spacing: 0.08em;
+    }
+
+    .brand-name {
+      font-size: 22px;
+      color: var(--ink);
+      line-height: 1;
+    }
+
+    .nav-links {
+      display: inline-flex;
+      align-items: center;
+      gap: 18px;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 600;
+    }
 
     .btn {
       display: inline-flex;
@@ -86,322 +139,867 @@
       justify-content: center;
       gap: 10px;
       border-radius: 999px;
-      padding: 12px 22px;
+      padding: 12px 20px;
       border: 1px solid var(--line);
-      transition: .25s ease;
-      font-weight: 600;
+      font-size: 14px;
+      font-weight: 700;
+      transition: 0.25s ease;
       cursor: pointer;
     }
+
     .btn-primary {
-      color: var(--black);
-      background: var(--white);
-      border-color: var(--white);
+      border-color: #111;
+      background: #111;
+      color: #fff;
+      box-shadow: 0 16px 30px -20px rgba(0, 0, 0, 0.6);
     }
-    .btn-primary:hover { transform: translateY(-2px); }
-    .btn-ghost:hover { border-color: #7d7d7d; }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      background: #000;
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.92);
+      color: #111;
+    }
+
+    .btn-secondary:hover {
+      border-color: rgba(17, 17, 17, 0.32);
+      background: #fff;
+    }
 
     .hero {
-      padding: 84px 0 56px;
+      padding: 78px 0 54px;
       display: grid;
-      gap: 32px;
-      grid-template-columns: 1.15fr .85fr;
+      grid-template-columns: 1.08fr 0.92fr;
+      gap: 26px;
       align-items: center;
     }
-    .hero h1 { font-size: clamp(2rem, 6vw, 4rem); }
-    .hero p { margin-top: 18px; max-width: 62ch; }
-    .hero-actions { margin-top: 28px; display: flex; flex-wrap: wrap; gap: 12px; }
 
-    .mockup {
+    .eyebrow {
+      margin-bottom: 10px;
+      font-size: 11px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: rgba(17, 17, 17, 0.48);
+      font-weight: 800;
+    }
+
+    .hero h1 {
+      font-size: clamp(2.6rem, 6vw, 5rem);
+      color: #0f0f0f;
+    }
+
+    .hero p {
+      margin-top: 18px;
+      max-width: 58ch;
+      font-size: 16px;
+    }
+
+    .hero-actions {
+      margin-top: 30px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .hero-panel {
       position: relative;
-      border-radius: 24px;
-      border: 1px solid #242424;
-      background: linear-gradient(160deg, #101010, #080808);
-      box-shadow: var(--shadow);
-      padding: 18px;
-      min-height: 420px;
+      border-radius: var(--radius-xl);
+      border: 1px solid rgba(255, 255, 255, 0.72);
+      background:
+        radial-gradient(30rem 12rem at 100% 0%, rgba(0, 0, 0, 0.05) 0%, transparent 70%),
+        var(--card);
+      box-shadow: var(--shadow-lg);
+      padding: 20px;
+      min-height: 440px;
       overflow: hidden;
     }
 
-    .widget-chip {
+    .hero-preview {
+      border-radius: 18px;
+      border: 1px solid rgba(17, 17, 17, 0.1);
+      background: #0b0b0b;
+      color: #f4f4f4;
+      padding: 20px;
+      min-height: 250px;
+    }
+
+    .hero-preview h3 {
+      font-family: 'Manrope', sans-serif;
+      font-size: 18px;
+      line-height: 1.2;
+      margin-bottom: 12px;
+    }
+
+    .mini-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .mini-card {
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.06);
+      padding: 10px;
+    }
+
+    .mini-card b {
+      display: block;
+      font-size: 18px;
+      color: #fff;
+    }
+
+    .mini-card span {
+      display: block;
+      margin-top: 2px;
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.72);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .tryon-chip {
       position: absolute;
       right: 18px;
       bottom: 18px;
-      background: var(--white);
-      color: var(--black);
-      padding: 10px 14px;
+      background: #fff;
+      color: #111;
       border-radius: 999px;
-      font-weight: 700;
-      animation: float 2.8s ease-in-out infinite;
+      border: 1px solid rgba(17, 17, 17, 0.15);
+      padding: 11px 15px;
+      font-weight: 800;
+      box-shadow: var(--shadow-md);
+      animation: floaty 3s ease-in-out infinite;
     }
 
-    @keyframes float {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-8px); }
+    section {
+      padding: 62px 0;
     }
 
-    .glass {
-      border: 1px solid rgba(255, 255, 255, .12);
-      border-radius: var(--radius);
-      background: rgba(255, 255, 255, .03);
+    .section-head {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 20px;
     }
 
-    .metrics {
-      margin-top: 14px;
-      display: grid;
-      gap: 10px;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+    .section-title {
+      font-size: clamp(2rem, 4.4vw, 3.4rem);
+      color: #0f0f0f;
     }
-    .metric {
-      padding: 14px;
-      border-radius: 12px;
-      background: rgba(255, 255, 255, .035);
-    }
-    .metric b { display: block; font-size: 1.25rem; color: var(--white); }
-    .metric span { color: var(--muted); font-size: .86rem; }
 
-    section { padding: 56px 0; }
-    .section-title { font-size: clamp(1.5rem, 3.2vw, 2.4rem); margin-bottom: 10px; }
-    .section-sub { max-width: 68ch; }
+    .section-sub {
+      max-width: 68ch;
+      font-size: 15px;
+    }
 
     .grid-3 {
-      margin-top: 22px;
       display: grid;
-      gap: 16px;
       grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
     }
 
     .card {
+      border-radius: var(--radius-lg);
+      border: 1px solid rgba(255, 255, 255, 0.7);
+      background:
+        radial-gradient(22rem 9rem at 100% 0%, rgba(0, 0, 0, 0.035) 0%, transparent 68%),
+        rgba(255, 255, 255, 0.9);
+      box-shadow: var(--shadow-md);
       padding: 22px;
-      border-radius: var(--radius);
-      border: 1px solid var(--line);
-      background: linear-gradient(180deg, #121212, #0b0b0b);
     }
 
-    .demo {
+    .card h3 {
+      font-family: 'Manrope', sans-serif;
+      font-size: 20px;
+      line-height: 1.2;
+      margin-bottom: 10px;
+    }
+
+    .demo-wrap {
       display: grid;
-      gap: 18px;
-      grid-template-columns: 1fr 1fr;
-      margin-top: 22px;
+      grid-template-columns: 0.92fr 1.08fr;
+      gap: 14px;
     }
 
-    .tabs { display: flex; gap: 10px; margin-bottom: 14px; }
-    .tab {
-      background: #121212;
-      border: 1px solid var(--line);
-      color: var(--muted);
-      border-radius: 999px;
-      padding: 8px 14px;
-      cursor: pointer;
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
     }
-    .tab.active { color: var(--black); background: var(--white); border-color: var(--white); }
+
+    .tab {
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      padding: 9px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--muted);
+      cursor: pointer;
+      background: #fff;
+      transition: .2s ease;
+    }
+
+    .tab.active {
+      background: #111;
+      border-color: #111;
+      color: #fff;
+    }
 
     .demo-stage {
-      min-height: 260px;
-      border: 1px solid var(--line);
       border-radius: 16px;
-      background: #090909;
+      border: 1px solid rgba(17, 17, 17, 0.1);
+      background: #0c0c0c;
+      min-height: 260px;
+      color: #efefef;
       display: flex;
       align-items: center;
       justify-content: center;
       text-align: center;
-      padding: 18px;
-    }
-
-    .steps { display: grid; gap: 12px; margin-top: 20px; }
-    .step {
       padding: 16px;
-      border-left: 3px solid var(--white);
-      background: #0f0f0f;
-      border-radius: 10px;
     }
 
-    .pricing {
-      margin-top: 22px;
+    .demo-stage h4 {
+      margin: 0 0 8px;
+      font-family: 'Manrope', sans-serif;
+      font-size: 20px;
+      color: #fff;
+    }
+
+    .steps {
       display: grid;
-      gap: 14px;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 16px;
     }
-    .price {
-      padding: 24px;
-      border-radius: 16px;
-      border: 1px solid var(--line);
-      background: #0b0b0b;
-    }
-    .price.popular { border-color: #fff; box-shadow: 0 0 0 1px #fff inset; }
-    .price h3 { margin-bottom: 8px; }
-    .amount { font-size: 2rem; color: var(--white); font-family: "Playfair Display", serif; }
 
-    .faq { margin-top: 18px; display: grid; gap: 12px; }
-    details {
-      border: 1px solid var(--line);
-      background: #0d0d0d;
+    .step {
+      padding: 15px;
       border-radius: 12px;
-      padding: 12px 14px;
+      border: 1px solid rgba(17, 17, 17, 0.1);
+      background: rgba(255, 255, 255, 0.9);
+      position: relative;
+      padding-left: 44px;
     }
-    summary { cursor: pointer; color: var(--white); font-weight: 600; }
+
+    .step b {
+      position: absolute;
+      left: 14px;
+      top: 15px;
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      background: #111;
+      color: #fff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
+
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    .price-card {
+      border-radius: 18px;
+      border: 1px solid rgba(17, 17, 17, 0.12);
+      background: rgba(255, 255, 255, 0.92);
+      padding: 22px;
+      box-shadow: var(--shadow-md);
+    }
+
+    .price-card.featured {
+      background: #111;
+      color: #fff;
+      border-color: #111;
+      transform: translateY(-4px);
+    }
+
+    .price-card .plan {
+      font-size: 12px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-weight: 800;
+      color: rgba(17, 17, 17, 0.56);
+    }
+
+    .price-card.featured .plan {
+      color: rgba(255, 255, 255, 0.68);
+    }
+
+    .price {
+      margin: 10px 0 12px;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 54px;
+      line-height: 0.9;
+      color: #111;
+    }
+
+    .price small {
+      font-size: 18px;
+      font-family: 'Manrope', sans-serif;
+      color: rgba(17, 17, 17, 0.58);
+    }
+
+    .price-card.featured .price,
+    .price-card.featured .price small,
+    .price-card.featured p,
+    .price-card.featured li {
+      color: #fff;
+    }
+
+    .price-card ul {
+      margin: 14px 0 0;
+      padding-left: 18px;
+      color: var(--muted);
+      display: grid;
+      gap: 6px;
+      font-size: 14px;
+    }
+
+    .compare {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: var(--shadow-md);
+      border: 1px solid rgba(17, 17, 17, 0.1);
+    }
+
+    .compare th,
+    .compare td {
+      padding: 11px 14px;
+      text-align: left;
+      border-bottom: 1px solid rgba(17, 17, 17, 0.08);
+      background: rgba(255, 255, 255, 0.9);
+    }
+
+    .compare th {
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(17, 17, 17, 0.54);
+    }
+
+    .proof-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .quote {
+      border-radius: 16px;
+      border: 1px solid rgba(17, 17, 17, 0.1);
+      background: rgba(255, 255, 255, 0.9);
+      padding: 18px;
+      box-shadow: var(--shadow-md);
+    }
+
+    .quote p {
+      color: #303030;
+      font-size: 14px;
+    }
+
+    .quote small {
+      display: block;
+      margin-top: 10px;
+      color: #6f6f6f;
+      font-size: 12px;
+    }
+
+    .numbers {
+      margin-top: 14px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .num {
+      border-radius: 16px;
+      border: 1px solid rgba(17, 17, 17, 0.1);
+      background: #111;
+      color: #fff;
+      padding: 18px;
+      box-shadow: var(--shadow-md);
+    }
+
+    .num b {
+      display: block;
+      font-size: 34px;
+      line-height: 0.95;
+      font-family: 'Cormorant Garamond', serif;
+    }
+
+    .num span {
+      display: block;
+      margin-top: 8px;
+      color: rgba(255, 255, 255, 0.72);
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .faq {
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    details {
+      border-radius: 12px;
+      border: 1px solid rgba(17, 17, 17, 0.12);
+      background: rgba(255, 255, 255, 0.9);
+      padding: 12px 14px;
+      box-shadow: var(--shadow-md);
+    }
+
+    summary {
+      cursor: pointer;
+      font-weight: 700;
+      color: #111;
+    }
+
+    .roadmap {
+      margin-top: 16px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .roadmap .card h3 {
+      margin-bottom: 8px;
+      font-size: 17px;
+    }
 
     .final-cta {
-      margin: 56px 0 72px;
-      border: 1px solid var(--line);
+      margin: 60px 0 70px;
       border-radius: 24px;
-      padding: 34px;
-      background: linear-gradient(160deg, #141414, #090909);
+      border: 1px solid rgba(17, 17, 17, 0.12);
+      background:
+        radial-gradient(25rem 11rem at 100% 0%, rgba(0, 0, 0, 0.06), transparent 72%),
+        rgba(255, 255, 255, 0.94);
+      box-shadow: var(--shadow-lg);
+      padding: 36px 20px;
       text-align: center;
     }
 
-    .reveal { opacity: 0; transform: translateY(18px); transition: .45s ease; }
-    .reveal.show { opacity: 1; transform: translateY(0); }
+    .final-cta h2 {
+      font-size: clamp(2rem, 4.2vw, 3.2rem);
+      color: #111;
+    }
 
-    @media (max-width: 980px) {
+    .final-cta p {
+      margin: 10px auto 0;
+      max-width: 68ch;
+    }
+
+    .final-actions {
+      margin-top: 22px;
+      display: inline-flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    footer {
+      padding: 0 0 26px;
+      text-align: center;
+      color: rgba(17, 17, 17, 0.54);
+      font-size: 13px;
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(18px);
+      transition: 0.45s ease;
+    }
+
+    .reveal.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @keyframes floaty {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    @media (max-width: 1120px) {
       .hero,
-      .demo,
-      .pricing,
-      .grid-3 { grid-template-columns: 1fr; }
-      .hero { padding-top: 56px; }
-      .metrics { grid-template-columns: 1fr; }
-      .mockup { min-height: 340px; }
+      .demo-wrap,
+      .pricing-grid,
+      .grid-3,
+      .proof-grid,
+      .numbers,
+      .roadmap {
+        grid-template-columns: 1fr;
+      }
+
+      .hero {
+        padding-top: 54px;
+      }
+
+      .mini-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .section-head {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .nav-links { display: none; }
+      .brand-name { font-size: 18px; }
+      .btn { padding: 11px 16px; font-size: 13px; }
+      .hero-panel { min-height: 360px; }
     }
   </style>
 </head>
 <body>
   <header class="topbar">
     <div class="wrap topbar-inner">
-      <div class="logo">FashionFit</div>
-      <a class="btn btn-primary" href="#cta">Umow demo</a>
+      <a class="brand" href="#top">
+        <span class="brand-mark">FF</span>
+        <span class="brand-name">FashionFit</span>
+      </a>
+      <nav class="nav-links">
+        <a href="#features">Korzyści</a>
+        <a href="#demo">Demo</a>
+        <a href="#pricing">Cennik</a>
+        <a href="#faq">FAQ</a>
+      </nav>
+      <a class="btn btn-primary" href="/register">Zacznij trial</a>
     </div>
   </header>
 
-  <main class="wrap">
+  <main class="wrap" id="top">
     <section class="hero reveal">
       <div>
-        <h1>Klienci przymierzaja ubrania zanim klikna „Kup teraz”.</h1>
-        <p>FashionFit to panel + widget dla WooCommerce. Wlacz wirtualna przymierzalnie, zwieksz konwersje i mierz realny przychod z try-on, a nie tylko liczbe klikniec.</p>
+        <p class="eyebrow">WooCommerce Virtual Try-On</p>
+        <h1>Twoi klienci przymierzają ubrania zanim kupią.</h1>
+        <p>
+          FashionFit to elegancka przymierzalnia AI dla e-commerce mody.
+          Instalujesz raz i od razu widzisz: ile osób kupiło po przymiarce,
+          jaki produkt konwertuje najlepiej i jaki przychód to generuje.
+        </p>
         <div class="hero-actions">
-          <a class="btn btn-primary" href="#cta">Zacznij 14 dni za darmo</a>
-          <a class="btn btn-ghost" href="./widget-demo.html">Zobacz demo „Przymierz”</a>
+          <a class="btn btn-primary" href="/register">Zacznij 14 dni za darmo</a>
+          <a class="btn btn-secondary" href="./widget-demo.html">Zobacz opcję „Przymierz”</a>
         </div>
       </div>
-      <div class="mockup glass">
-        <div class="card">
-          <h3>Panel klienta</h3>
-          <p>Przymiarki, zakupy po przymiarce, przychod, top produkty i porownanie sklepow.</p>
-          <div class="metrics">
-            <div class="metric"><b>1 284</b><span>Przymiarki / 30 dni</span></div>
-            <div class="metric"><b>216</b><span>Zakupy po try-on</span></div>
-            <div class="metric"><b>42 980 zl</b><span>Przychod atrybuowany</span></div>
-          </div>
-        </div>
-        <div class="widget-chip">Przymierz wirtualnie</div>
-      </div>
-    </section>
 
-    <section class="reveal">
-      <h2 class="section-title">Co zyskuje sklep?</h2>
-      <p class="section-sub">Mniej zwrotow, wiecej transakcji i lepszy UX. Wszystko mierzone w jednym panelu B2B.</p>
-      <div class="grid-3">
-        <article class="card"><h3>Mniej zwrotow</h3><p>Klient widzi stylizacje przed zakupem, wiec decyzja jest bardziej swiadoma.</p></article>
-        <article class="card"><h3>Wyzsza konwersja</h3><p>„Przymierz” dziala na karcie produktu i domyka niezdecydowanych.</p></article>
-        <article class="card"><h3>Twarde dane</h3><p>Pokazujesz: ile osob kupilo po przymiarce, jaka wartosc koszyka i jaki przychod.</p></article>
-      </div>
-    </section>
-
-    <section class="reveal">
-      <h2 class="section-title">Jak wyglada opcja „Przymierz wirtualnie”?</h2>
-      <p class="section-sub">Tu pokazujesz klientom realne flow: klik, wybor trybu, wynik i CTA „Dodaj do koszyka”.</p>
-      <div class="demo">
-        <div class="card">
-          <div class="tabs">
-            <button class="tab active" data-tab="photo">Tryb zdjecia</button>
-            <button class="tab" data-tab="live">Live kamera</button>
-          </div>
-          <div class="demo-stage" id="demo-stage">
-            <div>
-              <h3>Photo AI</h3>
-              <p>Klient wrzuca zdjecie, po kilku sekundach dostaje gotowy podglad stylizacji.</p>
+      <div class="hero-panel">
+        <div class="hero-preview">
+          <h3>Panel klienta FashionFit</h3>
+          <p>Przymiarki, zakupy po try-on i przychód atrybuowany w jednym widoku.</p>
+          <div class="mini-grid">
+            <div class="mini-card">
+              <b>1 284</b>
+              <span>Przymiarki / 30 dni</span>
+            </div>
+            <div class="mini-card">
+              <b>216</b>
+              <span>Zakupy po try-on</span>
+            </div>
+            <div class="mini-card">
+              <b>42 980 zł</b>
+              <span>Przychód</span>
             </div>
           </div>
         </div>
-        <div class="card">
-          <h3>Sprawdz pelne demo</h3>
-          <p>Przygotowalem osobna strone z przyciskiem i modalem, zeby zobaczyc to „na zywo”.</p>
-          <p style="margin-top:12px;">Kliknij ponizej i testuj jak klient:</p>
-          <p style="margin-top:16px;"><a class="btn btn-primary" href="./widget-demo.html">Otworz widget-demo.html</a></p>
+        <div class="tryon-chip">Przymierz wirtualnie ✨</div>
+      </div>
+    </section>
+
+    <section id="features" class="reveal">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">Dlaczego to działa?</h2>
+          <p class="section-sub">Wirtualna przymierzalnia zmniejsza niepewność klienta. A mniejsza niepewność to wyższa konwersja i mniej zwrotów.</p>
         </div>
       </div>
-    </section>
-
-    <section class="reveal">
-      <h2 class="section-title">3 kroki wdrozenia</h2>
-      <div class="steps">
-        <div class="step"><strong>1.</strong> Instalujesz wtyczke FashionFit w WooCommerce.</div>
-        <div class="step"><strong>2.</strong> Wklejasz API URL i API Key, klikasz „Polacz ze sklepem”.</div>
-        <div class="step"><strong>3.</strong> Synchronizujesz produkty i uruchamiasz „Przymierz wirtualnie”.</div>
-      </div>
-    </section>
-
-    <section class="reveal">
-      <h2 class="section-title">Cennik</h2>
-      <div class="pricing">
-        <article class="price">
-          <h3>Starter</h3>
-          <p class="amount">199 zl</p>
-          <p>/ mies.</p>
+      <div class="grid-3">
+        <article class="card">
+          <h3>Mniej zwrotów</h3>
+          <p>Klient widzi efekt przed zakupem, więc decyzje są trafniejsze.</p>
         </article>
-        <article class="price popular">
-          <h3>Growth</h3>
-          <p class="amount">499 zl</p>
-          <p>/ mies.</p>
+        <article class="card">
+          <h3>Więcej transakcji</h3>
+          <p>Opcja „Przymierz” aktywuje klientów, którzy wcześniej tylko oglądali produkt.</p>
         </article>
-        <article class="price">
-          <h3>Scale</h3>
-          <p class="amount">1299 zl</p>
-          <p>/ mies.</p>
+        <article class="card">
+          <h3>Realne statystyki</h3>
+          <p>Raportujesz zakupy po przymiarce, a nie wyłącznie kliknięcia.</p>
         </article>
       </div>
     </section>
 
+    <section id="demo" class="reveal">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">Jak wygląda „Przymierz wirtualnie”?</h2>
+          <p class="section-sub">Klient wybiera tryb zdjęcia lub kamery, dostaje wynik i przechodzi do koszyka bez opuszczania produktu.</p>
+        </div>
+      </div>
+
+      <div class="demo-wrap">
+        <article class="card">
+          <div class="tabs">
+            <button class="tab active" data-tab="photo">Tryb zdjęcia</button>
+            <button class="tab" data-tab="live">Live kamerka</button>
+          </div>
+          <div class="demo-stage" id="demo-stage">
+            <div>
+              <h4>Photo AI</h4>
+              <p>Użytkownik przesyła zdjęcie i po kilku sekundach widzi gotową stylizację.</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="card">
+          <h3>Instalacja w 3 krokach</h3>
+          <div class="steps">
+            <div class="step"><b>1</b>Instalujesz wtyczkę FashionFit w WordPress.</div>
+            <div class="step"><b>2</b>Wklejasz API Key i łączysz sklep.</div>
+            <div class="step"><b>3</b>Synchronizujesz produkty i gotowe.</div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="pricing" class="reveal">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">Cennik</h2>
+          <p class="section-sub">Skalowanie od mniejszych butików po sieci sklepów fashion.</p>
+        </div>
+      </div>
+
+      <div class="pricing-grid">
+        <article class="price-card">
+          <p class="plan">Starter</p>
+          <p class="price">199 <small>zł / mies.</small></p>
+          <p>Dla jednego sklepu, szybki start.</p>
+          <ul>
+            <li>1 sklep WooCommerce</li>
+            <li>Photo AI</li>
+            <li>Podstawowa analityka</li>
+          </ul>
+        </article>
+
+        <article class="price-card featured">
+          <p class="plan">Growth — najpopularniejszy</p>
+          <p class="price">499 <small>zł / mies.</small></p>
+          <p>Najlepszy balans ceny i skali.</p>
+          <ul>
+            <li>Do 5 sklepów</li>
+            <li>Photo AI + Live AR</li>
+            <li>Analityka konwersji i zakupów</li>
+          </ul>
+        </article>
+
+        <article class="price-card">
+          <p class="plan">Scale</p>
+          <p class="price">1299 <small>zł / mies.</small></p>
+          <p>Dla marek o większym ruchu i wielu domenach.</p>
+          <ul>
+            <li>Sklepy bez limitu</li>
+            <li>Priorytetowe wsparcie</li>
+            <li>Raporty premium</li>
+          </ul>
+        </article>
+      </div>
+
+      <table class="compare" aria-label="Tabela porównawcza planów">
+        <thead>
+          <tr>
+            <th>Funkcja</th>
+            <th>Starter</th>
+            <th>Growth</th>
+            <th>Scale</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Photo AI</td>
+            <td>Tak</td>
+            <td>Tak</td>
+            <td>Tak</td>
+          </tr>
+          <tr>
+            <td>Live AR</td>
+            <td>Nie</td>
+            <td>Tak</td>
+            <td>Tak</td>
+          </tr>
+          <tr>
+            <td>Raport zakupów po try-on</td>
+            <td>Podstawowy</td>
+            <td>Rozszerzony</td>
+            <td>Zaawansowany</td>
+          </tr>
+          <tr>
+            <td>Wsparcie</td>
+            <td>Standard</td>
+            <td>Priorytet</td>
+            <td>VIP</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
     <section class="reveal">
-      <h2 class="section-title">FAQ</h2>
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">Social proof</h2>
+          <p class="section-sub">Pierwsze sklepy beta już używają FashionFit i raportują lepszą decyzję zakupową klientów.</p>
+        </div>
+      </div>
+
+      <div class="proof-grid">
+        <article class="quote">
+          <p>"Klienci dużo częściej pytają o dostępność rozmiaru po użyciu przymierzalni. Widać większą intencję zakupu."</p>
+          <small>Butik online (beta)</small>
+        </article>
+        <article class="quote">
+          <p>"Największa wartość to raport zakupów po try-on. Wreszcie widzimy wpływ funkcji na sprzedaż."</p>
+          <small>Sklep fashion premium (beta)</small>
+        </article>
+        <article class="quote">
+          <p>"Integracja była prosta, a panel od razu pokazał które produkty konwertują po przymiarce."</p>
+          <small>Marka D2C (beta)</small>
+        </article>
+      </div>
+
+      <div class="numbers">
+        <article class="num"><b>37+</b><span>Sklepów beta</span></article>
+        <article class="num"><b>48k+</b><span>Przymiarek</span></article>
+        <article class="num"><b>-21%</b><span>Średnio zwrotów</span></article>
+      </div>
+    </section>
+
+    <section id="faq" class="reveal">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">FAQ</h2>
+          <p class="section-sub">Najczęstsze pytania przed wdrożeniem.</p>
+        </div>
+      </div>
+
       <div class="faq">
-        <details><summary>Czy to dziala z WooCommerce?</summary><p>Tak. To natywna integracja pod WooCommerce, a widget dziala na stronach produktow.</p></details>
-        <details><summary>Czy moge testowac na prawdziwej domenie?</summary><p>Tak, to rekomendowany scenariusz. Potrzebujesz tylko publicznego backendu API.</p></details>
-        <details><summary>Czy klient musi miec kamerke?</summary><p>Nie. Moze skorzystac z trybu zdjecia (Photo AI).</p></details>
+        <details>
+          <summary>Czy działa z moim WooCommerce?</summary>
+          <p>Tak, wtyczka jest przygotowana pod WooCommerce i łączy się z panelem przez API Key oraz Shop ID.</p>
+        </details>
+        <details>
+          <summary>Ile trwa instalacja?</summary>
+          <p>Zwykle od 5 do 15 minut: instalacja wtyczki, połączenie sklepu i synchronizacja produktów.</p>
+        </details>
+        <details>
+          <summary>Czy zdjęcia klientów są bezpieczne?</summary>
+          <p>Tak, przetwarzanie odbywa się kontrolowanie, a politykę retencji możesz ustawić po stronie backendu.</p>
+        </details>
+        <details>
+          <summary>Co jeśli klient nie chce udostępnić kamery?</summary>
+          <p>Może skorzystać z trybu zdjęcia, który działa bez kamery.</p>
+        </details>
+        <details>
+          <summary>Czy można anulować subskrypcję?</summary>
+          <p>Tak, plan możesz zmienić lub anulować w panelu płatności.</p>
+        </details>
+        <details>
+          <summary>Czy mam dane ile osób kupiło po przymiarce?</summary>
+          <p>Tak, panel zawiera metryki: zakupy po try-on, purchase rate, przychód i top produkty konwertujące.</p>
+        </details>
+      </div>
+    </section>
+
+    <section class="reveal">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">Co jeszcze można dodać?</h2>
+          <p class="section-sub">Rozszerzenia, które warto wdrożyć jako kolejny etap produktu.</p>
+        </div>
+      </div>
+
+      <div class="roadmap">
+        <article class="card">
+          <h3>A/B testy widgetu</h3>
+          <p>Testowanie różnych tekstów CTA, pozycji przycisku i kolorystyki pod wzrost konwersji.</p>
+        </article>
+        <article class="card">
+          <h3>Alerty KPI na e-mail</h3>
+          <p>Automatyczne raporty: dzienny przychód po try-on, spadki konwersji, top produkty tygodnia.</p>
+        </article>
+        <article class="card">
+          <h3>Segmentacja klientów</h3>
+          <p>Podział wyników na mobile/desktop, nowe/powracające osoby i konkretne kolekcje.</p>
+        </article>
       </div>
     </section>
 
     <section class="final-cta reveal" id="cta">
-      <h2>Zacznij za darmo. Bez ryzyka i bez programisty.</h2>
-      <p style="margin-top:10px;">14 dni testow, szybkie wdrozenie i panel z realnymi KPI sprzedażowymi.</p>
-      <p style="margin-top:20px;"><a class="btn btn-primary" href="/register">Zaloz konto</a></p>
+      <h2>Zacznij za darmo i pokaż klientom nowy standard zakupów fashion.</h2>
+      <p>14 dni testów, bez ryzyka. Połącz sklep, uruchom „Przymierz wirtualnie” i mierz realny wpływ na sprzedaż.</p>
+      <div class="final-actions">
+        <a class="btn btn-primary" href="/register">Załóż konto</a>
+        <a class="btn btn-secondary" href="/login">Zaloguj się do panelu</a>
+      </div>
     </section>
   </main>
+
+  <footer>
+    © <span id="year"></span> FashionFit. Wirtualna przymierzalnia dla nowoczesnych sklepów.
+  </footer>
 
   <script>
     const tabs = document.querySelectorAll('.tab');
     const stage = document.getElementById('demo-stage');
 
+    const DEMO = {
+      photo: {
+        title: 'Photo AI',
+        text: 'Klient dodaje zdjęcie, wybiera rozmiar i dostaje wynik do porównania przed zakupem.'
+      },
+      live: {
+        title: 'Live Kamerka',
+        text: 'Tryb live pokazuje overlay ubrania w czasie rzeczywistym i pozwala zapisać finalny podgląd.'
+      }
+    };
+
     tabs.forEach((btn) => {
       btn.addEventListener('click', () => {
-        tabs.forEach((b) => b.classList.remove('active'));
+        tabs.forEach((el) => el.classList.remove('active'));
         btn.classList.add('active');
-        if (btn.dataset.tab === 'photo') {
-          stage.innerHTML = '<div><h3>Photo AI</h3><p>Klient wrzuca zdjecie, po kilku sekundach dostaje gotowy podglad stylizacji.</p></div>';
-        } else {
-          stage.innerHTML = '<div><h3>Live AR</h3><p>Kamerka + nakladka ubrania na zywo, z mozliwoscia zrobienia zrzutu i zakupu.</p></div>';
-        }
+        const mode = btn.getAttribute('data-tab');
+        const d = DEMO[mode] || DEMO.photo;
+        stage.innerHTML = `<div><h4>${d.title}</h4><p>${d.text}</p></div>`;
       });
     });
 
-    const io = new IntersectionObserver((entries) => {
+    const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
           entry.target.classList.add('show');
-          io.unobserve(entry.target);
+          observer.unobserve(entry.target);
         }
       });
-    }, { threshold: 0.16 });
+    }, { threshold: 0.14 });
 
-    document.querySelectorAll('.reveal').forEach((node) => io.observe(node));
+    document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
+    document.getElementById('year').textContent = new Date().getFullYear();
   </script>
 </body>
 </html>
