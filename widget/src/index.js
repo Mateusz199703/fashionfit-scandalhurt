@@ -47,8 +47,18 @@ async function init() {
   }
 
   if (!product) {
-    console.warn('[FashionFit] Nie znaleziono zsynchronizowanego produktu dla id:', externalId);
-    return;
+    const page = getPageProductInfo();
+    product = {
+      id: externalId || `fallback:${location.pathname}`,
+      external_id: externalId || null,
+      name: page.name || 'Produkt',
+      garment_image_url: page.image || null,
+      product_url: location.href,
+      category: 'tops',
+      variants: null,
+      _fallback: true,
+    };
+    console.warn('[FashionFit] Nie znaleziono zsynchronizowanego produktu dla id, uruchamiam fallback:', externalId);
   }
 
   createWidget({ config, api, product, externalId }).mount();
