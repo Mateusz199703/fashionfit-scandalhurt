@@ -19,6 +19,12 @@ const { ApiError } = require('../middleware/errorHandler');
 const router = express.Router();
 const useMockAuth = isMockBackendEnabled();
 
+function isTableMissingError(err, tableName) {
+  if (!err) return false;
+  if (err.code === '42P01') return true;
+  return String(err.message || '').toLowerCase().includes(String(tableName || '').toLowerCase());
+}
+
 function signToken(client) {
   return jwt.sign({ sub: client.id, email: client.email }, config.jwtSecret, {
     expiresIn: config.jwtExpiresIn,
@@ -138,18 +144,25 @@ router.post('/register', authLimiter, async (req, res) => {
     .single();
   if (error) throw error;
 
-  const generated = await generateApiKey(data.id, {
-    name: 'Default key',
-    scopes: ['widget', 'sync'],
-  });
+  let issuedApiKey = data.api_key;
+  try {
+    const generated = await generateApiKey(data.id, {
+      name: 'Default key',
+      scopes: ['widget', 'sync'],
+    });
 
-  // Transitional compatibility for existing plugin/dashboard flows that still
-  // read clients.api_key directly. New verification uses hashed api_keys table.
-  const { error: keyUpdateError } = await supabase
-    .from('clients')
-    .update({ api_key: generated.rawKey })
-    .eq('id', data.id);
-  if (keyUpdateError) throw keyUpdateError;
+    // Transitional compatibility for existing plugin/dashboard flows that still
+    // read clients.api_key directly. New verification uses hashed api_keys table.
+    const { error: keyUpdateError } = await supabase
+      .from('clients')
+      .update({ api_key: generated.rawKey })
+      .eq('id', data.id);
+    if (keyUpdateError) throw keyUpdateError;
+    issuedApiKey = generated.rawKey;
+  } catch (err) {
+    if (!isTableMissingError(err, 'api_keys')) throw err;
+    console.warn('api_keys table missing, using legacy clients.api_key fallback');
+  }
 
   let checkoutUrl = null;
   if (selectedPlan && stripeService.isStripeSecretConfigured()) {
@@ -179,7 +192,7 @@ router.post('/register', authLimiter, async (req, res) => {
 
   res.status(201).json({
     token: signToken(data),
-    apiKey: generated.rawKey,
+    apiKey: issuedApiKey,
     checkoutUrl,
     client: {
       id: data.id,
