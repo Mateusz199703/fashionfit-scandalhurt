@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { API_URL, TOKEN_KEY } from '../config';
+import { API_URL, REFRESH_TOKEN_KEY, TOKEN_KEY } from '../config';
 
 export const api = axios.create({ baseURL: API_URL });
 
@@ -10,6 +10,15 @@ export function getToken(): string | null {
 export function setToken(token: string | null): void {
   if (token) localStorage.setItem(TOKEN_KEY, token);
   else localStorage.removeItem(TOKEN_KEY);
+}
+
+export function getRefreshToken(): string | null {
+  return localStorage.getItem(REFRESH_TOKEN_KEY);
+}
+
+export function setRefreshToken(token: string | null): void {
+  if (token) localStorage.setItem(REFRESH_TOKEN_KEY, token);
+  else localStorage.removeItem(REFRESH_TOKEN_KEY);
 }
 
 // Attach the bearer token to every request.
@@ -33,6 +42,7 @@ api.interceptors.response.use(
   (error) => {
     if (error?.response?.status === 401) {
       setToken(null);
+      setRefreshToken(null);
       if (window.location.pathname !== '/login') {
         window.location.href = '/login';
       }

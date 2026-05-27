@@ -1,5 +1,11 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { api, getToken, setToken as persistToken } from '../api/client';
+import {
+  api,
+  getRefreshToken,
+  getToken,
+  setRefreshToken as persistRefreshToken,
+  setToken as persistToken,
+} from '../api/client';
 import { Client } from '../types';
 
 interface AuthContextValue {
@@ -57,8 +63,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const delay = Math.max(0, expiry - Date.now() - REFRESH_LEAD_MS);
       refreshTimer.current = setTimeout(async () => {
         try {
-          const { data } = await api.post<{ token: string }>('/api/auth/refresh');
+          const refreshToken = getRefreshToken();
+          if (!refreshToken) return;
+          const { data } = await api.post<{ token: string; refreshToken?: string }>('/api/auth/refresh', { refreshToken });
           persistToken(data.token);
+          if (data.refreshToken) persistRefreshToken(data.refreshToken);
           scheduleRefresh(data.token);
         } catch {
           /* interceptor handles 401 */
@@ -69,8 +78,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const applyToken = useCallback(
-    (token: string) => {
+    (token: string, refreshToken?: string | null) => {
       persistToken(token);
+      if (refreshToken !== undefined) persistRefreshToken(refreshToken);
       scheduleRefresh(token);
     },
     [scheduleRefresh],
@@ -78,14 +88,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = useCallback(() => {
     clearRefreshTimer();
+    const refreshToken = getRefreshToken();
+    if (refreshToken) {
+      api.post('/api/auth/logout', { refreshToken }).catch(() => {});
+    }
     persistToken(null);
+    persistRefreshToken(null);
     setClient(null);
   }, [clearRefreshTimer]);
 
   const login = useCallback(
     async (email: string, password: string) => {
-      const { data } = await api.post<{ token: string }>('/api/auth/login', { email, password });
-      applyToken(data.token);
+      const { data } = await api.post<{ token: string; refreshToken?: string }>('/api/auth/login', { email, password });
+      applyToken(data.token, data.refreshToken || null);
       await fetchMe();
     },
     [applyToken, fetchMe],
@@ -100,8 +115,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       company_nip?: string;
       plan?: 'STARTER' | 'GROWTH' | 'SCALE';
     }) => {
-      const { data } = await api.post<{ token: string; checkoutUrl?: string | null }>('/api/auth/register', form);
-      applyToken(data.token);
+      const { data } = await api.post<{ token: string; refreshToken?: string; checkoutUrl?: string | null }>('/api/auth/register', form);
+      applyToken(data.token, data.refreshToken || null);
       await fetchMe();
       return { checkoutUrl: data.checkoutUrl || null };
     },
@@ -110,7 +125,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const token = getToken();
+    const refreshToken = getRefreshToken();
     if (!token) {
+      setLoading(false);
+      return;
+    }
+    if (!refreshToken) {
+      // Transitional compatibility with older sessions that only had access token.
+      persistToken(null);
       setLoading(false);
       return;
     }

@@ -1,6 +1,7 @@
 export const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
 export const TOKEN_KEY = 'fashionfit_token';
+export const REFRESH_TOKEN_KEY = 'fashionfit_refresh_token';
 
 export const PLANS = [
   { id: 'STARTER', name: 'Starter', price: 49, limit: 100, features: ['1 sklep', '100 przymiarek / mies.', 'Photo AI'] },

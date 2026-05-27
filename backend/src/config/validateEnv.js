@@ -44,6 +44,8 @@ function validateEnv(config) {
   }
 
   assertMinLength('JWT_SECRET', process.env.JWT_SECRET, isProduction ? 32 : 12, isProduction);
+  const effectiveRefreshSecret = process.env.REFRESH_TOKEN_SECRET || process.env.JWT_SECRET;
+  assertMinLength('REFRESH_TOKEN_SECRET', effectiveRefreshSecret, isProduction ? 32 : 12, isProduction);
 
   if (process.env.API_PUBLIC_URL && !isValidUrl(process.env.API_PUBLIC_URL)) {
     throw new Error('Environment variable API_PUBLIC_URL must be a valid URL');

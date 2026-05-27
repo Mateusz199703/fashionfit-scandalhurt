@@ -20,7 +20,9 @@ const config = {
   apiPublicUrl: process.env.API_PUBLIC_URL || '',
 
   jwtSecret: process.env.JWT_SECRET || 'dev-insecure-secret-change-me',
-  jwtExpiresIn: '7d',
+  jwtExpiresIn: process.env.JWT_EXPIRES_IN || '15m',
+  refreshTokenSecret: process.env.REFRESH_TOKEN_SECRET || process.env.JWT_SECRET || 'dev-refresh-secret-change-me',
+  refreshTokenExpiresIn: process.env.REFRESH_TOKEN_EXPIRES_IN || '7d',
 
   supabase: {
     url: process.env.SUPABASE_URL || 'http://localhost:54321',
