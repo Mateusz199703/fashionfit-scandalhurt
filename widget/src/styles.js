@@ -1,4 +1,20 @@
 const CSS = `
+.ff-overlay, .ff-overlay * {
+  box-sizing: border-box !important;
+}
+.ff-overlay button,
+.ff-overlay input,
+.ff-overlay select,
+.ff-overlay textarea,
+.ff-overlay span,
+.ff-overlay b,
+.ff-overlay div,
+.ff-overlay h2,
+.ff-overlay label {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif !important;
+  letter-spacing: normal !important;
+}
+
 .ff-fab {
   position: fixed; bottom: 24px; right: 24px; z-index: 99999;
   display: inline-flex; align-items: center; gap: 8px;
@@ -43,15 +59,38 @@ const CSS = `
 
 .ff-modes { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 18px; }
 .ff-mode {
-  position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px;
+  position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  min-height: 104px;
   padding: 20px 12px; border: 1.5px solid #e5e7eb; border-radius: 14px; cursor: pointer;
   background: #fff; color: #111827; font-weight: 600; text-align: center;
+  line-height: 1.2;
 }
 .ff-mode:hover { border-color: var(--ff-primary); }
-.ff-mode .ff-emoji { font-size: 26px; }
+.ff-mode .ff-emoji {
+  display: block !important;
+  position: static !important;
+  margin: 0 !important;
+  transform: none !important;
+  float: none !important;
+  line-height: 1 !important;
+  font-size: 26px !important;
+}
+.ff-mode .ff-mode-label {
+  display: block !important;
+  position: static !important;
+  margin: 0 !important;
+  transform: none !important;
+  float: none !important;
+  font-size: 15px !important;
+  line-height: 1.2 !important;
+  font-weight: 700 !important;
+  color: inherit !important;
+  text-transform: none !important;
+}
 .ff-badge {
   position: absolute; top: -8px; right: -8px; padding: 2px 8px; border-radius: 999px;
   background: var(--ff-primary); color: #fff; font-size: 10px; font-weight: 700;
+  z-index: 2;
 }
 
 .ff-sizes { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0 18px; }
