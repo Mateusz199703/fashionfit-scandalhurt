@@ -62,6 +62,7 @@ cp .env.example .env
 | `JWT_SECRET`            | Secret used to sign JWT access tokens.        |
 | `PORT`                  | Backend port (default `3001`).                |
 | `FRONTEND_URL`          | Dashboard origin (default `http://localhost:3000`). |
+| `API_PUBLIC_URL`        | Public backend URL used in widget snippets (e.g. `https://...onrender.com`). |
 
 ### 3. Run the backend
 

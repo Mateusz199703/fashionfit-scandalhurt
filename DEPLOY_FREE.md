@@ -1,22 +1,33 @@
-# FashionFit — darmowy deploy backendu (bez placenia na start)
+# FashionFit — darmowy deploy (tymczasowe adresy onrender.com)
 
-## Opcja A (najprostsza): Render Free Web Service
+## Opcja A (najprostsza): Render Blueprint (backend + dashboard)
 
 1. Wejdz na https://render.com i zaloguj sie.
 2. New + -> **Blueprint** i wybierz repozytorium.
 3. Render automatycznie wykryje plik `render.yaml` z tego repo.
-4. Potwierdz utworzenie serwisu `fashionfit-backend` (plan `free`).
-5. Dodaj zmienne srodowiskowe:
+4. Potwierdz utworzenie 2 serwisow:
+   - `fashionfit-backend` (Web Service)
+   - `fashionfit-dashboard` (Static Site)
+5. Ustaw zmienne srodowiskowe backendu:
    - `SUPABASE_URL`
    - `SUPABASE_ANON_KEY`
    - `SUPABASE_SERVICE_KEY`
    - `JWT_SECRET`
-   - `FRONTEND_URL` = `http://localhost:3000`
-   - opcjonalnie: `FASHN_API_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`
-6. Deploy.
-7. Po deployu skopiuj publiczny adres, np. `https://fashionfit-backend.onrender.com`.
+   - `FASHN_API_KEY`
+   - `STRIPE_SECRET_KEY`
+   - `STRIPE_WEBHOOK_SECRET`
+   - `STRIPE_PRICE_STARTER`
+   - `STRIPE_PRICE_GROWTH`
+   - `STRIPE_PRICE_SCALE`
+6. Po pierwszym deployu skopiuj URL backendu, np.
+   `https://fashionfit-backend-xxxx.onrender.com`
+7. Ustaw:
+   - backend `FRONTEND_URL` = URL dashboardu (np. `https://fashionfit-dashboard-xxxx.onrender.com`)
+   - backend `API_PUBLIC_URL` = URL backendu (np. `https://fashionfit-backend-xxxx.onrender.com`)
+   - dashboard `REACT_APP_API_URL` = URL backendu
+8. Redeploy obu serwisow.
 
-To bedzie Twoj `API URL` we wtyczce WordPress.
+To bedzie Twoj tymczasowy, produkcyjny setup bez domeny.
 
 ## Opcja B: Koyeb (1 free web service)
 
@@ -31,7 +42,7 @@ To bedzie Twoj `API URL` we wtyczce WordPress.
 
 ## Co wpisac w WordPress (wtyczka FashionFit)
 
-1. `API URL` -> publiczny adres backendu z Render/Koyeb.
+1. `API URL` -> publiczny adres backendu z Render/Koyeb (`https://...onrender.com`).
 2. `API Key` -> pobrany z API po rejestracji klienta.
 3. `Połącz ze sklepem` -> `Shop ID` uzupelni sie automatycznie.
 
@@ -62,3 +73,17 @@ Otworz w przegladarce:
 `https://TWOJ_BACKEND_URL/health`
 
 Powinno zwrocic JSON ze statusem `ok`.
+
+## Stripe webhook (wymagane dla auto-aktywacji kont)
+
+W Stripe -> Developers -> Webhooks dodaj endpoint:
+
+`https://TWOJ_BACKEND_URL/api/webhooks/stripe`
+
+Eventy:
+- `checkout.session.completed`
+- `customer.subscription.updated`
+- `customer.subscription.deleted`
+
+Po zapisaniu skopiuj `Signing secret` i wklej do:
+- `STRIPE_WEBHOOK_SECRET` w backendzie na Render.

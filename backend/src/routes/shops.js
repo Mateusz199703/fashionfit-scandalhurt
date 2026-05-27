@@ -19,6 +19,11 @@ const router = express.Router();
 const useMockBackend = isMockBackendEnabled();
 router.use(authenticateJWT);
 
+function resolveWidgetScriptUrl(req) {
+  const base = config.apiPublicUrl || `${req.protocol}://${req.get('host')}`;
+  return `${String(base).replace(/\/+$/, '')}/widget.js`;
+}
+
 async function getOwnedShop(shopId, clientId) {
   const { data, error } = await supabase
     .from('shops')
@@ -155,7 +160,7 @@ router.get('/:id/snippet', async (req, res) => {
     clientApiKey = client.api_key;
   }
 
-  const widgetUrl = `${config.frontendUrl}/widget/fashionfit-widget.js`;
+  const widgetUrl = resolveWidgetScriptUrl(req);
   const snippet = [
     '<!-- FashionFit Widget -->',
     '<script',

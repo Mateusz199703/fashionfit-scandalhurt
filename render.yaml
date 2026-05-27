@@ -10,7 +10,9 @@ services:
       - key: NODE_ENV
         value: production
       - key: FRONTEND_URL
-        value: http://localhost:3000
+        sync: false
+      - key: API_PUBLIC_URL
+        sync: false
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_ANON_KEY
@@ -30,4 +32,14 @@ services:
       - key: STRIPE_PRICE_GROWTH
         sync: false
       - key: STRIPE_PRICE_SCALE
+        sync: false
+
+  - type: static
+    name: fashionfit-dashboard
+    rootDir: dashboard
+    buildCommand: npm install && npm run build
+    staticPublishPath: build
+    pullRequestPreviewsEnabled: false
+    envVars:
+      - key: REACT_APP_API_URL
         sync: false

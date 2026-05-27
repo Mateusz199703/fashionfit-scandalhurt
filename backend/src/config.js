@@ -5,6 +5,7 @@ const config = {
   env: process.env.NODE_ENV || 'development',
   port: parseInt(process.env.PORT, 10) || 3001,
   frontendUrl: process.env.FRONTEND_URL || 'http://localhost:3000',
+  apiPublicUrl: process.env.API_PUBLIC_URL || '',
 
   jwtSecret: process.env.JWT_SECRET || 'dev-insecure-secret-change-me',
   jwtExpiresIn: '7d',
