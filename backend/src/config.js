@@ -1,10 +1,22 @@
 const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 
+function parseAllowedOrigins(value, fallback) {
+  if (!value || !String(value).trim()) return [fallback];
+  return String(value)
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
 const config = {
   env: process.env.NODE_ENV || 'development',
+  isProduction: (process.env.NODE_ENV || 'development') === 'production',
   port: parseInt(process.env.PORT, 10) || 3001,
+  apiVersion: process.env.API_VERSION || '1.0.0',
+
   frontendUrl: process.env.FRONTEND_URL || 'http://localhost:3000',
+  allowedOrigins: parseAllowedOrigins(process.env.ALLOWED_ORIGINS, process.env.FRONTEND_URL || 'http://localhost:3000'),
   apiPublicUrl: process.env.API_PUBLIC_URL || '',
 
   jwtSecret: process.env.JWT_SECRET || 'dev-insecure-secret-change-me',
@@ -33,7 +45,6 @@ const config = {
     },
   },
 
-  // Monthly try-on allowance per plan, used for usage metering in the dashboard.
   planLimits: {
     STARTER: 100,
     GROWTH: 1000,
