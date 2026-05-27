@@ -1,14 +1,19 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { ArrowRight, Shirt } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 import { apiErrorMessage } from '../api/client';
+import { Plan } from '../types';
 
 export function RegisterPage() {
   const { register } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const queryPlan = String(searchParams.get('plan') || '').toUpperCase();
+  const initialPlan = ['STARTER', 'GROWTH', 'SCALE'].includes(queryPlan) ? (queryPlan as Plan) : '';
   const [form, setForm] = useState({ name: '', email: '', password: '', company_name: '' });
+  const [selectedPlan, setSelectedPlan] = useState<Plan | ''>(initialPlan);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
 
@@ -29,12 +34,18 @@ export function RegisterPage() {
     if (!validate()) return;
     setSubmitting(true);
     try {
-      await register({
+      const { checkoutUrl } = await register({
         name: form.name,
         email: form.email,
         password: form.password,
         company_name: form.company_name || undefined,
+        plan: selectedPlan || undefined,
       });
+      if (checkoutUrl) {
+        toast.success('Konto utworzone, przekierowanie do płatności');
+        window.location.href = checkoutUrl;
+        return;
+      }
       toast.success('Konto utworzone');
       navigate('/dashboard');
     } catch (err) {
@@ -110,6 +121,30 @@ export function RegisterPage() {
               <input id="password" type="password" className="ff-input" value={form.password} onChange={set('password')} />
               {errors.password && <p className="mt-1 text-xs text-red-600">{errors.password}</p>}
             </div>
+
+            <div>
+              <label className="ff-label">Plan (opcjonalnie od razu z płatnością)</label>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                {(['STARTER', 'GROWTH', 'SCALE'] as Plan[]).map((plan) => (
+                  <button
+                    key={plan}
+                    type="button"
+                    onClick={() => setSelectedPlan((prev) => (prev === plan ? '' : plan))}
+                    className={`rounded-xl border px-3 py-2 text-sm font-semibold transition ${
+                      selectedPlan === plan
+                        ? 'border-ink bg-ink text-white'
+                        : 'border-ink/15 bg-white text-ink/70 hover:border-ink/30'
+                    }`}
+                  >
+                    {plan}
+                  </button>
+                ))}
+              </div>
+              <p className="mt-2 text-xs text-ink/55">
+                Gdy wybierzesz plan, po rejestracji przejdziesz bezpośrednio do Stripe Checkout. Bez wyboru planu uruchamiamy trial.
+              </p>
+            </div>
+
             <button type="submit" className="ff-btn-primary ff-auth-submit" disabled={submitting}>
               {submitting ? 'Tworzenie konta...' : 'Zarejestruj się'}
               {!submitting && <ArrowRight size={16} />}

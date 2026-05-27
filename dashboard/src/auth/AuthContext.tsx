@@ -6,7 +6,13 @@ interface AuthContextValue {
   client: Client | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (data: { email: string; password: string; name: string; company_name?: string }) => Promise<void>;
+  register: (data: {
+    email: string;
+    password: string;
+    name: string;
+    company_name?: string;
+    plan?: 'STARTER' | 'GROWTH' | 'SCALE';
+  }) => Promise<{ checkoutUrl: string | null }>;
   logout: () => void;
   refreshClient: () => Promise<void>;
 }
@@ -85,10 +91,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const register = useCallback(
-    async (form: { email: string; password: string; name: string; company_name?: string }) => {
-      const { data } = await api.post<{ token: string }>('/api/auth/register', form);
+    async (form: { email: string; password: string; name: string; company_name?: string; plan?: 'STARTER' | 'GROWTH' | 'SCALE' }) => {
+      const { data } = await api.post<{ token: string; checkoutUrl?: string | null }>('/api/auth/register', form);
       applyToken(data.token);
       await fetchMe();
+      return { checkoutUrl: data.checkoutUrl || null };
     },
     [applyToken, fetchMe],
   );

@@ -112,9 +112,12 @@ router.post('/checkout', async (req, res) => {
     return;
   }
 
-  const { plan } = req.body || {};
+  const { plan, shopDomain } = req.body || {};
   const priceId = config.stripe.prices[plan];
   if (!priceId) throw new ApiError(400, 'This plan is not available for checkout');
+  if (!stripeService.isStripeSecretConfigured()) {
+    throw new ApiError(503, 'Stripe is not configured on the server yet');
+  }
 
   const client = await getClient(req.clientId);
   let customerId = client.stripe_customer_id;
@@ -129,6 +132,8 @@ router.post('/checkout', async (req, res) => {
     priceId,
     plan,
     clientId: req.clientId,
+    shopDomain: shopDomain || null,
+    source: 'dashboard_upgrade',
   });
   res.json({ url: session.url });
 });

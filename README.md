@@ -56,6 +56,9 @@ cp .env.example .env
 | `FASHN_API_KEY`         | FASHN AI try-on API key.                      |
 | `STRIPE_SECRET_KEY`     | Stripe secret key.                            |
 | `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret.                |
+| `STRIPE_PRICE_STARTER`  | Stripe price id for Starter plan.             |
+| `STRIPE_PRICE_GROWTH`   | Stripe price id for Growth plan.              |
+| `STRIPE_PRICE_SCALE`    | Stripe price id for Scale plan.               |
 | `JWT_SECRET`            | Secret used to sign JWT access tokens.        |
 | `PORT`                  | Backend port (default `3001`).                |
 | `FRONTEND_URL`          | Dashboard origin (default `http://localhost:3000`). |
@@ -67,6 +70,17 @@ npm run dev:backend
 ```
 
 The API will be available at `http://localhost:3001`.
+
+## SaaS onboarding flow (recommended)
+
+1. Customer registers in `/register` (trial account is created instantly).
+2. Optional: a paid plan can be selected at registration, then backend returns a Stripe Checkout URL.
+3. Stripe webhook (`/api/webhooks/stripe`) is the source of truth for activation.
+4. On `checkout.session.completed` and subscription updates:
+   - client status is activated/deactivated,
+   - plan is synchronized from Stripe,
+   - subscription period is stored in `subscriptions`,
+   - duplicate webhook deliveries are ignored via `stripe_webhook_events`.
 
 ## Project layout
 

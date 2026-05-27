@@ -38,9 +38,13 @@ function toClientResponse(client) {
 
 // POST /api/auth/register → create client, return JWT + api_key
 router.post('/register', authLimiter, async (req, res) => {
-  const { email, password, name, company_name } = req.body || {};
+  const { email, password, name, company_name, plan, shop_domain } = req.body || {};
   if (!email || !password || !name) {
     throw new ApiError(400, 'email, password and name are required');
+  }
+  const selectedPlan = plan ? String(plan).toUpperCase() : null;
+  if (selectedPlan && !config.planLimits[selectedPlan]) {
+    throw new ApiError(400, 'Unsupported plan');
   }
 
   if (useMockAuth) {
@@ -50,10 +54,15 @@ router.post('/register', authLimiter, async (req, res) => {
     const passwordHash = await bcrypt.hash(password, 10);
     const client = createMockClient({ email, name, company_name, passwordHash });
 
+    const checkoutUrl = selectedPlan
+      ? `${config.frontendUrl}/billing?status=success&plan=${selectedPlan.toLowerCase()}`
+      : null;
+
     res.status(201).json({
       token: signToken(client),
       apiKey: client.api_key,
       client: toClientResponse(client),
+      checkoutUrl,
     });
     return;
   }
@@ -89,9 +98,32 @@ router.post('/register', authLimiter, async (req, res) => {
     .single();
   if (error) throw error;
 
+  let checkoutUrl = null;
+  if (selectedPlan && stripeService.isStripeSecretConfigured()) {
+    const priceId = config.stripe.prices[selectedPlan];
+    if (!priceId) throw new ApiError(400, `Plan ${selectedPlan} is not available for checkout`);
+
+    if (!stripeCustomerId) {
+      const customer = await stripeService.createCustomer({ email, name });
+      stripeCustomerId = customer.id;
+      await supabase.from('clients').update({ stripe_customer_id: stripeCustomerId }).eq('id', data.id);
+    }
+
+    const checkout = await stripeService.createCheckoutSession({
+      customerId: stripeCustomerId,
+      priceId,
+      plan: selectedPlan,
+      clientId: data.id,
+      shopDomain: shop_domain || null,
+      source: 'register',
+    });
+    checkoutUrl = checkout.url;
+  }
+
   res.status(201).json({
     token: signToken(data),
     apiKey: data.api_key,
+    checkoutUrl,
     client: {
       id: data.id,
       email: data.email,
