@@ -24,7 +24,11 @@ const app = express();
 const dashboardCors = cors({ origin: config.frontendUrl, credentials: true });
 const widgetCors = cors();
 
-app.use(helmet());
+app.use(helmet({
+  // Widget is embedded on external WooCommerce domains, so we cannot keep
+  // same-origin only resource policy globally.
+  crossOriginResourcePolicy: false,
+}));
 app.use(morgan(config.env === 'production' ? 'combined' : 'dev'));
 
 // Stripe webhooks need the raw request body, so mount before the JSON parser.
@@ -41,6 +45,9 @@ app.get('/health', (req, res) => {
 app.get('/widget.js', (req, res) => {
   const widgetPath = path.resolve(__dirname, '../../widget/dist/widget.js');
   res.setHeader('Cache-Control', 'public, max-age=300');
+  // Allow embedding the script from any storefront domain.
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
   res.type('application/javascript');
   res.sendFile(widgetPath);
 });

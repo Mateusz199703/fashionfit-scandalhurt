@@ -1,4 +1,4 @@
-import { getConfig, isProductPage, getProductExternalId } from './utils.js';
+import { getConfig, isProductPage, getProductExternalId, getPageProductInfo } from './utils.js';
 import { injectStyles } from './styles.js';
 import { createApi } from './api.js';
 import { createWidget } from './ui.js';
@@ -22,7 +22,25 @@ async function init() {
   if (externalId) {
     try {
       const { products } = await api.getProducts();
-      product = (products || []).find((p) => String(p.external_id) === String(externalId)) || null;
+      const list = products || [];
+      product = list.find((p) => String(p.external_id) === String(externalId)) || null;
+      if (!product) {
+        const currentPath = location.pathname.replace(/\/+$/, '');
+        product = list.find((p) => {
+          if (!p.product_url) return false;
+          try {
+            const url = new URL(p.product_url);
+            return url.pathname.replace(/\/+$/, '') === currentPath;
+          } catch {
+            return false;
+          }
+        }) || null;
+      }
+      if (!product) {
+        const page = getPageProductInfo();
+        const normalize = (value) => String(value || '').trim().toLowerCase();
+        product = list.find((p) => normalize(p.name) === normalize(page.name)) || null;
+      }
     } catch (e) {
       console.warn('[FashionFit] Nie udało się pobrać produktów:', e.message);
     }

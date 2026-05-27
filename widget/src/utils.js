@@ -43,6 +43,12 @@ export function getProductExternalId() {
   const bodyMatch = document.body.className.match(/postid-(\d+)/);
   if (bodyMatch) return bodyMatch[1];
 
+  const productNode = document.querySelector('[id^="product-"]');
+  if (productNode && productNode.id) {
+    const idMatch = productNode.id.match(/^product-(\d+)$/);
+    if (idMatch) return idMatch[1];
+  }
+
   const meta = document.querySelector('meta[property="product:retailer_item_id"]');
   if (meta && meta.getAttribute('content')) return meta.getAttribute('content');
 
