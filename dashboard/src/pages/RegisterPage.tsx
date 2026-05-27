@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { Shirt } from 'lucide-react';
+import { ArrowRight, Shirt } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 import { apiErrorMessage } from '../api/client';
 
@@ -45,46 +45,82 @@ export function RegisterPage() {
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center px-4 py-10">
-      <div className="absolute left-4 top-6 text-xs uppercase tracking-[0.16em] text-ink/45">FashionFit Studio</div>
-      <div className="w-full max-w-md">
-        <div className="mb-6 text-center">
-          <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-secondary text-white shadow-lg">
-            <Shirt size={24} />
-          </span>
-          <h1 className="mt-4 text-3xl font-bold leading-tight">Załóż konto</h1>
-          <p className="mt-1 text-sm text-ink/60">Uruchom panel i dodaj pierwszy sklep w kilka minut.</p>
-        </div>
+    <div className="ff-auth-shell">
+      <div className="ff-auth-grid">
+        <aside className="ff-auth-hero">
+          <div className="ff-auth-brand">
+            <span className="ff-auth-mark">
+              <Shirt size={16} />
+            </span>
+            <span>FashionFit Studio</span>
+          </div>
 
-        <form onSubmit={handleSubmit} className="ff-card space-y-4 p-6 sm:p-7" noValidate>
-          <div>
-            <label className="ff-label" htmlFor="name">Imię i nazwisko</label>
-            <input id="name" className="ff-input" value={form.name} onChange={set('name')} />
-            {errors.name && <p className="mt-1 text-xs text-red-600">{errors.name}</p>}
-          </div>
-          <div>
-            <label className="ff-label" htmlFor="company">Nazwa firmy (opcjonalnie)</label>
-            <input id="company" className="ff-input" value={form.company_name} onChange={set('company_name')} />
-          </div>
-          <div>
-            <label className="ff-label" htmlFor="email">E-mail</label>
-            <input id="email" type="email" className="ff-input" value={form.email} onChange={set('email')} />
-            {errors.email && <p className="mt-1 text-xs text-red-600">{errors.email}</p>}
-          </div>
-          <div>
-            <label className="ff-label" htmlFor="password">Hasło</label>
-            <input id="password" type="password" className="ff-input" value={form.password} onChange={set('password')} />
-            {errors.password && <p className="mt-1 text-xs text-red-600">{errors.password}</p>}
-          </div>
-          <button type="submit" className="ff-btn-primary w-full" disabled={submitting}>
-            {submitting ? 'Tworzenie konta...' : 'Zarejestruj się'}
-          </button>
-        </form>
+          <p className="ff-auth-kicker">Luxury Commerce Intelligence</p>
+          <h1 className="ff-auth-title">
+            Stwórz
+            <br />
+            doświadczenie,
+            <br />
+            które sprzedaje.
+          </h1>
+          <p className="ff-auth-copy">
+            Dołącz do platformy i uruchom wirtualną przymierzalnię, która podnosi konwersję i buduje przewagę marki.
+          </p>
 
-        <p className="mt-4 text-center text-sm text-ink/60">
-          Masz już konto?{' '}
-          <Link to="/login" className="font-medium text-primary hover:underline">Zaloguj się</Link>
-        </p>
+          <div className="ff-auth-metrics">
+            <div>
+              <b>14 dni</b>
+              <span>trial bez karty</span>
+            </div>
+            <div>
+              <b>5 min</b>
+              <span>średni czas wdrożenia</span>
+            </div>
+            <div>
+              <b>∞</b>
+              <span>skalowalność dla wielu sklepów</span>
+            </div>
+          </div>
+        </aside>
+
+        <section className="ff-auth-panel">
+          <div className="mb-7">
+            <p className="ff-auth-panel-kicker">Nowe Konto</p>
+            <h2 className="ff-auth-panel-title">Załóż konto</h2>
+            <p className="mt-2 text-sm text-ink/60">Uruchom panel i dodaj pierwszy sklep w kilka minut.</p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+            <div>
+              <label className="ff-label" htmlFor="name">Imię i nazwisko</label>
+              <input id="name" className="ff-input" value={form.name} onChange={set('name')} />
+              {errors.name && <p className="mt-1 text-xs text-red-600">{errors.name}</p>}
+            </div>
+            <div>
+              <label className="ff-label" htmlFor="company">Nazwa firmy (opcjonalnie)</label>
+              <input id="company" className="ff-input" value={form.company_name} onChange={set('company_name')} />
+            </div>
+            <div>
+              <label className="ff-label" htmlFor="email">E-mail</label>
+              <input id="email" type="email" className="ff-input" value={form.email} onChange={set('email')} />
+              {errors.email && <p className="mt-1 text-xs text-red-600">{errors.email}</p>}
+            </div>
+            <div>
+              <label className="ff-label" htmlFor="password">Hasło</label>
+              <input id="password" type="password" className="ff-input" value={form.password} onChange={set('password')} />
+              {errors.password && <p className="mt-1 text-xs text-red-600">{errors.password}</p>}
+            </div>
+            <button type="submit" className="ff-btn-primary ff-auth-submit" disabled={submitting}>
+              {submitting ? 'Tworzenie konta...' : 'Zarejestruj się'}
+              {!submitting && <ArrowRight size={16} />}
+            </button>
+          </form>
+
+          <p className="mt-6 text-center text-sm text-ink/60">
+            Masz już konto?{' '}
+            <Link to="/login" className="font-semibold text-ink hover:opacity-70">Zaloguj się</Link>
+          </p>
+        </section>
       </div>
     </div>
   );

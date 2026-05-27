@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&family=Sora:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -83,6 +83,239 @@
   }
   .ff-muted {
     color: var(--ff-muted);
+  }
+
+  .ff-auth-shell {
+    @apply min-h-screen p-4 md:p-8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background:
+      radial-gradient(46rem 28rem at -12% -12%, rgba(255, 255, 255, 0.72) 0%, transparent 72%),
+      radial-gradient(38rem 24rem at 108% 0%, rgba(245, 245, 245, 0.92) 0%, transparent 70%),
+      linear-gradient(140deg, #f5f5f4 0%, #efefee 46%, #f9f9f8 100%);
+  }
+
+  .ff-auth-grid {
+    width: min(1140px, 100%);
+    display: grid;
+    grid-template-columns: 1.05fr 0.95fr;
+    border: 1px solid rgba(17, 17, 17, 0.08);
+    border-radius: 28px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.76);
+    backdrop-filter: blur(16px);
+    box-shadow:
+      0 42px 80px -44px rgba(0, 0, 0, 0.32),
+      0 18px 36px -24px rgba(0, 0, 0, 0.24);
+  }
+
+  .ff-auth-hero {
+    position: relative;
+    padding: clamp(2rem, 3.2vw, 3.2rem);
+    border-right: 1px solid rgba(17, 17, 17, 0.08);
+    background:
+      radial-gradient(34rem 18rem at 18% -10%, rgba(255, 255, 255, 0.72), transparent 72%),
+      linear-gradient(168deg, #111 0%, #050505 72%, #000 100%);
+    color: #ffffff;
+  }
+
+  .ff-auth-hero::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(120deg, transparent 0%, rgba(255, 255, 255, 0.06) 18%, transparent 44%),
+      linear-gradient(180deg, transparent 0%, rgba(255, 255, 255, 0.04) 100%);
+  }
+
+  .ff-auth-brand {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.94);
+    font-size: 0.73rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .ff-auth-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.45rem;
+    height: 1.45rem;
+    border-radius: 999px;
+    background: #ffffff;
+    color: #090909;
+  }
+
+  .ff-auth-kicker {
+    position: relative;
+    z-index: 1;
+    margin-top: 1.75rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.73rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.72);
+    font-weight: 600;
+  }
+
+  .ff-auth-title {
+    position: relative;
+    z-index: 1;
+    margin: 0;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: clamp(2.4rem, 4.4vw, 4rem);
+    font-weight: 600;
+    line-height: 0.92;
+    letter-spacing: -0.02em;
+    color: #ffffff;
+  }
+
+  .ff-auth-copy {
+    position: relative;
+    z-index: 1;
+    margin-top: 1.2rem;
+    max-width: 32rem;
+    color: rgba(255, 255, 255, 0.78);
+    font-size: 0.95rem;
+    line-height: 1.7;
+  }
+
+  .ff-auth-metrics {
+    position: relative;
+    z-index: 1;
+    margin-top: 2.3rem;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.7rem;
+  }
+
+  .ff-auth-metrics > div {
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.07);
+    padding: 0.8rem 0.7rem;
+  }
+
+  .ff-auth-metrics b {
+    display: block;
+    font-size: 1.18rem;
+    color: #ffffff;
+    letter-spacing: -0.01em;
+  }
+
+  .ff-auth-metrics span {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.71rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.72);
+  }
+
+  .ff-auth-panel {
+    padding: clamp(1.7rem, 3vw, 2.7rem);
+    background:
+      radial-gradient(24rem 12rem at 100% 0%, rgba(0, 0, 0, 0.025), transparent 72%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.92));
+  }
+
+  .ff-auth-panel-kicker {
+    margin: 0 0 0.25rem;
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(17, 17, 17, 0.52);
+    font-weight: 700;
+  }
+
+  .ff-auth-panel-title {
+    margin: 0;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: clamp(2.05rem, 3vw, 2.75rem);
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -0.01em;
+    color: #101010;
+  }
+
+  .ff-auth-panel .ff-input {
+    font-family: 'Manrope', 'Sora', system-ui, -apple-system, sans-serif;
+    background: rgba(255, 255, 255, 0.94);
+    border-color: rgba(0, 0, 0, 0.18);
+    border-radius: 14px;
+    padding-top: 0.72rem;
+    padding-bottom: 0.72rem;
+  }
+
+  .ff-auth-panel .ff-input:focus {
+    border-color: rgba(0, 0, 0, 0.62);
+    box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.08);
+  }
+
+  .ff-auth-panel .ff-label {
+    font-family: 'Manrope', 'Sora', system-ui, -apple-system, sans-serif;
+    font-size: 0.8rem;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: rgba(10, 10, 10, 0.72);
+    font-weight: 700;
+  }
+
+  .ff-auth-submit {
+    width: 100%;
+    margin-top: 0.35rem;
+    border-radius: 14px;
+    padding-top: 0.82rem;
+    padding-bottom: 0.82rem;
+    font-size: 0.9rem;
+    letter-spacing: 0.03em;
+  }
+}
+
+@media (max-width: 1024px) {
+  .ff-auth-grid {
+    grid-template-columns: 1fr;
+    max-width: 660px;
+  }
+
+  .ff-auth-hero {
+    border-right: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  }
+
+  .ff-auth-title {
+    font-size: clamp(2.1rem, 8vw, 3.2rem);
+  }
+}
+
+@media (max-width: 640px) {
+  .ff-auth-shell {
+    padding: 0.85rem;
+  }
+
+  .ff-auth-grid {
+    border-radius: 20px;
+  }
+
+  .ff-auth-hero,
+  .ff-auth-panel {
+    padding: 1.25rem 1rem;
+  }
+
+  .ff-auth-metrics {
+    grid-template-columns: 1fr;
   }
 }
 

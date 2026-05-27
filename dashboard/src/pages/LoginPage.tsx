@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { Shirt } from 'lucide-react';
+import { ArrowRight, Shirt } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 import { apiErrorMessage } from '../api/client';
 
@@ -37,37 +37,73 @@ export function LoginPage() {
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center px-4 py-10">
-      <div className="absolute left-4 top-6 text-xs uppercase tracking-[0.16em] text-ink/45">FashionFit Studio</div>
-      <div className="w-full max-w-md">
-        <div className="mb-6 text-center">
-          <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-secondary text-white shadow-lg">
-            <Shirt size={24} />
-          </span>
-          <h1 className="mt-4 text-3xl font-bold leading-tight">Witaj ponownie</h1>
-          <p className="mt-1 text-sm text-ink/60">Zaloguj się do panelu i zarządzaj przymierzalnią AI.</p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="ff-card space-y-4 p-6 sm:p-7" noValidate>
-          <div>
-            <label className="ff-label" htmlFor="email">E-mail</label>
-            <input id="email" type="email" className="ff-input" value={email} onChange={(e) => setEmail(e.target.value)} />
-            {errors.email && <p className="mt-1 text-xs text-red-600">{errors.email}</p>}
+    <div className="ff-auth-shell">
+      <div className="ff-auth-grid">
+        <aside className="ff-auth-hero">
+          <div className="ff-auth-brand">
+            <span className="ff-auth-mark">
+              <Shirt size={16} />
+            </span>
+            <span>FashionFit Studio</span>
           </div>
-          <div>
-            <label className="ff-label" htmlFor="password">Hasło</label>
-            <input id="password" type="password" className="ff-input" value={password} onChange={(e) => setPassword(e.target.value)} />
-            {errors.password && <p className="mt-1 text-xs text-red-600">{errors.password}</p>}
-          </div>
-          <button type="submit" className="ff-btn-primary w-full" disabled={submitting}>
-            {submitting ? 'Logowanie...' : 'Zaloguj się'}
-          </button>
-        </form>
 
-        <p className="mt-4 text-center text-sm text-ink/60">
-          Nie masz konta?{' '}
-          <Link to="/register" className="font-medium text-primary hover:underline">Zarejestruj się</Link>
-        </p>
+          <p className="ff-auth-kicker">B2B Virtual Try-On Platform</p>
+          <h1 className="ff-auth-title">
+            Moda zaczyna
+            <br />
+            się od
+            <br />
+            pierwszego wrażenia.
+          </h1>
+          <p className="ff-auth-copy">
+            Twój panel do zarządzania przymierzalnią AI, konwersjami i doświadczeniem zakupowym klientów.
+          </p>
+
+          <div className="ff-auth-metrics">
+            <div>
+              <b>+27%</b>
+              <span>średni wzrost konwersji</span>
+            </div>
+            <div>
+              <b>-19%</b>
+              <span>mniej zwrotów</span>
+            </div>
+            <div>
+              <b>24/7</b>
+              <span>analityka w czasie rzeczywistym</span>
+            </div>
+          </div>
+        </aside>
+
+        <section className="ff-auth-panel">
+          <div className="mb-7">
+            <p className="ff-auth-panel-kicker">Panel Klienta</p>
+            <h2 className="ff-auth-panel-title">Witaj ponownie</h2>
+            <p className="mt-2 text-sm text-ink/60">Zaloguj się i wróć do zarządzania sprzedażą.</p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+            <div>
+              <label className="ff-label" htmlFor="email">E-mail</label>
+              <input id="email" type="email" className="ff-input" value={email} onChange={(e) => setEmail(e.target.value)} />
+              {errors.email && <p className="mt-1 text-xs text-red-600">{errors.email}</p>}
+            </div>
+            <div>
+              <label className="ff-label" htmlFor="password">Hasło</label>
+              <input id="password" type="password" className="ff-input" value={password} onChange={(e) => setPassword(e.target.value)} />
+              {errors.password && <p className="mt-1 text-xs text-red-600">{errors.password}</p>}
+            </div>
+            <button type="submit" className="ff-btn-primary ff-auth-submit" disabled={submitting}>
+              {submitting ? 'Logowanie...' : 'Zaloguj się'}
+              {!submitting && <ArrowRight size={16} />}
+            </button>
+          </form>
+
+          <p className="mt-6 text-center text-sm text-ink/60">
+            Nie masz konta?{' '}
+            <Link to="/register" className="font-semibold text-ink hover:opacity-70">Zarejestruj się</Link>
+          </p>
+        </section>
       </div>
     </div>
   );
