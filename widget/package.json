@@ -1,0 +1,14 @@
+{
+  "name": "@fashionfit/widget",
+  "version": "0.1.0",
+  "private": true,
+  "description": "FashionFit embeddable virtual try-on widget",
+  "scripts": {
+    "build": "esbuild src/index.js --bundle --minify --outfile=dist/widget.js",
+    "dev": "esbuild src/index.js --bundle --watch --outfile=dist/widget.js"
+  },
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "esbuild": "^0.25.0"
+  }
+}

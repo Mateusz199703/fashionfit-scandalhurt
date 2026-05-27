@@ -1,0 +1,188 @@
+{
+  "clients": [
+    {
+      "id": "f588b25e-3a07-4878-a1c0-5e04abd61534",
+      "email": "mateusz@test.local",
+      "name": "mateusz",
+      "company_name": null,
+      "password_hash": "$2b$10$ebc4rYb4mU3busCs7jWT5eMGkU9L5YTrOIztHYCeocbF9Z2T2yblW",
+      "plan": "STARTER",
+      "status": "trial",
+      "api_key": "ff_mock_3bee66d48f7e435481661f1f",
+      "trial_ends_at": "2026-06-10T01:43:25.977Z",
+      "stripe_customer_id": null
+    },
+    {
+      "id": "9bbfaf96-d143-496e-af94-30f687fd5173",
+      "email": "mateuszzajda12@interia.pl",
+      "name": "mateusz zajda ",
+      "company_name": "social a need",
+      "password_hash": "$2b$10$M.8mliInZ/FsCGJjsS9WL.LBDchsBpZa0vYtshQaborJC3/qg7cW2",
+      "plan": "STARTER",
+      "status": "trial",
+      "api_key": "ff_mock_9a07f73bee3c465999f0f65e",
+      "trial_ends_at": "2026-06-10T01:59:25.000Z",
+      "stripe_customer_id": null
+    },
+    {
+      "id": "205ec535-2ca3-4988-92e6-f652c83323a2",
+      "email": "mateuszzajda12@icloud.com",
+      "name": "Mateusz Zajda",
+      "company_name": "Social a Need Anita Urbaniak",
+      "password_hash": "$2b$10$oggES2tlhloxRKyGE31K3eEvQR/uz9XFDWDibUbulNaPWDP5NQWNy",
+      "plan": "STARTER",
+      "status": "trial",
+      "api_key": "ff_mock_10d104b23a9943e1b26e5240",
+      "trial_ends_at": "2026-06-10T02:29:51.957Z",
+      "stripe_customer_id": null
+    }
+  ],
+  "shops": [
+    {
+      "id": "391f5c1e-311a-43bf-979d-d37115a1f8f9",
+      "client_id": "f588b25e-3a07-4878-a1c0-5e04abd61534",
+      "name": "Demo",
+      "domain": "demo.local",
+      "platform": "woocommerce",
+      "wc_consumer_key": null,
+      "wc_consumer_secret": null,
+      "widget_config": {},
+      "is_active": true,
+      "created_at": "2026-05-27T02:13:43.487Z"
+    },
+    {
+      "id": "31a83d31-4069-47b6-ad94-60a0fabf6169",
+      "client_id": "205ec535-2ca3-4988-92e6-f652c83323a2",
+      "name": "Scandalhurt.pl",
+      "domain": "https://scandalhurt.pl/",
+      "platform": "woocommerce",
+      "wc_consumer_key": null,
+      "wc_consumer_secret": null,
+      "widget_config": {},
+      "is_active": true,
+      "created_at": "2026-05-27T02:31:42.172Z"
+    }
+  ],
+  "productsByShopId": {
+    "391f5c1e-311a-43bf-979d-d37115a1f8f9": [
+      {
+        "id": "0d54d53c-9607-4b1f-bbbd-eaf368ab7638",
+        "shop_id": "391f5c1e-311a-43bf-979d-d37115a1f8f9",
+        "external_id": "mock-1",
+        "name": "Sukienka Luna",
+        "category": "one-pieces",
+        "garment_image_url": null,
+        "product_url": "https://demo.local/products/mock-1",
+        "is_synced": true,
+        "last_synced_at": "2026-05-27T02:13:43.522Z",
+        "created_at": "2026-05-27T02:13:43.522Z"
+      },
+      {
+        "id": "04e04b46-0d9e-4c0e-8105-9e7ad2120d9b",
+        "shop_id": "391f5c1e-311a-43bf-979d-d37115a1f8f9",
+        "external_id": "mock-2",
+        "name": "Marynarka Nova",
+        "category": "outerwear",
+        "garment_image_url": null,
+        "product_url": "https://demo.local/products/mock-2",
+        "is_synced": true,
+        "last_synced_at": "2026-05-27T02:13:43.522Z",
+        "created_at": "2026-05-27T02:13:43.522Z"
+      },
+      {
+        "id": "8dc1e37f-c7df-42a6-b9d5-a4287c843d3a",
+        "shop_id": "391f5c1e-311a-43bf-979d-d37115a1f8f9",
+        "external_id": "mock-3",
+        "name": "Jeansy Skyline",
+        "category": "bottoms",
+        "garment_image_url": null,
+        "product_url": "https://demo.local/products/mock-3",
+        "is_synced": true,
+        "last_synced_at": "2026-05-27T02:13:43.522Z",
+        "created_at": "2026-05-27T02:13:43.522Z"
+      },
+      {
+        "id": "8065dcd1-78db-4aef-bbab-dd6dc59c6281",
+        "shop_id": "391f5c1e-311a-43bf-979d-d37115a1f8f9",
+        "external_id": "mock-4",
+        "name": "Bluzka Bloom",
+        "category": "tops",
+        "garment_image_url": null,
+        "product_url": "https://demo.local/products/mock-4",
+        "is_synced": true,
+        "last_synced_at": "2026-05-27T02:13:43.522Z",
+        "created_at": "2026-05-27T02:13:43.522Z"
+      }
+    ],
+    "31a83d31-4069-47b6-ad94-60a0fabf6169": [
+      {
+        "id": "e5b37d61-5911-41e5-bc74-10f166a6f0ed",
+        "shop_id": "31a83d31-4069-47b6-ad94-60a0fabf6169",
+        "external_id": "mock-1",
+        "name": "Sukienka Luna",
+        "category": "one-pieces",
+        "garment_image_url": null,
+        "product_url": "https://https://scandalhurt.pl//products/mock-1",
+        "is_synced": true,
+        "last_synced_at": "2026-05-27T02:38:33.079Z",
+        "created_at": "2026-05-27T02:38:33.079Z"
+      },
+      {
+        "id": "e65bfa13-0d67-482d-9d80-49cc4b5f852e",
+        "shop_id": "31a83d31-4069-47b6-ad94-60a0fabf6169",
+        "external_id": "mock-2",
+        "name": "Marynarka Nova",
+        "category": "outerwear",
+        "garment_image_url": null,
+        "product_url": "https://https://scandalhurt.pl//products/mock-2",
+        "is_synced": true,
+        "last_synced_at": "2026-05-27T02:38:33.079Z",
+        "created_at": "2026-05-27T02:38:33.079Z"
+      },
+      {
+        "id": "2490bf70-48ea-4123-8ecc-6f67d7cdcda0",
+        "shop_id": "31a83d31-4069-47b6-ad94-60a0fabf6169",
+        "external_id": "mock-3",
+        "name": "Jeansy Skyline",
+        "category": "bottoms",
+        "garment_image_url": null,
+        "product_url": "https://https://scandalhurt.pl//products/mock-3",
+        "is_synced": true,
+        "last_synced_at": "2026-05-27T02:38:33.079Z",
+        "created_at": "2026-05-27T02:38:33.079Z"
+      },
+      {
+        "id": "2d868a48-dc11-419f-bade-ba60cf20d2ae",
+        "shop_id": "31a83d31-4069-47b6-ad94-60a0fabf6169",
+        "external_id": "mock-4",
+        "name": "Bluzka Bloom",
+        "category": "tops",
+        "garment_image_url": null,
+        "product_url": "https://https://scandalhurt.pl//products/mock-4",
+        "is_synced": true,
+        "last_synced_at": "2026-05-27T02:38:33.079Z",
+        "created_at": "2026-05-27T02:38:33.079Z"
+      }
+    ]
+  },
+  "analyticsByShopId": {
+    "391f5c1e-311a-43bf-979d-d37115a1f8f9": {
+      "widget_opens": 180,
+      "tryon_starts": 120,
+      "completions": 84,
+      "add_to_carts": 26,
+      "purchases": 14,
+      "buyers_count": 11,
+      "revenue": 4380
+    },
+    "31a83d31-4069-47b6-ad94-60a0fabf6169": {
+      "widget_opens": 180,
+      "tryon_starts": 120,
+      "completions": 84,
+      "add_to_carts": 26,
+      "purchases": 14,
+      "buyers_count": 11,
+      "revenue": 4380
+    }
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "name": "fashionfit",
+  "version": "0.1.0",
+  "private": true,
+  "description": "FashionFit — B2B SaaS virtual try-on for WooCommerce stores",
+  "workspaces": [
+    "backend",
+    "widget"
+  ],
+  "scripts": {
+    "dev:backend": "npm run dev --workspace=backend",
+    "start:backend": "npm run start --workspace=backend",
+    "bootstrap:client": "node scripts/bootstrap-client.js"
+  },
+  "license": "UNLICENSED"
+}

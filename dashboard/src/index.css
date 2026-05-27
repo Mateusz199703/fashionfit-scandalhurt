@@ -1,0 +1,98 @@
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --ff-bg-a: #f7f7f7;
+    --ff-bg-b: #ffffff;
+    --ff-text: #111111;
+    --ff-muted: #666666;
+    --ff-card: rgba(255, 255, 255, 0.78);
+    --ff-border: rgba(255, 255, 255, 0.65);
+  }
+
+  html,
+  body {
+    @apply text-ink antialiased;
+    background:
+      radial-gradient(55rem 32rem at -10% -20%, #ececec 10%, transparent 70%),
+      radial-gradient(45rem 28rem at 110% 0%, #f0f0f0 8%, transparent 68%),
+      linear-gradient(165deg, var(--ff-bg-a), var(--ff-bg-b));
+    font-family: 'Sora', system-ui, -apple-system, sans-serif;
+    min-height: 100%;
+  }
+
+  #root {
+    min-height: 100vh;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: 'Space Grotesk', 'Sora', system-ui, -apple-system, sans-serif;
+    letter-spacing: -0.02em;
+  }
+}
+
+@layer components {
+  .ff-card {
+    @apply rounded-2xl border shadow-xl;
+    background: var(--ff-card);
+    border-color: var(--ff-border);
+    box-shadow:
+      0 18px 45px -24px rgba(0, 0, 0, 0.18),
+      0 8px 20px -12px rgba(0, 0, 0, 0.16);
+    backdrop-filter: blur(14px);
+    animation: ff-fade-up 0.45s ease both;
+  }
+  .ff-btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .ff-btn-primary {
+    @apply ff-btn text-white;
+    background: linear-gradient(120deg, #111111, #1f1f1f 55%, #333333);
+    box-shadow: 0 14px 28px -16px rgba(0, 0, 0, 0.55);
+  }
+  .ff-btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 18px 30px -16px rgba(0, 0, 0, 0.65);
+  }
+  .ff-btn-secondary {
+    @apply ff-btn border text-ink;
+    background: rgba(255, 255, 255, 0.76);
+    border-color: rgba(16, 33, 45, 0.12);
+  }
+  .ff-btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.95);
+    border-color: rgba(16, 33, 45, 0.18);
+  }
+  .ff-input {
+    @apply w-full rounded-xl border px-3 py-2.5 text-sm text-ink outline-none transition-all;
+    background: rgba(255, 255, 255, 0.82);
+    border-color: rgba(0, 0, 0, 0.16);
+  }
+  .ff-input:focus {
+    border-color: rgba(0, 0, 0, 0.55);
+    box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.1);
+  }
+  .ff-label {
+    @apply mb-1.5 block text-sm font-medium text-ink;
+  }
+  .ff-muted {
+    color: var(--ff-muted);
+  }
+}
+
+@keyframes ff-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

@@ -1,0 +1,56 @@
+.fashionfit-settings .fashionfit-card {
+	background: #fff;
+	border: 1px solid #e2e4e7;
+	border-radius: 8px;
+	padding: 8px 20px 16px;
+	margin: 16px 0;
+	max-width: 860px;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, .04);
+}
+
+.fashionfit-settings .fashionfit-card h2 {
+	margin: 12px 0 4px;
+	font-size: 15px;
+}
+
+.fashionfit-settings .fashionfit-req {
+	color: #d63638;
+}
+
+.fashionfit-settings #fashionfit-connect,
+.fashionfit-settings #fashionfit-sync {
+	margin-left: 8px;
+	vertical-align: middle;
+}
+
+.fashionfit-settings .fashionfit-status {
+	display: inline-block;
+	margin-left: 10px;
+	font-style: italic;
+	vertical-align: middle;
+}
+
+.fashionfit-settings .fashionfit-ok {
+	color: #00794e;
+	font-style: normal;
+}
+
+.fashionfit-settings .fashionfit-err {
+	color: #d63638;
+	font-style: normal;
+}
+
+.fashionfit-shortcode-btn {
+	display: inline-block;
+	padding: 12px 20px;
+	border-radius: 999px;
+	background: var(--ff-primary, #C4883A);
+	color: #fff;
+	font-weight: 600;
+	text-decoration: none;
+}
+
+.fashionfit-shortcode-btn:hover {
+	filter: brightness(1.06);
+	color: #fff;
+}
