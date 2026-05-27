@@ -10,6 +10,7 @@
   "scripts": {
     "dev:backend": "npm run dev --workspace=backend",
     "start:backend": "npm run start --workspace=backend",
+    "render:build": "npm install && npm run build --workspace=widget",
     "bootstrap:client": "node scripts/bootstrap-client.js"
   },
   "license": "UNLICENSED"
