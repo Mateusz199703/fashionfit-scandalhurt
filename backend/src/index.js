@@ -1,4 +1,5 @@
 const config = require('./config');
+const path = require('path');
 
 const express = require('express');
 const cors = require('cors');
@@ -33,6 +34,15 @@ app.use(express.json({ limit: '15mb' }));
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'fashionfit-backend' });
+});
+
+// Serve embeddable widget bundle from the backend origin so stores do not
+// depend on a separate CDN hostname during setup.
+app.get('/widget.js', (req, res) => {
+  const widgetPath = path.resolve(__dirname, '../../widget/dist/widget.js');
+  res.setHeader('Cache-Control', 'public, max-age=300');
+  res.type('application/javascript');
+  res.sendFile(widgetPath);
 });
 
 app.use('/api/auth', dashboardCors, authRoutes);

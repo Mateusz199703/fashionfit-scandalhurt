@@ -25,10 +25,12 @@ class FashionFit_Widget {
 		}
 
 		$settings = FashionFit::get_settings();
+		$api_url  = FashionFit::get_api_base_url();
+		$widget_src = $api_url ? untrailingslashit( $api_url ) . '/widget.js' : FASHIONFIT_WIDGET_URL;
 		$config   = array(
 			'apiKey'       => $settings['api_key'],
 			'shopId'       => $settings['shop_id'],
-			'apiUrl'       => rtrim( FASHIONFIT_API_URL, '/' ),
+			'apiUrl'       => $api_url,
 			'primaryColor' => $settings['primary_color'],
 			'buttonLabel'  => $settings['button_label'],
 			'position'     => $settings['position'],
@@ -36,7 +38,7 @@ class FashionFit_Widget {
 
 		echo "\n<!-- FashionFit Virtual Try-On -->\n";
 		echo '<script>window.FashionFitConfig = ' . wp_json_encode( $config ) . ';</script>' . "\n";
-		echo '<script async src="' . esc_url( FASHIONFIT_WIDGET_URL ) . '"></script>' . "\n";
+		echo '<script async src="' . esc_url( $widget_src ) . '"></script>' . "\n";
 	}
 
 	/**
