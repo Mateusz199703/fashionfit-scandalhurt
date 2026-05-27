@@ -2,6 +2,7 @@ const express = require('express');
 const config = require('../config');
 const { supabase } = require('../services/supabase');
 const { syncShopProducts } = require('../services/woocommerce');
+const { encryptFields, decryptMaybe } = require('../services/encryption');
 const {
   isMockBackendEnabled,
   listMockShops,
@@ -18,6 +19,53 @@ const { ApiError } = require('../middleware/errorHandler');
 const router = express.Router();
 const useMockBackend = isMockBackendEnabled();
 router.use(authenticateJWT);
+
+function sanitizeShop(shop) {
+  if (!shop) return shop;
+  const hasWooCredentials = Boolean(shop.wc_consumer_key && shop.wc_consumer_secret);
+  const next = { ...shop, hasWooCredentials };
+  delete next.wc_consumer_key;
+  delete next.wc_consumer_secret;
+  return next;
+}
+
+function encryptWooCredentials(payload) {
+  const patch = { ...(payload || {}) };
+  const sensitive = ['wc_consumer_key', 'wc_consumer_secret'];
+
+  for (const field of sensitive) {
+    if (!(field in patch)) continue;
+    const value = patch[field];
+    if (value === '' || value === null) {
+      patch[field] = null;
+      continue;
+    }
+    if (value !== undefined) {
+      patch[field] = String(value).trim();
+    }
+  }
+
+  return encryptFields(patch, sensitive);
+}
+
+function withDecryptedWooCredentials(shop) {
+  if (!shop) return shop;
+  try {
+    let wcConsumerKey = shop.wc_consumer_key;
+    let wcConsumerSecret = shop.wc_consumer_secret;
+
+    if (wcConsumerKey) wcConsumerKey = decryptMaybe(wcConsumerKey);
+    if (wcConsumerSecret) wcConsumerSecret = decryptMaybe(wcConsumerSecret);
+
+    return {
+      ...shop,
+      wc_consumer_key: wcConsumerKey,
+      wc_consumer_secret: wcConsumerSecret,
+    };
+  } catch (err) {
+    throw new ApiError(500, `Could not decrypt WooCommerce credentials: ${err.message}`, 'CREDENTIALS_DECRYPT_FAILED');
+  }
+}
 
 function resolveWidgetScriptUrl(req) {
   const base = config.apiPublicUrl || `${req.protocol}://${req.get('host')}`;
@@ -39,7 +87,7 @@ async function getOwnedShop(shopId, clientId) {
 // GET /api/shops
 router.get('/', async (req, res) => {
   if (useMockBackend) {
-    res.json({ shops: listMockShops(req.clientId) });
+    res.json({ shops: listMockShops(req.clientId).map(sanitizeShop) });
     return;
   }
 
@@ -49,7 +97,7 @@ router.get('/', async (req, res) => {
     .eq('client_id', req.clientId)
     .order('created_at', { ascending: false });
   if (error) throw error;
-  res.json({ shops: data });
+  res.json({ shops: (data || []).map(sanitizeShop) });
 });
 
 // POST /api/shops
@@ -66,9 +114,14 @@ router.post('/', async (req, res) => {
       wc_consumer_secret,
       widget_config,
     });
-    res.status(201).json({ shop });
+    res.status(201).json({ shop: sanitizeShop(shop) });
     return;
   }
+
+  const encrypted = encryptWooCredentials({
+    wc_consumer_key: wc_consumer_key || null,
+    wc_consumer_secret: wc_consumer_secret || null,
+  });
 
   const { data, error } = await supabase
     .from('shops')
@@ -77,14 +130,14 @@ router.post('/', async (req, res) => {
       name: name || null,
       domain,
       platform: platform || 'woocommerce',
-      wc_consumer_key: wc_consumer_key || null,
-      wc_consumer_secret: wc_consumer_secret || null,
+      wc_consumer_key: encrypted.wc_consumer_key,
+      wc_consumer_secret: encrypted.wc_consumer_secret,
       widget_config: widget_config || {},
     })
     .select('*')
     .single();
   if (error) throw error;
-  res.status(201).json({ shop: data });
+  res.status(201).json({ shop: sanitizeShop(data) });
 });
 
 // PUT /api/shops/:id
@@ -97,7 +150,7 @@ router.put('/:id', async (req, res) => {
     }
     const shop = updateMockShop(req.params.id, req.clientId, patch);
     if (!shop) throw new ApiError(404, 'Shop not found');
-    res.json({ shop });
+    res.json({ shop: sanitizeShop(shop) });
     return;
   }
 
@@ -108,16 +161,17 @@ router.put('/:id', async (req, res) => {
   for (const key of allowed) {
     if (req.body && key in req.body) patch[key] = req.body[key];
   }
+  const encryptedPatch = encryptWooCredentials(patch);
 
   const { data, error } = await supabase
     .from('shops')
-    .update(patch)
+    .update(encryptedPatch)
     .eq('id', req.params.id)
     .eq('client_id', req.clientId)
     .select('*')
     .single();
   if (error) throw error;
-  res.json({ shop: data });
+  res.json({ shop: sanitizeShop(data) });
 });
 
 // DELETE /api/shops/:id
@@ -219,7 +273,7 @@ router.post('/:id/sync', async (req, res) => {
     return;
   }
 
-  const shop = await getOwnedShop(req.params.id, req.clientId);
+  const shop = withDecryptedWooCredentials(await getOwnedShop(req.params.id, req.clientId));
   if (!shop.wc_consumer_key || !shop.wc_consumer_secret) {
     throw new ApiError(400, 'Shop is missing WooCommerce API credentials');
   }

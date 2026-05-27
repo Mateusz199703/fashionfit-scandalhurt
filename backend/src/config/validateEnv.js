@@ -63,6 +63,11 @@ function validateEnv(config) {
   if (isProduction && (hasStripeSecret || hasStripeWebhookSecret) && !(hasStripeSecret && hasStripeWebhookSecret)) {
     throw new Error('STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET must be set together');
   }
+
+  const encryptionKey = process.env.ENCRYPTION_KEY;
+  if (encryptionKey && !/^[a-fA-F0-9]{64}$/.test(encryptionKey)) {
+    throw new Error('ENCRYPTION_KEY must be a 64-character hex string');
+  }
 }
 
 module.exports = validateEnv;

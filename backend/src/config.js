@@ -47,6 +47,8 @@ const config = {
     },
   },
 
+  encryptionKey: process.env.ENCRYPTION_KEY || '',
+
   planLimits: {
     STARTER: 100,
     GROWTH: 1000,
