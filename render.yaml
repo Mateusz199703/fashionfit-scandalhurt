@@ -34,8 +34,9 @@ services:
       - key: STRIPE_PRICE_SCALE
         sync: false
 
-  - type: static
+  - type: web
     name: fashionfit-dashboard
+    runtime: static
     rootDir: dashboard
     buildCommand: npm install && npm run build
     staticPublishPath: build
