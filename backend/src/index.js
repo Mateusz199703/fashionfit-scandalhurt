@@ -44,7 +44,12 @@ app.get('/health', (req, res) => {
 // depend on a separate CDN hostname during setup.
 app.get('/widget.js', (req, res) => {
   const widgetPath = path.resolve(__dirname, '../../widget/dist/widget.js');
-  res.setHeader('Cache-Control', 'public, max-age=300');
+  // Always serve the newest widget build because store themes often cache
+  // aggressively and stale JS causes UI glitches during rollout.
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  res.setHeader('Surrogate-Control', 'no-store');
   // Allow embedding the script from any storefront domain.
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
