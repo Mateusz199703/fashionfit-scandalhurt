@@ -3,9 +3,18 @@ const { supabase } = require('../services/supabase');
 const { isShopOwnedByClient } = require('../services/ownership');
 const { authenticateApiKey } = require('../middleware/auth');
 const { ApiError } = require('../middleware/errorHandler');
+const {
+  isMockBackendEnabled,
+  findMockShopForDomain,
+  listMockProducts,
+  upsertMockWidgetProducts,
+  deactivateMockWidgetProduct,
+  trackMockAnalyticsEvent,
+} = require('../services/mockStore');
 const tryonRoutes = require('./tryon');
 
 const ALLOWED_CATEGORIES = ['tops', 'bottoms', 'one-pieces', 'outerwear', 'accessories'];
+const mockTryonSessions = new Map();
 
 function normalizeDomain(value) {
   if (!value) return null;
@@ -24,6 +33,13 @@ router.use(authenticateApiKey);
 // GET /api/widget/shop?domain=...  → resolve this client's shop id for a domain.
 // Used by store plugins to "connect" with only an API key.
 router.get('/shop', async (req, res) => {
+  if (isMockBackendEnabled()) {
+    const shop = findMockShopForDomain(req.clientId, req.query.domain);
+    if (!shop) throw new ApiError(404, 'No shop matches this domain');
+    res.json({ shopId: shop.id, name: shop.name, domain: shop.domain });
+    return;
+  }
+
   const { data: shops, error } = await supabase
     .from('shops')
     .select('id, name, domain')
@@ -45,6 +61,14 @@ router.post('/products/sync', async (req, res) => {
   if (!shopId || !Array.isArray(products)) {
     throw new ApiError(400, 'shopId and a products[] array are required');
   }
+
+  if (isMockBackendEnabled()) {
+    const synced = upsertMockWidgetProducts(shopId, req.clientId, products);
+    if (synced === null) throw new ApiError(403, 'Shop does not belong to this API key');
+    res.json({ synced });
+    return;
+  }
+
   if (!(await isShopOwnedByClient(shopId, req.clientId))) {
     throw new ApiError(403, 'Shop does not belong to this API key');
   }
@@ -78,6 +102,14 @@ router.post('/products/deactivate', async (req, res) => {
   if (!shopId || externalId == null) {
     throw new ApiError(400, 'shopId and external_id are required');
   }
+
+  if (isMockBackendEnabled()) {
+    const ok = deactivateMockWidgetProduct(shopId, req.clientId, externalId);
+    if (!ok) throw new ApiError(403, 'Shop does not belong to this API key');
+    res.json({ ok: true });
+    return;
+  }
+
   if (!(await isShopOwnedByClient(shopId, req.clientId))) {
     throw new ApiError(403, 'Shop does not belong to this API key');
   }
@@ -91,13 +123,49 @@ router.post('/products/deactivate', async (req, res) => {
   res.json({ ok: true });
 });
 
-// Try-on endpoints: /api/widget/tryon/photo, /api/widget/tryon/status/:id
-router.use('/tryon', tryonRoutes);
+if (isMockBackendEnabled()) {
+  router.post('/tryon/photo', async (req, res) => {
+    const { shopId, productId } = req.body || {};
+    if (!shopId || !productId) throw new ApiError(400, 'shopId and productId are required');
+    const products = listMockProducts(shopId, req.clientId);
+    if (!products) throw new ApiError(403, 'Shop does not belong to this API key');
+    const hasProduct = products.some((p) => String(p.id) === String(productId) || String(p.external_id) === String(productId));
+    if (!hasProduct) throw new ApiError(404, 'Product not found');
+
+    const sessionId = `mock_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+    mockTryonSessions.set(sessionId, {
+      createdAt: Date.now(),
+      resultImageUrl: 'https://placehold.co/900x1200/161616/FFFFFF?text=FashionFit+Try-On+Result',
+    });
+    res.status(202).json({ sessionId, status: 'processing' });
+  });
+
+  router.get('/tryon/status/:sessionId', async (req, res) => {
+    const session = mockTryonSessions.get(req.params.sessionId);
+    if (!session) throw new ApiError(404, 'Session not found');
+    const done = Date.now() - session.createdAt > 3500;
+    res.json({
+      status: done ? 'completed' : 'processing',
+      resultImageUrl: done ? session.resultImageUrl : null,
+    });
+  });
+} else {
+  // Try-on endpoints: /api/widget/tryon/photo, /api/widget/tryon/status/:id
+  router.use('/tryon', tryonRoutes);
+}
 
 // POST /api/widget/events
 router.post('/events', async (req, res) => {
   const { shopId, eventType, productId, sessionId, metadata } = req.body || {};
   if (!shopId || !eventType) throw new ApiError(400, 'shopId and eventType are required');
+
+  if (isMockBackendEnabled()) {
+    const ok = trackMockAnalyticsEvent(shopId, req.clientId, eventType);
+    if (!ok) throw new ApiError(403, 'Shop does not belong to this API key');
+    res.status(201).json({ ok: true });
+    return;
+  }
+
   if (!(await isShopOwnedByClient(shopId, req.clientId))) {
     throw new ApiError(403, 'Shop does not belong to this API key');
   }
@@ -115,6 +183,25 @@ router.post('/events', async (req, res) => {
 
 // GET /api/widget/products/:shopId
 router.get('/products/:shopId', async (req, res) => {
+  if (isMockBackendEnabled()) {
+    const products = listMockProducts(req.params.shopId, req.clientId);
+    if (!products) throw new ApiError(403, 'Shop does not belong to this API key');
+    res.json({
+      products: products
+        .filter((p) => p.is_synced !== false)
+        .map((p) => ({
+          id: p.id,
+          external_id: p.external_id,
+          name: p.name,
+          category: p.category,
+          garment_image_url: p.garment_image_url || null,
+          product_url: p.product_url || null,
+          variants: p.variants || null,
+        })),
+    });
+    return;
+  }
+
   if (!(await isShopOwnedByClient(req.params.shopId, req.clientId))) {
     throw new ApiError(403, 'Shop does not belong to this API key');
   }

@@ -97,10 +97,29 @@ function hasMockClients() {
   return clientsById.size > 0;
 }
 
+function normalizeDomain(value) {
+  if (!value) return null;
+  return String(value)
+    .trim()
+    .toLowerCase()
+    .replace(/^https?:\/\//, '')
+    .replace(/^www\./, '')
+    .replace(/\/.*$/, '');
+}
+
 function listMockShops(clientId) {
   return [...shopsById.values()]
     .filter((shop) => shop.client_id === clientId)
     .sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
+}
+
+function findMockShopForDomain(clientId, domain) {
+  const shops = listMockShops(clientId);
+  if (shops.length === 0) return null;
+  const wanted = normalizeDomain(domain);
+  let shop = wanted ? shops.find((s) => normalizeDomain(s.domain) === wanted) : null;
+  if (!shop && shops.length === 1) [shop] = shops;
+  return shop || null;
 }
 
 function createMockShop(clientId, input) {
@@ -162,6 +181,82 @@ function listMockProducts(shopId, clientId) {
   const shop = getMockShop(shopId, clientId);
   if (!shop) return null;
   return productsByShopId.get(shopId) || [];
+}
+
+function upsertMockWidgetProducts(shopId, clientId, products) {
+  const shop = getMockShop(shopId, clientId);
+  if (!shop) return null;
+
+  const now = new Date().toISOString();
+  const existing = productsByShopId.get(shopId) || [];
+  const byExternalId = new Map(existing.map((p) => [String(p.external_id), p]));
+
+  let synced = 0;
+  for (const product of products || []) {
+    if (!product || product.external_id == null) continue;
+    const externalId = String(product.external_id);
+    const prev = byExternalId.get(externalId);
+    byExternalId.set(externalId, {
+      id: prev ? prev.id : uuidv4(),
+      shop_id: shopId,
+      external_id: externalId,
+      name: product.name || (prev ? prev.name : null),
+      category: product.category || (prev ? prev.category : 'tops'),
+      garment_image_url: product.garment_image_url || (prev ? prev.garment_image_url : null),
+      product_url: product.product_url || (prev ? prev.product_url : null),
+      variants: product.variants || (prev ? prev.variants : null),
+      is_synced: true,
+      last_synced_at: now,
+      created_at: prev ? prev.created_at : now,
+    });
+    synced += 1;
+  }
+
+  productsByShopId.set(shopId, [...byExternalId.values()]);
+  saveState();
+  return synced;
+}
+
+function deactivateMockWidgetProduct(shopId, clientId, externalId) {
+  const shop = getMockShop(shopId, clientId);
+  if (!shop) return false;
+  const list = productsByShopId.get(shopId) || [];
+  let changed = false;
+  const next = list.map((item) => {
+    if (String(item.external_id) === String(externalId)) {
+      changed = true;
+      return { ...item, is_synced: false };
+    }
+    return item;
+  });
+  productsByShopId.set(shopId, next);
+  saveState();
+  return changed;
+}
+
+function trackMockAnalyticsEvent(shopId, clientId, eventType) {
+  const shop = getMockShop(shopId, clientId);
+  if (!shop) return false;
+
+  const stats = analyticsByShopId.get(shopId) || {
+    widget_opens: 0,
+    tryon_starts: 0,
+    completions: 0,
+    add_to_carts: 0,
+    purchases: 0,
+    buyers_count: 0,
+    revenue: 0,
+  };
+
+  if (eventType === 'widget_open') stats.widget_opens += 1;
+  if (eventType === 'tryon_start') stats.tryon_starts += 1;
+  if (eventType === 'tryon_complete') stats.completions += 1;
+  if (eventType === 'add_to_cart') stats.add_to_carts += 1;
+  if (eventType === 'purchase') stats.purchases += 1;
+
+  analyticsByShopId.set(shopId, stats);
+  saveState();
+  return true;
 }
 
 function syncMockShopProducts(shopId, clientId) {
@@ -270,12 +365,16 @@ module.exports = {
   getMockClientByEmail,
   getMockClientById,
   getMockClientByApiKey,
+  findMockShopForDomain,
   listMockShops,
   createMockShop,
   getMockShop,
   updateMockShop,
   deleteMockShop,
   listMockProducts,
+  upsertMockWidgetProducts,
+  deactivateMockWidgetProduct,
+  trackMockAnalyticsEvent,
   syncMockShopProducts,
   getMockAnalyticsOverview,
   getMockBillingOverview,
