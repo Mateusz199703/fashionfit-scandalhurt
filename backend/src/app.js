@@ -15,6 +15,7 @@ const shopRoutes = require('./routes/shops');
 const productRoutes = require('./routes/products');
 const analyticsRoutes = require('./routes/analytics');
 const billingRoutes = require('./routes/billing');
+const keysRoutes = require('./routes/keys');
 const widgetRoutes = require('./routes/widget');
 const webhookRoutes = require('./routes/webhooks');
 
@@ -90,6 +91,7 @@ function mountVersionedApi(prefix) {
   app.use(`${prefix}/products`, dashboardCors, apiLimiter, productRoutes);
   app.use(`${prefix}/analytics`, dashboardCors, apiLimiter, analyticsRoutes);
   app.use(`${prefix}/billing`, dashboardCors, apiLimiter, billingRoutes);
+  app.use(`${prefix}/keys`, dashboardCors, apiLimiter, keysRoutes);
   app.use(`${prefix}/widget`, widgetCors, widgetRoutes);
 }
 

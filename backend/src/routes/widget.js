@@ -1,7 +1,7 @@
 const express = require('express');
 const { supabase } = require('../services/supabase');
 const { isShopOwnedByClient } = require('../services/ownership');
-const { authenticateApiKey } = require('../middleware/auth');
+const { authenticateApiKey, requireScope } = require('../middleware/auth');
 const { ApiError } = require('../middleware/errorHandler');
 const {
   isMockBackendEnabled,
@@ -29,6 +29,7 @@ function normalizeDomain(value) {
 // Public router for the embeddable widget. Auth via X-API-Key.
 const router = express.Router();
 router.use(authenticateApiKey);
+router.use(requireScope('widget'));
 
 // GET /api/widget/shop?domain=...  → resolve this client's shop id for a domain.
 // Used by store plugins to "connect" with only an API key.

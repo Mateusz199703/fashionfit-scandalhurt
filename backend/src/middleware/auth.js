@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const config = require('../config');
 const { supabase } = require('../services/supabase');
+const { verifyApiKey } = require('../services/apiKeys');
 const { isMockBackendEnabled, getMockClientByApiKey } = require('../services/mockStore');
 const { ApiError } = require('./errorHandler');
 
@@ -33,17 +34,44 @@ async function authenticateApiKey(req, res, next) {
     return next();
   }
 
-  const { data, error } = await supabase
-    .from('clients')
-    .select('id, status, plan')
-    .eq('api_key', apiKey)
-    .maybeSingle();
-  if (error) return next(error);
-  if (!data) return next(new ApiError(401, 'Invalid API key'));
-
-  req.clientId = data.id;
-  req.client = data;
-  return next();
+  try {
+    const verified = await verifyApiKey(apiKey);
+    req.clientId = verified.clientId;
+    req.client = {
+      id: verified.clientId,
+      status: verified.status,
+      plan: verified.plan,
+    };
+    req.apiKey = {
+      id: verified.keyId,
+      prefix: verified.keyPrefix,
+      scopes: verified.scopes,
+    };
+    return next();
+  } catch (err) {
+    // Backward compatibility path: clients.api_key plaintext support.
+    const { data, error } = await supabase
+      .from('clients')
+      .select('id, status, plan')
+      .eq('api_key', String(apiKey))
+      .maybeSingle();
+    if (error) return next(error);
+    if (!data) return next(err);
+    req.clientId = data.id;
+    req.client = data;
+    req.apiKey = { id: null, prefix: String(apiKey).slice(0, 14), scopes: ['widget', 'sync'] };
+    return next();
+  }
 }
 
-module.exports = { authenticateJWT, authenticateApiKey };
+function requireScope(scope) {
+  return (req, res, next) => {
+    const scopes = req.apiKey && Array.isArray(req.apiKey.scopes) ? req.apiKey.scopes : [];
+    if (!scopes.includes(scope)) {
+      return next(new ApiError(403, `API key is missing required scope: ${scope}`, 'SCOPE_REQUIRED'));
+    }
+    return next();
+  };
+}
+
+module.exports = { authenticateJWT, authenticateApiKey, requireScope };

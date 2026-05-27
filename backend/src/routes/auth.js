@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const config = require('../config');
 const { supabase } = require('../services/supabase');
+const { generateApiKey } = require('../services/apiKeys');
 const stripeService = require('../services/stripe');
 const {
   isMockBackendEnabled,
@@ -137,6 +138,19 @@ router.post('/register', authLimiter, async (req, res) => {
     .single();
   if (error) throw error;
 
+  const generated = await generateApiKey(data.id, {
+    name: 'Default key',
+    scopes: ['widget', 'sync'],
+  });
+
+  // Transitional compatibility for existing plugin/dashboard flows that still
+  // read clients.api_key directly. New verification uses hashed api_keys table.
+  const { error: keyUpdateError } = await supabase
+    .from('clients')
+    .update({ api_key: generated.rawKey })
+    .eq('id', data.id);
+  if (keyUpdateError) throw keyUpdateError;
+
   let checkoutUrl = null;
   if (selectedPlan && stripeService.isStripeSecretConfigured()) {
     const priceId = config.stripe.prices[selectedPlan];
@@ -165,7 +179,7 @@ router.post('/register', authLimiter, async (req, res) => {
 
   res.status(201).json({
     token: signToken(data),
-    apiKey: data.api_key,
+    apiKey: generated.rawKey,
     checkoutUrl,
     client: {
       id: data.id,
