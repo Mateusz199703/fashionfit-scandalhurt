@@ -1,13 +1,33 @@
 const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 const config = require('../config');
-const { supabase, uploadBase64Image, uploadImageFromUrl } = require('../services/supabase');
+const { supabase } = require('../services/supabase');
+const {
+  uploadBase64,
+  uploadFromUrl,
+  createSignedUrl,
+  isRemoteUrl,
+} = require('../services/storage');
 const { isShopOwnedByClient } = require('../services/ownership');
 const fashn = require('../services/fashn');
 const { ApiError } = require('../middleware/errorHandler');
 
 // Mounted under /api/widget/tryon — API key auth is applied by the parent router.
 const router = express.Router();
+
+function personStoragePath(shopId, sessionToken) {
+  return `${shopId}/${sessionToken}.jpg`;
+}
+
+function resultStoragePath(shopId, sessionId) {
+  return `${shopId}/${sessionId}.jpg`;
+}
+
+async function resolveResultImageUrl(storedValue) {
+  if (!storedValue) return null;
+  if (isRemoteUrl(storedValue)) return storedValue;
+  return createSignedUrl(config.storage.resultsBucket, storedValue, 60 * 60);
+}
 
 // POST /api/widget/tryon/photo
 router.post('/photo', async (req, res) => {
@@ -30,14 +50,15 @@ router.post('/photo', async (req, res) => {
   if (!product.garment_image_url) throw new ApiError(422, 'Product has no garment image to try on');
 
   const sessionToken = uuidv4();
-  const personUrl = await uploadBase64Image(
+  const personKey = await uploadBase64(
     config.storage.uploadsBucket,
-    `${shopId}/${sessionToken}.jpg`,
+    personStoragePath(shopId, sessionToken),
     personImageBase64,
   );
+  const personSignedUrl = await createSignedUrl(config.storage.uploadsBucket, personKey, 60 * 60);
 
   const predictionId = await fashn.run({
-    modelImage: personUrl,
+    modelImage: personSignedUrl,
     garmentImage: product.garment_image_url,
     category: product.category,
   });
@@ -50,7 +71,7 @@ router.post('/photo', async (req, res) => {
       session_token: sessionToken,
       mode: 'photo',
       status: 'processing',
-      person_image_url: personUrl,
+      person_image_url: personKey,
       fashn_prediction_id: predictionId,
       metadata: metadata || null,
     })
@@ -75,7 +96,10 @@ router.get('/status/:sessionId', async (req, res) => {
   }
 
   if (session.status === 'completed') {
-    return res.json({ status: 'completed', resultImageUrl: session.result_image_url });
+    return res.json({
+      status: 'completed',
+      resultImageUrl: await resolveResultImageUrl(session.result_image_url),
+    });
   }
   if (session.status === 'failed') {
     return res.json({ status: 'failed', resultImageUrl: null });
@@ -88,20 +112,23 @@ router.get('/status/:sessionId', async (req, res) => {
 
   if (prediction.status === 'completed') {
     const outputUrl = Array.isArray(prediction.output) ? prediction.output[0] : prediction.output;
-    const storedUrl = await uploadImageFromUrl(
+    const storedPath = await uploadFromUrl(
       config.storage.resultsBucket,
-      `${session.shop_id}/${session.id}.jpg`,
+      resultStoragePath(session.shop_id, session.id),
       outputUrl,
     );
     await supabase
       .from('tryon_sessions')
       .update({
         status: 'completed',
-        result_image_url: storedUrl,
+        result_image_url: storedPath,
         completed_at: new Date().toISOString(),
       })
       .eq('id', session.id);
-    return res.json({ status: 'completed', resultImageUrl: storedUrl });
+    return res.json({
+      status: 'completed',
+      resultImageUrl: await createSignedUrl(config.storage.resultsBucket, storedPath, 60 * 60),
+    });
   }
 
   if (prediction.status === 'failed') {
