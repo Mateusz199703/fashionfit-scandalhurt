@@ -16,6 +16,7 @@ const productRoutes = require('./routes/products');
 const analyticsRoutes = require('./routes/analytics');
 const billingRoutes = require('./routes/billing');
 const keysRoutes = require('./routes/keys');
+const onboardingRoutes = require('./routes/onboarding');
 const widgetRoutes = require('./routes/widget');
 const webhookRoutes = require('./routes/webhooks');
 const fashnService = require('./services/fashn');
@@ -95,6 +96,7 @@ function mountVersionedApi(prefix) {
   app.use(`${prefix}/analytics`, dashboardCors, apiLimiter, analyticsRoutes);
   app.use(`${prefix}/billing`, dashboardCors, apiLimiter, billingRoutes);
   app.use(`${prefix}/keys`, dashboardCors, apiLimiter, keysRoutes);
+  app.use(`${prefix}/onboarding`, dashboardCors, apiLimiter, onboardingRoutes);
   app.use(`${prefix}/widget`, widgetCors, widgetRoutes);
 }
 

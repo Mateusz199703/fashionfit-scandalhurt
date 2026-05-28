@@ -3,6 +3,7 @@ const config = require('../config');
 const { supabase } = require('../services/supabase');
 const { syncShopProducts } = require('../services/woocommerce');
 const { encryptFields, decryptMaybe } = require('../services/encryption');
+const { markOnboardingProgressAsync } = require('../services/onboarding');
 const {
   isMockBackendEnabled,
   listMockShops,
@@ -65,34 +66,6 @@ function withDecryptedWooCredentials(shop) {
   } catch (err) {
     throw new ApiError(500, `Could not decrypt WooCommerce credentials: ${err.message}`, 'CREDENTIALS_DECRYPT_FAILED');
   }
-}
-
-function isOnboardingTableMissing(err) {
-  if (!err) return false;
-  if (err.code === '42P01') return true;
-  return /onboarding_progress/i.test(String(err.message || ''));
-}
-
-function markOnboardingProgressAsync(clientId, patch) {
-  setImmediate(async () => {
-    try {
-      const { error } = await supabase
-        .from('onboarding_progress')
-        .upsert(
-          {
-            client_id: clientId,
-            updated_at: new Date().toISOString(),
-            ...patch,
-          },
-          { onConflict: 'client_id' },
-        );
-      if (error) throw error;
-    } catch (err) {
-      if (!isOnboardingTableMissing(err)) {
-        console.warn('onboarding progress update failed:', err.message);
-      }
-    }
-  });
 }
 
 function resolveWidgetScriptUrl(req) {
@@ -286,8 +259,16 @@ router.get('/:id/verify', async (req, res) => {
     .limit(1)
     .maybeSingle();
 
+  const connected = (productCount || 0) > 0 || Boolean(lastEvent);
+  if (connected) {
+    markOnboardingProgressAsync(req.clientId, {
+      step_plugin_installed: true,
+      step_products_synced: (productCount || 0) > 0,
+    });
+  }
+
   res.json({
-    connected: (productCount || 0) > 0 || Boolean(lastEvent),
+    connected,
     productCount: productCount || 0,
     lastEventAt: lastEvent ? lastEvent.created_at : null,
   });

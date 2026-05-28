@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Shirt, ShoppingCart, Store, Gauge, Plus, ArrowRight, Users, Wallet } from 'lucide-react';
+import { Shirt, ShoppingCart, Store, Gauge, Plus, ArrowRight, Users, Wallet, Circle, CheckCircle2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { api, apiErrorMessage } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
 import { MetricCard, Card, StatusBadge } from '../components/ui';
 import { MetricGridSkeleton, RowsSkeleton } from '../components/Skeleton';
-import { AnalyticsOverview, BillingOverview, Shop } from '../types';
+import { AnalyticsOverview, BillingOverview, OnboardingProgress, Shop } from '../types';
 import { formatMoney, formatPercent, trialDaysLeft } from '../utils';
 
 interface ShopStat {
@@ -22,6 +22,7 @@ export function DashboardPage() {
   const [stats, setStats] = useState<ShopStat[]>([]);
   const [totals, setTotals] = useState({ completions: 0, addToCarts: 0, purchases: 0, buyers: 0, revenue: 0 });
   const [billing, setBilling] = useState<BillingOverview | null>(null);
+  const [onboarding, setOnboarding] = useState<OnboardingProgress | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -62,6 +63,9 @@ export function DashboardPage() {
         setStats(shopStats);
         setTotals({ completions, addToCarts, purchases, buyers, revenue });
         setBilling(billingRes ? billingRes.data : null);
+
+        const onboardingRes = await api.get<OnboardingProgress>('/api/onboarding/progress').catch(() => null);
+        if (onboardingRes && !cancelled) setOnboarding(onboardingRes.data);
       } catch (err) {
         toast.error(apiErrorMessage(err));
       } finally {
@@ -76,6 +80,15 @@ export function DashboardPage() {
   const activeShops = stats.filter((s) => s.shop.is_active).length;
   const remaining = billing ? Math.max(0, billing.usage.limit - billing.usage.used) : null;
   const days = trialDaysLeft(client?.trialEndsAt);
+  const onboardingItems = onboarding
+    ? [
+        { label: 'Konto utworzone', done: onboarding.step_account_created },
+        { label: 'Sklep dodany', done: onboarding.step_shop_added },
+        { label: 'Wtyczka połączona', done: onboarding.step_plugin_installed },
+        { label: 'Produkty zsynchronizowane', done: onboarding.step_products_synced },
+        { label: 'Pierwsza przymiarka klienta', done: onboarding.step_first_tryon },
+      ]
+    : [];
 
   return (
     <div className="space-y-6">
@@ -98,6 +111,30 @@ export function DashboardPage() {
             Trial kończy się za {days} {days === 1 ? 'dzień' : 'dni'}.
           </span>
           <Link to="/billing" className="ff-btn-primary">Wybierz plan</Link>
+        </Card>
+      )}
+
+      {!loading && onboarding && (
+        <Card className="p-5">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div>
+              <h2 className="ff-section-title">Onboarding</h2>
+              <p className="mt-1 text-sm text-ink/60">
+                Ukończono {onboarding.completed_steps}/{onboarding.total_steps} kroków ({onboarding.completion_percent}%)
+              </p>
+            </div>
+            <div className="h-2 w-40 rounded-full bg-black/10">
+              <div className="h-full rounded-full bg-black transition-all" style={{ width: `${onboarding.completion_percent}%` }} />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+            {onboardingItems.map((item) => (
+              <div key={item.label} className="flex items-center gap-2 rounded-xl border border-ink/10 bg-white px-3 py-2">
+                {item.done ? <CheckCircle2 size={16} className="text-ink" /> : <Circle size={16} className="text-ink/35" />}
+                <span className={item.done ? 'text-sm font-medium text-ink' : 'text-sm text-ink/65'}>{item.label}</span>
+              </div>
+            ))}
+          </div>
         </Card>
       )}
 

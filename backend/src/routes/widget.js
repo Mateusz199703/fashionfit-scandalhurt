@@ -1,6 +1,7 @@
 const express = require('express');
 const { supabase } = require('../services/supabase');
 const { isShopOwnedByClient } = require('../services/ownership');
+const { markOnboardingProgressAsync } = require('../services/onboarding');
 const { authenticateApiKey, requireScope } = require('../middleware/auth');
 const { ApiError } = require('../middleware/errorHandler');
 const {
@@ -42,28 +43,7 @@ function normalizeEvent(input) {
 }
 
 async function markFirstTryonComplete(clientId) {
-  try {
-    // If table is missing in older schema, keep analytics flow non-blocking.
-    const { data, error } = await supabase
-      .from('onboarding_progress')
-      .upsert(
-        {
-          client_id: clientId,
-          step_first_tryon: true,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: 'client_id' },
-      )
-      .select('client_id')
-      .maybeSingle();
-    if (error) {
-      if (error.code === '42P01' || /onboarding_progress/i.test(String(error.message || ''))) return;
-      throw error;
-    }
-    return data;
-  } catch (err) {
-    console.warn('onboarding_progress update skipped:', err.message);
-  }
+  markOnboardingProgressAsync(clientId, { step_first_tryon: true });
 }
 
 function persistEventsAsync(rows, clientId) {
@@ -112,6 +92,7 @@ router.get('/shop', async (req, res) => {
   if (isMockBackendEnabled()) {
     const shop = findMockShopForDomain(req.clientId, req.query.domain);
     if (!shop) throw new ApiError(404, 'No shop matches this domain');
+    markOnboardingProgressAsync(req.clientId, { step_plugin_installed: true });
     res.json({ shopId: shop.id, name: shop.name, domain: shop.domain });
     return;
   }
@@ -127,6 +108,7 @@ router.get('/shop', async (req, res) => {
   let shop = wanted ? shops.find((s) => normalizeDomain(s.domain) === wanted) : null;
   if (!shop && shops.length === 1) [shop] = shops;
   if (!shop) throw new ApiError(404, 'No shop matches this domain');
+  markOnboardingProgressAsync(req.clientId, { step_plugin_installed: true });
 
   res.json({ shopId: shop.id, name: shop.name, domain: shop.domain });
 });
@@ -141,6 +123,10 @@ router.post('/products/sync', async (req, res) => {
   if (isMockBackendEnabled()) {
     const synced = upsertMockWidgetProducts(shopId, req.clientId, products);
     if (synced === null) throw new ApiError(403, 'Shop does not belong to this API key');
+    markOnboardingProgressAsync(req.clientId, {
+      step_plugin_installed: true,
+      step_products_synced: synced > 0,
+    });
     res.json({ synced });
     return;
   }
@@ -169,6 +155,10 @@ router.post('/products/sync', async (req, res) => {
     .from('products')
     .upsert(rows, { onConflict: 'shop_id,external_id' });
   if (error) throw error;
+  markOnboardingProgressAsync(req.clientId, {
+    step_plugin_installed: true,
+    step_products_synced: rows.length > 0,
+  });
   res.json({ synced: rows.length });
 });
 

@@ -82,6 +82,20 @@ export interface BillingOverview {
   usage: { used: number; limit: number };
 }
 
+export interface OnboardingProgress {
+  step_account_created: boolean;
+  step_shop_added: boolean;
+  step_plugin_installed: boolean;
+  step_products_synced: boolean;
+  step_first_tryon: boolean;
+  completed_at: string | null;
+  completed_steps: number;
+  total_steps: number;
+  completion_percent: number;
+  is_completed: boolean;
+  table_available: boolean;
+}
+
 export interface Payment {
   id: string;
   date: string;
