@@ -229,11 +229,27 @@ router.post('/portal', async (req, res) => {
   }
 
   const client = await getClient(req.clientId);
-  if (!client.stripe_customer_id) {
-    throw new ApiError(400, 'No Stripe customer is linked to this account yet');
+  let customerId = client.stripe_customer_id;
+
+  if (!customerId) {
+    const customer = await stripeService.createCustomer({
+      email: client.email,
+      name: client.name,
+      companyNip: client.company_nip,
+    });
+    customerId = customer.id;
+    await supabase.from('clients').update({ stripe_customer_id: customerId }).eq('id', req.clientId);
   }
 
-  const session = await stripeService.createBillingPortalSession(client.stripe_customer_id);
+  if (client.company_nip) {
+    try {
+      await stripeService.upsertCustomerTaxId(customerId, client.company_nip);
+    } catch (err) {
+      console.warn('Stripe tax ID sync skipped:', err.message);
+    }
+  }
+
+  const session = await stripeService.createBillingPortalSession(customerId);
   res.json({ url: session.url });
 });
 
