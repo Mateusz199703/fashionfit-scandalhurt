@@ -8,7 +8,9 @@ const {
   createSignedUrl,
   isRemoteUrl,
 } = require('../services/storage');
+const { get: getIdempotencyEntry, set: setIdempotencyEntry } = require('../services/idempotencyStore');
 const { isShopOwnedByClient } = require('../services/ownership');
+const { checkUsageQuota } = require('../middleware/usageCheck');
 const fashn = require('../services/fashn');
 const { ApiError } = require('../middleware/errorHandler');
 
@@ -29,12 +31,67 @@ async function resolveResultImageUrl(storedValue) {
   return createSignedUrl(config.storage.resultsBucket, storedValue, 60 * 60);
 }
 
+function getIdempotencyKey(req) {
+  const fromHeader = req.headers['idempotency-key'];
+  const fromBody = req.body && req.body.idempotencyKey;
+  const key = fromHeader || fromBody || null;
+  if (!key) return null;
+  return String(key).trim().slice(0, 120);
+}
+
+function validatePersonImageBase64(payload) {
+  const raw = String(payload || '').includes(',') ? String(payload).split(',').pop() : String(payload || '');
+  if (!raw) throw new ApiError(400, 'personImageBase64 is empty');
+  const approxBytes = Math.floor((raw.length * 3) / 4);
+  const maxBytes = 10 * 1024 * 1024;
+  if (approxBytes > maxBytes) {
+    throw new ApiError(413, 'Image is too large. Max 10MB.', 'IMAGE_TOO_LARGE');
+  }
+}
+
+async function fetchSessionById(sessionId) {
+  const { data, error } = await supabase
+    .from('tryon_sessions')
+    .select('*')
+    .eq('id', sessionId)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
 // POST /api/widget/tryon/photo
-router.post('/photo', async (req, res) => {
+router.post('/photo', checkUsageQuota, async (req, res) => {
   const { shopId, productId, personImageBase64, metadata } = req.body || {};
   if (!shopId || !productId || !personImageBase64) {
     throw new ApiError(400, 'shopId, productId and personImageBase64 are required');
   }
+  validatePersonImageBase64(personImageBase64);
+
+  const idempotencyKey = getIdempotencyKey(req);
+  if (idempotencyKey) {
+    const existing = getIdempotencyEntry({
+      clientId: req.clientId,
+      shopId,
+      idempotencyKey,
+    });
+    if (existing && existing.sessionId) {
+      const session = await fetchSessionById(existing.sessionId);
+      if (session) {
+        if (!(await isShopOwnedByClient(session.shop_id, req.clientId))) {
+          throw new ApiError(403, 'Session does not belong to this API key');
+        }
+        if (session.status === 'completed') {
+          return res.status(202).json({
+            sessionId: session.id,
+            status: 'completed',
+            resultImageUrl: await resolveResultImageUrl(session.result_image_url),
+          });
+        }
+        return res.status(202).json({ sessionId: session.id, status: session.status || 'processing' });
+      }
+    }
+  }
+
   if (!(await isShopOwnedByClient(shopId, req.clientId))) {
     throw new ApiError(403, 'Shop does not belong to this API key');
   }
@@ -73,11 +130,23 @@ router.post('/photo', async (req, res) => {
       status: 'processing',
       person_image_url: personKey,
       fashn_prediction_id: predictionId,
-      metadata: metadata || null,
+      metadata: {
+        ...(metadata || {}),
+        ...(idempotencyKey ? { idempotencyKey } : {}),
+      },
     })
     .select('id')
     .single();
   if (error) throw error;
+
+  if (idempotencyKey) {
+    setIdempotencyEntry({
+      clientId: req.clientId,
+      shopId,
+      idempotencyKey,
+      sessionId: session.id,
+    });
+  }
 
   res.status(202).json({ sessionId: session.id, status: 'processing' });
 });

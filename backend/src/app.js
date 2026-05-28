@@ -18,6 +18,7 @@ const billingRoutes = require('./routes/billing');
 const keysRoutes = require('./routes/keys');
 const widgetRoutes = require('./routes/widget');
 const webhookRoutes = require('./routes/webhooks');
+const fashnService = require('./services/fashn');
 
 const packageJson = require('../package.json');
 
@@ -68,7 +69,7 @@ app.get('/health', (req, res) => {
     services: {
       database: 'unknown',
       redis: 'unknown',
-      fashn_circuit: 'unknown',
+      fashn_circuit: fashnService.getCircuitState(),
     },
   });
 });
