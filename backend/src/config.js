@@ -17,6 +17,29 @@ function parseCsvList(value) {
     .filter(Boolean);
 }
 
+function parseBoolean(value, fallback = false) {
+  if (value == null || value === '') return fallback;
+  const normalized = String(value).trim().toLowerCase();
+  if (['1', 'true', 'yes', 'on'].includes(normalized)) return true;
+  if (['0', 'false', 'no', 'off'].includes(normalized)) return false;
+  return fallback;
+}
+
+function parseIntOrDefault(value, fallback) {
+  const parsed = parseInt(value, 10);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function parseWidgetAllowedOrigins() {
+  const raw = process.env.WIDGET_ALLOWED_ORIGINS;
+  if (raw && String(raw).trim()) return parseAllowedOrigins(raw, process.env.FRONTEND_URL || 'http://localhost:3000');
+  const defaults = [
+    process.env.FRONTEND_URL || 'http://localhost:3000',
+    process.env.API_PUBLIC_URL || '',
+  ].filter(Boolean);
+  return [...new Set(defaults)];
+}
+
 const config = {
   env: process.env.NODE_ENV || 'development',
   isProduction: (process.env.NODE_ENV || 'development') === 'production',
@@ -25,6 +48,7 @@ const config = {
 
   frontendUrl: process.env.FRONTEND_URL || 'http://localhost:3000',
   allowedOrigins: parseAllowedOrigins(process.env.ALLOWED_ORIGINS, process.env.FRONTEND_URL || 'http://localhost:3000'),
+  widgetAllowedOrigins: parseWidgetAllowedOrigins(),
   apiPublicUrl: process.env.API_PUBLIC_URL || '',
   adminEmails: parseCsvList(process.env.ADMIN_EMAILS),
 
@@ -55,6 +79,16 @@ const config = {
   tryon: {
     defaultProvider: process.env.TRYON_DEFAULT_PROVIDER || 'auto',
     fallbackProvider: process.env.TRYON_FALLBACK_PROVIDER || 'mock',
+    allowMockInProduction: parseBoolean(process.env.TRYON_ALLOW_MOCK_IN_PRODUCTION, false),
+  },
+
+  security: {
+    auditLogEnabled: parseBoolean(process.env.SECURITY_AUDIT_LOG_ENABLED, true),
+    apiKeyAbuse: {
+      windowMs: parseIntOrDefault(process.env.API_KEY_ABUSE_WINDOW_MS, 10 * 60 * 1000),
+      maxFailures: parseIntOrDefault(process.env.API_KEY_ABUSE_MAX_FAILURES, 15),
+      blockMs: parseIntOrDefault(process.env.API_KEY_ABUSE_BLOCK_MS, 30 * 60 * 1000),
+    },
   },
 
   stripe: {

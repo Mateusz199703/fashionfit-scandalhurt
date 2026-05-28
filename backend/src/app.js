@@ -7,8 +7,9 @@ const { v4: uuidv4 } = require('uuid');
 
 const config = require('./config');
 const validateEnv = require('./config/validateEnv');
-const { notFound, errorHandler } = require('./middleware/errorHandler');
-const { apiLimiter } = require('./middleware/rateLimiter');
+const { ApiError, notFound, errorHandler } = require('./middleware/errorHandler');
+const { apiLimiter, authLimiter, widgetLimiter } = require('./middleware/rateLimiter');
+const { logSecurityEvent } = require('./services/securityEvents');
 
 const authRoutes = require('./routes/auth');
 const shopRoutes = require('./routes/shops');
@@ -32,17 +33,48 @@ validateEnv(config);
 const app = express();
 app.disable('x-powered-by');
 
+function isOriginAllowed(origin, allowedList = []) {
+  if (!origin) return true;
+  if (allowedList.includes('*')) return true;
+
+  try {
+    const originUrl = new URL(origin);
+    return allowedList.some((allowed) => {
+      if (!allowed) return false;
+      const normalized = String(allowed).trim();
+      if (!normalized) return false;
+      if (normalized === origin) return true;
+
+      if (normalized.startsWith('*.')) {
+        const host = normalized.slice(2);
+        return originUrl.hostname === host || originUrl.hostname.endsWith(`.${host}`);
+      }
+
+      try {
+        const allowedUrl = new URL(normalized);
+        return allowedUrl.origin === originUrl.origin;
+      } catch {
+        return false;
+      }
+    });
+  } catch {
+    return false;
+  }
+}
+
 const widgetCors = cors({
-  origin: true,
+  origin(origin, callback) {
+    if (isOriginAllowed(origin, config.widgetAllowedOrigins)) return callback(null, true);
+    return callback(new ApiError(403, `Widget CORS blocked for origin: ${origin}`, 'CORS_BLOCKED'));
+  },
   allowedHeaders: ['Content-Type', 'X-API-Key', 'Idempotency-Key', 'Authorization'],
   methods: ['GET', 'POST', 'OPTIONS'],
 });
 
 const dashboardCors = cors({
   origin(origin, callback) {
-    if (!origin) return callback(null, true);
-    if (config.allowedOrigins.includes(origin)) return callback(null, true);
-    return callback(new Error(`CORS blocked for origin: ${origin}`));
+    if (isOriginAllowed(origin, config.allowedOrigins)) return callback(null, true);
+    return callback(new ApiError(403, `CORS blocked for origin: ${origin}`, 'CORS_BLOCKED'));
   },
   credentials: true,
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-Id'],
@@ -52,6 +84,13 @@ app.use((req, res, next) => {
   req.id = req.headers['x-request-id'] || uuidv4();
   res.setHeader('Request-Id', req.id);
   res.setHeader('API-Version', config.apiVersion);
+
+  res.on('finish', () => {
+    if (res.statusCode === 401 || res.statusCode === 403 || res.statusCode === 429) {
+      logSecurityEvent('http_security_status', req, { statusCode: res.statusCode }, 'info');
+    }
+  });
+
   next();
 });
 
@@ -98,14 +137,14 @@ app.get('/widget.js', (req, res) => {
 });
 
 function mountVersionedApi(prefix) {
-  app.use(`${prefix}/auth`, dashboardCors, authRoutes);
+  app.use(`${prefix}/auth`, dashboardCors, authLimiter, authRoutes);
   app.use(`${prefix}/shops`, dashboardCors, apiLimiter, shopRoutes);
   app.use(`${prefix}/products`, dashboardCors, apiLimiter, productRoutes);
   app.use(`${prefix}/analytics`, dashboardCors, apiLimiter, analyticsRoutes);
   app.use(`${prefix}/billing`, dashboardCors, apiLimiter, billingRoutes);
   app.use(`${prefix}/keys`, dashboardCors, apiLimiter, keysRoutes);
   app.use(`${prefix}/onboarding`, dashboardCors, apiLimiter, onboardingRoutes);
-  app.use(`${prefix}/widget`, widgetCors, widgetRoutes);
+  app.use(`${prefix}/widget`, widgetCors, widgetLimiter, widgetRoutes);
   app.use(`${prefix}/demo`, widgetCors, apiLimiter, demoRoutes);
 }
 

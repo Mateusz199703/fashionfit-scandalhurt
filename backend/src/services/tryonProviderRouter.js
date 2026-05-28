@@ -4,6 +4,11 @@ const config = require('../config');
 
 const ALLOWED_PROVIDERS = ['auto', 'fashn', 'google_vto', 'mock'];
 
+function isMockAllowed() {
+  if (!config.isProduction) return true;
+  return Boolean(config.tryon.allowMockInProduction);
+}
+
 function normalizeProvider(value) {
   const raw = String(value || '').trim().toLowerCase();
   if (!ALLOWED_PROVIDERS.includes(raw)) return 'auto';
@@ -37,9 +42,14 @@ function defaultProviderOrder(preferredProvider) {
   push(fallback);
   push('google_vto');
   push('fashn');
-  push('mock');
+  if (isMockAllowed()) {
+    push('mock');
+  }
 
-  return order.filter((provider) => isConfigured(provider) || provider === 'mock');
+  return order.filter((provider) => {
+    if (provider === 'mock') return isMockAllowed();
+    return isConfigured(provider);
+  });
 }
 
 function buildMockImageUrl(sessionId) {
@@ -98,6 +108,10 @@ async function runTryOnWithProviders(params) {
     }
   }
 
+  if (!providerOrder.length) {
+    throw new Error('No try-on provider is configured. Configure Google VTO or FASHN.');
+  }
+
   throw new Error(`All providers failed. ${errors.join(' | ')}`);
 }
 
@@ -107,6 +121,7 @@ function getTryOnProvidersStatus() {
       fashn: Boolean(config.fashn.apiKey),
       google_vto: Boolean(config.google.projectId)
         && (Boolean(process.env.GOOGLE_CREDENTIALS_JSON) || Boolean(process.env.GOOGLE_APPLICATION_CREDENTIALS)),
+      mock: isMockAllowed(),
     },
     defaultProvider: normalizeProvider(config.tryon.defaultProvider),
     fallbackProvider: normalizeProvider(config.tryon.fallbackProvider),

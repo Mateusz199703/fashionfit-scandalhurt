@@ -13,6 +13,10 @@ services:
         sync: false
       - key: API_PUBLIC_URL
         sync: false
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: WIDGET_ALLOWED_ORIGINS
+        sync: false
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_ANON_KEY
@@ -36,6 +40,16 @@ services:
       - key: TRYON_DEFAULT_PROVIDER
         sync: false
       - key: TRYON_FALLBACK_PROVIDER
+        sync: false
+      - key: TRYON_ALLOW_MOCK_IN_PRODUCTION
+        sync: false
+      - key: SECURITY_AUDIT_LOG_ENABLED
+        sync: false
+      - key: API_KEY_ABUSE_WINDOW_MS
+        sync: false
+      - key: API_KEY_ABUSE_MAX_FAILURES
+        sync: false
+      - key: API_KEY_ABUSE_BLOCK_MS
         sync: false
       - key: STRIPE_SECRET_KEY
         sync: false

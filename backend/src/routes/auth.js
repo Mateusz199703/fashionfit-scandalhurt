@@ -249,7 +249,7 @@ async function bootstrapSandboxForClient(client) {
 }
 
 // POST /api/auth/register → create client, return JWT + api_key
-router.post('/register', authLimiter, async (req, res) => {
+router.post('/register', async (req, res) => {
   const {
     email,
     password,
@@ -413,7 +413,7 @@ router.post('/register', authLimiter, async (req, res) => {
 });
 
 // POST /api/auth/login → return JWT
-router.post('/login', authLimiter, async (req, res) => {
+router.post('/login', async (req, res) => {
   const { email, password } = req.body || {};
   if (!email || !password) throw new ApiError(400, 'email and password are required');
   const lock = getLockoutState(email);
