@@ -30,6 +30,11 @@ function monthStartIso() {
   return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
 }
 
+function isWebhookTableMissing(err) {
+  if (!err) return false;
+  return err.code === '42P01' || /stripe_webhook_events/i.test(String(err.message || ''));
+}
+
 // GET /api/billing/overview → plan, period and this month's usage
 router.get('/overview', async (req, res) => {
   if (useMockBackend) {
@@ -75,6 +80,43 @@ router.get('/overview', async (req, res) => {
   });
 });
 
+// GET /api/billing/status → Stripe diagnostics for dashboard UI
+router.get('/status', async (req, res) => {
+  if (useMockBackend) {
+    if (!getMockClientById(req.clientId)) throw new ApiError(404, 'Client not found');
+    res.json({
+      stripeConfigured: false,
+      webhookConfigured: false,
+      stripeCustomerLinked: false,
+      lastWebhookEvent: null,
+    });
+    return;
+  }
+
+  const client = await getClient(req.clientId);
+  let lastWebhookEvent = null;
+
+  try {
+    const { data, error } = await supabase
+      .from('stripe_webhook_events')
+      .select('event_id, event_type, status, processed_at, created_at, error_message')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (error) throw error;
+    lastWebhookEvent = data || null;
+  } catch (err) {
+    if (!isWebhookTableMissing(err)) throw err;
+  }
+
+  res.json({
+    stripeConfigured: stripeService.isStripeSecretConfigured(),
+    webhookConfigured: stripeService.isWebhookSecretConfigured(),
+    stripeCustomerLinked: Boolean(client.stripe_customer_id),
+    lastWebhookEvent,
+  });
+});
+
 // GET /api/billing/history → recent Stripe invoices
 router.get('/history', async (req, res) => {
   if (useMockBackend) {
@@ -92,13 +134,14 @@ router.get('/history', async (req, res) => {
       payments: invoices.map((inv) => ({
         id: inv.id,
         date: new Date(inv.created * 1000).toISOString(),
-        amount: (inv.amount_paid || 0) / 100,
+        amount: ((inv.amount_paid || inv.amount_due || 0) / 100),
         currency: inv.currency,
         status: inv.status,
-        url: inv.hosted_invoice_url,
+        url: inv.hosted_invoice_url || inv.invoice_pdf || null,
       })),
     });
   } catch (e) {
+    console.warn('Stripe invoice list failed:', e.message);
     res.json({ payments: [] });
   }
 });
@@ -146,6 +189,26 @@ router.post('/checkout', async (req, res) => {
     shopDomain: shopDomain || null,
     source: 'dashboard_upgrade',
   });
+  res.json({ url: session.url });
+});
+
+// POST /api/billing/portal → open Stripe customer portal
+router.post('/portal', async (req, res) => {
+  if (useMockBackend) {
+    res.json({ url: `${config.frontendUrl}/billing` });
+    return;
+  }
+
+  if (!stripeService.isStripeSecretConfigured()) {
+    throw new ApiError(503, 'Stripe is not configured on the server yet');
+  }
+
+  const client = await getClient(req.clientId);
+  if (!client.stripe_customer_id) {
+    throw new ApiError(400, 'No Stripe customer is linked to this account yet');
+  }
+
+  const session = await stripeService.createBillingPortalSession(client.stripe_customer_id);
   res.json({ url: session.url });
 });
 

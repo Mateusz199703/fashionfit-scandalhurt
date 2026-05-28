@@ -1,20 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Check, CreditCard, Sparkles } from 'lucide-react';
+import { Check, CreditCard, Sparkles, Link2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { api, apiErrorMessage } from '../api/client';
 import { Card, PlanBadge } from '../components/ui';
 import { Skeleton, RowsSkeleton } from '../components/Skeleton';
 import { PLANS } from '../config';
-import { BillingOverview, Payment, Plan } from '../types';
+import { BillingOverview, BillingStatus, Payment, Plan } from '../types';
 import { formatDate, formatMoney } from '../utils';
 
 export function BillingPage() {
   const [params, setParams] = useSearchParams();
   const [overview, setOverview] = useState<BillingOverview | null>(null);
+  const [status, setStatus] = useState<BillingStatus | null>(null);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
   const [upgrading, setUpgrading] = useState<Plan | null>(null);
+  const [portalLoading, setPortalLoading] = useState(false);
 
   useEffect(() => {
     const status = params.get('status');
@@ -30,10 +32,12 @@ export function BillingPage() {
   useEffect(() => {
     Promise.all([
       api.get<BillingOverview>('/api/billing/overview').then((r) => r.data),
+      api.get<BillingStatus>('/api/billing/status').then((r) => r.data).catch(() => null),
       api.get<{ payments: Payment[] }>('/api/billing/history').then((r) => r.data.payments).catch(() => []),
     ])
-      .then(([ov, pay]) => {
+      .then(([ov, st, pay]) => {
         setOverview(ov);
+        setStatus(st);
         setPayments(pay);
       })
       .catch((err) => toast.error(apiErrorMessage(err)))
@@ -55,6 +59,17 @@ export function BillingPage() {
     ? Math.min(100, Math.round((overview.usage.used / overview.usage.limit) * 100))
     : 0;
 
+  const openPortal = async () => {
+    setPortalLoading(true);
+    try {
+      const { data } = await api.post<{ url: string }>('/api/billing/portal');
+      window.location.href = data.url;
+    } catch (err) {
+      toast.error(apiErrorMessage(err, 'Nie udało się otworzyć panelu płatności Stripe'));
+      setPortalLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <section className="ff-hero-panel">
@@ -67,6 +82,47 @@ export function BillingPage() {
           <CreditCard size={14} /> Subskrypcja
         </span>
       </section>
+
+      {!loading && status && (
+        <Card className="p-5">
+          <h2 className="ff-section-title mb-4">Status integracji Stripe</h2>
+          <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
+            <div className="rounded-xl border border-ink/10 px-3 py-2">
+              <p className="text-xs uppercase tracking-[0.08em] text-ink/55">Stripe Secret</p>
+              <p className={status.stripeConfigured ? 'mt-1 text-sm font-semibold text-ink' : 'mt-1 text-sm text-red-600'}>
+                {status.stripeConfigured ? 'Skonfigurowany' : 'Brak konfiguracji'}
+              </p>
+            </div>
+            <div className="rounded-xl border border-ink/10 px-3 py-2">
+              <p className="text-xs uppercase tracking-[0.08em] text-ink/55">Stripe Webhook</p>
+              <p className={status.webhookConfigured ? 'mt-1 text-sm font-semibold text-ink' : 'mt-1 text-sm text-red-600'}>
+                {status.webhookConfigured ? 'Skonfigurowany' : 'Brak konfiguracji'}
+              </p>
+            </div>
+            <div className="rounded-xl border border-ink/10 px-3 py-2">
+              <p className="text-xs uppercase tracking-[0.08em] text-ink/55">Konto klienta w Stripe</p>
+              <p className={status.stripeCustomerLinked ? 'mt-1 text-sm font-semibold text-ink' : 'mt-1 text-sm text-red-600'}>
+                {status.stripeCustomerLinked ? 'Połączone' : 'Niepołączone'}
+              </p>
+            </div>
+          </div>
+          {status.lastWebhookEvent && (
+            <p className="mt-3 text-xs text-ink/60">
+              Ostatni webhook: {status.lastWebhookEvent.event_type} ({status.lastWebhookEvent.status}) - {formatDate(status.lastWebhookEvent.created_at)}
+            </p>
+          )}
+          <div className="mt-4">
+            <button
+              className="ff-btn-primary"
+              onClick={openPortal}
+              disabled={portalLoading || !status.stripeConfigured || !status.stripeCustomerLinked}
+            >
+              <Link2 size={15} />
+              {portalLoading ? 'Otwieranie...' : 'Zarządzaj subskrypcją (Stripe)'}
+            </button>
+          </div>
+        </Card>
+      )}
 
       {loading || !overview ? (
         <Skeleton className="h-32 w-full" />

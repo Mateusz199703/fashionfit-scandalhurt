@@ -82,6 +82,20 @@ export interface BillingOverview {
   usage: { used: number; limit: number };
 }
 
+export interface BillingStatus {
+  stripeConfigured: boolean;
+  webhookConfigured: boolean;
+  stripeCustomerLinked: boolean;
+  lastWebhookEvent: {
+    event_id: string;
+    event_type: string;
+    status: string;
+    processed_at: string | null;
+    created_at: string;
+    error_message: string | null;
+  } | null;
+}
+
 export interface OnboardingProgress {
   step_account_created: boolean;
   step_shop_added: boolean;

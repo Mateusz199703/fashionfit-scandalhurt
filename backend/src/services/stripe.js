@@ -82,6 +82,13 @@ async function listInvoices(customerId, limit = 12) {
   return result.data;
 }
 
+async function createBillingPortalSession(customerId) {
+  return stripe.billingPortal.sessions.create({
+    customer: customerId,
+    return_url: `${config.frontendUrl}/billing`,
+  });
+}
+
 async function getSubscription(subscriptionId) {
   return stripe.subscriptions.retrieve(subscriptionId);
 }
@@ -91,6 +98,7 @@ module.exports = {
   createCustomer,
   constructEvent,
   createCheckoutSession,
+  createBillingPortalSession,
   listInvoices,
   getSubscription,
   isStripeSecretConfigured,
