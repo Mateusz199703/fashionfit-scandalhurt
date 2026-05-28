@@ -68,6 +68,12 @@ const config = {
     uploadsBucket: 'tryon-uploads',
     resultsBucket: 'tryon-results',
   },
+
+  demo: {
+    apiKey: process.env.DEMO_API_KEY || 'ff_demo_public_key',
+    shopId: process.env.DEMO_SHOP_ID || 'demo-fashionfit-shop',
+    dailyLimit: parseInt(process.env.DEMO_DAILY_LIMIT, 10) || 500,
+  },
 };
 
 module.exports = config;

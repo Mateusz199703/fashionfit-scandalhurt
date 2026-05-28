@@ -35,6 +35,12 @@ services:
         sync: false
       - key: ADMIN_EMAILS
         sync: false
+      - key: DEMO_API_KEY
+        sync: false
+      - key: DEMO_SHOP_ID
+        sync: false
+      - key: DEMO_DAILY_LIMIT
+        sync: false
 
   - type: web
     name: fashionfit-dashboard

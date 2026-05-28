@@ -18,6 +18,7 @@ const billingRoutes = require('./routes/billing');
 const keysRoutes = require('./routes/keys');
 const onboardingRoutes = require('./routes/onboarding');
 const widgetRoutes = require('./routes/widget');
+const demoRoutes = require('./routes/demo');
 const webhookRoutes = require('./routes/webhooks');
 const fashnService = require('./services/fashn');
 const tryonWorker = require('./services/tryonWorker');
@@ -98,6 +99,7 @@ function mountVersionedApi(prefix) {
   app.use(`${prefix}/keys`, dashboardCors, apiLimiter, keysRoutes);
   app.use(`${prefix}/onboarding`, dashboardCors, apiLimiter, onboardingRoutes);
   app.use(`${prefix}/widget`, widgetCors, widgetRoutes);
+  app.use(`${prefix}/demo`, widgetCors, apiLimiter, demoRoutes);
 }
 
 // Primary API namespace

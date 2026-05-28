@@ -327,6 +327,186 @@
       gap: 14px;
     }
 
+    .demo-lab {
+      display: grid;
+      grid-template-columns: 0.96fr 1.04fr;
+      gap: 14px;
+      align-items: stretch;
+    }
+
+    .demo-label {
+      margin: 14px 0 8px;
+      font-size: 12px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-weight: 800;
+      color: rgba(17, 17, 17, 0.52);
+    }
+
+    .demo-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .pick {
+      border: 1px solid rgba(17, 17, 17, 0.14);
+      border-radius: 12px;
+      background: #fff;
+      padding: 8px;
+      cursor: pointer;
+      transition: 0.2s ease;
+      text-align: left;
+      color: #111;
+      font: inherit;
+    }
+
+    .pick.active {
+      border-color: #111;
+      box-shadow: 0 0 0 2px rgba(17, 17, 17, 0.14) inset;
+      transform: translateY(-1px);
+    }
+
+    .pick img {
+      width: 100%;
+      aspect-ratio: 3 / 4;
+      object-fit: cover;
+      border-radius: 9px;
+      border: 1px solid rgba(17, 17, 17, 0.08);
+      display: block;
+    }
+
+    .pick span {
+      display: block;
+      margin-top: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1.3;
+    }
+
+    .demo-actions {
+      margin-top: 16px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .demo-note {
+      font-size: 12px;
+      color: rgba(17, 17, 17, 0.6);
+    }
+
+    .demo-status {
+      margin-top: 10px;
+      min-height: 20px;
+      font-size: 13px;
+      color: rgba(17, 17, 17, 0.72);
+      font-weight: 600;
+    }
+
+    .demo-preview {
+      border-radius: 16px;
+      border: 1px solid rgba(17, 17, 17, 0.12);
+      background: #0e0e0e;
+      color: #f5f5f5;
+      box-shadow: var(--shadow-md);
+      overflow: hidden;
+      min-height: 560px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .demo-preview-head {
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.75);
+      font-weight: 700;
+    }
+
+    .demo-preview-body {
+      padding: 16px;
+      display: grid;
+      gap: 12px;
+      grid-template-rows: auto auto 1fr;
+      height: 100%;
+    }
+
+    .demo-thumb-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .demo-thumb {
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 12px;
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .demo-thumb img {
+      width: 100%;
+      aspect-ratio: 3 / 4;
+      object-fit: cover;
+      display: block;
+    }
+
+    .demo-thumb p {
+      margin: 0;
+      padding: 8px;
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.78);
+    }
+
+    .demo-result {
+      border: 1px dashed rgba(255, 255, 255, 0.3);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.05);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      min-height: 290px;
+    }
+
+    .demo-result img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .demo-result.empty {
+      padding: 22px;
+      text-align: center;
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 14px;
+    }
+
+    .demo-pills {
+      display: inline-flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    .pill {
+      border: 1px solid rgba(17, 17, 17, 0.14);
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      color: rgba(17, 17, 17, 0.75);
+      background: rgba(255, 255, 255, 0.88);
+    }
+
     .tabs {
       display: flex;
       gap: 8px;
@@ -637,6 +817,7 @@
     @media (max-width: 1120px) {
       .hero,
       .demo-wrap,
+      .demo-lab,
       .pricing-grid,
       .grid-3,
       .proof-grid,
@@ -653,6 +834,10 @@
         grid-template-columns: 1fr;
       }
 
+      .demo-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
       .section-head {
         align-items: flex-start;
         flex-direction: column;
@@ -664,6 +849,7 @@
       .brand-name { font-size: 18px; }
       .btn { padding: 11px 16px; font-size: 13px; }
       .hero-panel { min-height: 360px; }
+      .demo-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -749,31 +935,50 @@
     <section id="demo" class="reveal">
       <div class="section-head">
         <div>
-          <h2 class="section-title">Jak wygląda „Przymierz wirtualnie”?</h2>
-          <p class="section-sub">Klient wybiera tryb zdjęcia lub kamery, dostaje wynik i przechodzi do koszyka bez opuszczania produktu.</p>
+          <h2 class="section-title">Demo na żywo</h2>
+          <p class="section-sub">Kliknij produkt, wybierz modelkę i zobacz jak działa przymiarka AI w sandboxie bez rejestracji.</p>
         </div>
       </div>
 
-      <div class="demo-wrap">
+      <div class="demo-lab">
         <article class="card">
-          <div class="tabs">
-            <button class="tab active" data-tab="photo">Tryb zdjęcia</button>
-            <button class="tab" data-tab="live">Live kamerka</button>
+          <div class="demo-pills">
+            <span class="pill">Sandbox</span>
+            <span class="pill" id="demo-usage-pill">Limit dzienny: ...</span>
           </div>
-          <div class="demo-stage" id="demo-stage">
-            <div>
-              <h4>Photo AI</h4>
-              <p>Użytkownik przesyła zdjęcie i po kilku sekundach widzi gotową stylizację.</p>
-            </div>
+
+          <p class="demo-label">1. Wybierz produkt</p>
+          <div id="demo-products" class="demo-grid"></div>
+
+          <p class="demo-label">2. Wybierz modelkę</p>
+          <div id="demo-models" class="demo-grid"></div>
+
+          <div class="demo-actions">
+            <button class="btn btn-primary" id="demo-run-btn" type="button">Uruchom przymiarkę</button>
+            <span class="demo-note">Publiczne demo: limit 500 dziennie.</span>
           </div>
+          <div class="demo-status" id="demo-status"></div>
         </article>
 
-        <article class="card">
-          <h3>Instalacja w 3 krokach</h3>
-          <div class="steps">
-            <div class="step"><b>1</b>Instalujesz wtyczkę FashionFit w WordPress.</div>
-            <div class="step"><b>2</b>Wklejasz API Key i łączysz sklep.</div>
-            <div class="step"><b>3</b>Synchronizujesz produkty i gotowe.</div>
+        <article class="demo-preview">
+          <div class="demo-preview-head">
+            <span>Preview</span>
+            <span id="demo-preview-meta">Tryb: Photo AI</span>
+          </div>
+          <div class="demo-preview-body">
+            <div class="demo-thumb-row">
+              <div class="demo-thumb">
+                <img id="demo-preview-product" alt="Produkt demo" />
+                <p id="demo-preview-product-name">Produkt</p>
+              </div>
+              <div class="demo-thumb">
+                <img id="demo-preview-model" alt="Modelka demo" />
+                <p id="demo-preview-model-name">Modelka</p>
+              </div>
+            </div>
+            <div class="demo-result empty" id="demo-result">
+              Wybierz produkt i modelkę, a następnie kliknij „Uruchom przymiarkę”.
+            </div>
           </div>
         </article>
       </div>
@@ -965,29 +1170,160 @@
   </footer>
 
   <script>
-    const tabs = document.querySelectorAll('.tab');
-    const stage = document.getElementById('demo-stage');
-
-    const DEMO = {
-      photo: {
-        title: 'Photo AI',
-        text: 'Klient dodaje zdjęcie, wybiera rozmiar i dostaje wynik do porównania przed zakupem.'
-      },
-      live: {
-        title: 'Live Kamerka',
-        text: 'Tryb live pokazuje overlay ubrania w czasie rzeczywistym i pozwala zapisać finalny podgląd.'
-      }
+    const DEMO_API_BASE = 'https://fashionfit-backend.onrender.com';
+    const demoState = {
+      key: '',
+      shopId: '',
+      products: [],
+      models: [],
+      selectedProductId: '',
+      selectedModelId: '',
+      running: false
     };
 
-    tabs.forEach((btn) => {
-      btn.addEventListener('click', () => {
-        tabs.forEach((el) => el.classList.remove('active'));
-        btn.classList.add('active');
-        const mode = btn.getAttribute('data-tab');
-        const d = DEMO[mode] || DEMO.photo;
-        stage.innerHTML = `<div><h4>${d.title}</h4><p>${d.text}</p></div>`;
+    const elProducts = document.getElementById('demo-products');
+    const elModels = document.getElementById('demo-models');
+    const elStatus = document.getElementById('demo-status');
+    const elUsage = document.getElementById('demo-usage-pill');
+    const elRun = document.getElementById('demo-run-btn');
+    const elResult = document.getElementById('demo-result');
+    const elPreviewProduct = document.getElementById('demo-preview-product');
+    const elPreviewProductName = document.getElementById('demo-preview-product-name');
+    const elPreviewModel = document.getElementById('demo-preview-model');
+    const elPreviewModelName = document.getElementById('demo-preview-model-name');
+
+    function findById(list, id) {
+      return (list || []).find((item) => item.id === id) || null;
+    }
+
+    function setStatus(message) {
+      elStatus.textContent = message || '';
+    }
+
+    function setUsage(usage) {
+      if (!usage) return;
+      elUsage.textContent = `Limit dzienny: ${usage.used}/${usage.limit}`;
+    }
+
+    function renderPickGrid(container, list, selectedId, onPick) {
+      container.innerHTML = '';
+      list.forEach((item) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `pick${item.id === selectedId ? ' active' : ''}`;
+        btn.innerHTML = `<img src="${item.garmentImageUrl || item.imageUrl}" alt="${item.name}" /><span>${item.name}</span>`;
+        btn.addEventListener('click', () => onPick(item.id));
+        container.appendChild(btn);
       });
-    });
+    }
+
+    function renderPreview() {
+      const product = findById(demoState.products, demoState.selectedProductId);
+      const model = findById(demoState.models, demoState.selectedModelId);
+      if (product) {
+        elPreviewProduct.src = product.garmentImageUrl;
+        elPreviewProductName.textContent = product.name;
+      }
+      if (model) {
+        elPreviewModel.src = model.imageUrl;
+        elPreviewModelName.textContent = model.name;
+      }
+    }
+
+    function setLoadingResult() {
+      elResult.className = 'demo-result empty';
+      elResult.textContent = 'Generuję wynik... zwykle trwa to kilka-kilkanaście sekund.';
+    }
+
+    function setResultImage(url) {
+      elResult.className = 'demo-result';
+      elResult.innerHTML = `<img src="${url}" alt="Wynik demo przymiarki" />`;
+    }
+
+    async function pollStatus(sessionId, retries = 40) {
+      for (let i = 0; i < retries; i += 1) {
+        const resp = await fetch(`${DEMO_API_BASE}/api/demo/tryon/status/${sessionId}?apiKey=${encodeURIComponent(demoState.key)}`);
+        const data = await resp.json();
+        if (data.status === 'completed' && data.resultImageUrl) return data;
+        if (data.status === 'failed') throw new Error(data.error || 'Demo try-on failed');
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+      }
+      throw new Error('Demo timeout. Spróbuj ponownie.');
+    }
+
+    async function runDemoTryon() {
+      if (demoState.running) return;
+      if (!demoState.selectedProductId || !demoState.selectedModelId) {
+        setStatus('Wybierz produkt i modelkę.');
+        return;
+      }
+
+      demoState.running = true;
+      elRun.disabled = true;
+      setStatus('Uruchamiam demo...');
+      setLoadingResult();
+
+      try {
+        const resp = await fetch(`${DEMO_API_BASE}/api/demo/tryon/photo`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            apiKey: demoState.key,
+            shopId: demoState.shopId,
+            productId: demoState.selectedProductId,
+            modelId: demoState.selectedModelId
+          })
+        });
+        const payload = await resp.json();
+        if (!resp.ok) throw new Error(payload.message || payload.error || 'Nie udało się uruchomić demo');
+        setUsage(payload.usage);
+
+        const done = await pollStatus(payload.sessionId);
+        setResultImage(done.resultImageUrl);
+        setStatus('Gotowe. Tak wygląda wynik przymiarki AI.');
+      } catch (err) {
+        elResult.className = 'demo-result empty';
+        elResult.textContent = 'Demo chwilowo niedostępne. Spróbuj ponownie za moment.';
+        setStatus(err.message || 'Błąd demo');
+      } finally {
+        demoState.running = false;
+        elRun.disabled = false;
+      }
+    }
+
+    function renderDemo() {
+      renderPickGrid(elProducts, demoState.products, demoState.selectedProductId, (id) => {
+        demoState.selectedProductId = id;
+        renderDemo();
+      });
+      renderPickGrid(elModels, demoState.models, demoState.selectedModelId, (id) => {
+        demoState.selectedModelId = id;
+        renderDemo();
+      });
+      renderPreview();
+    }
+
+    async function initDemoSection() {
+      try {
+        const resp = await fetch(`${DEMO_API_BASE}/api/demo/catalog`);
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.message || 'Demo catalog error');
+
+        demoState.key = data.demoApiKey;
+        demoState.shopId = data.shopId;
+        demoState.products = data.products || [];
+        demoState.models = data.models || [];
+        demoState.selectedProductId = demoState.products[0] ? demoState.products[0].id : '';
+        demoState.selectedModelId = demoState.models[0] ? demoState.models[0].id : '';
+        setUsage(data.usage);
+        renderDemo();
+      } catch (err) {
+        setStatus('Nie udało się załadować demo. Sprawdź backend API.');
+      }
+    }
+
+    elRun.addEventListener('click', runDemoTryon);
+    initDemoSection();
 
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
