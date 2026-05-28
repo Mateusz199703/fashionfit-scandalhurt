@@ -2,6 +2,7 @@ const express = require('express');
 const config = require('../config');
 const { supabase } = require('../services/supabase');
 const stripeService = require('../services/stripe');
+const { markOnboardingProgressAsync } = require('../services/onboarding');
 const { isMockBackendEnabled } = require('../services/mockStore');
 
 const router = express.Router();
@@ -291,11 +292,15 @@ async function handleCheckoutCompleted(session) {
     });
   }
 
+  const subscriptionStatus = subscription ? subscription.status : 'active';
   await updateClientSubscriptionState({
     clientId,
     customerId: session.customer || null,
-    subscriptionStatus: subscription ? subscription.status : 'active',
+    subscriptionStatus,
     plan,
+  });
+  markOnboardingProgressAsync(clientId, {
+    step_subscription_active: ACTIVE_STATUSES.includes(subscriptionStatus),
   });
 
   await ensureClientShop(clientId, session.metadata ? session.metadata.shop_domain : null);
@@ -327,6 +332,9 @@ async function handleSubscriptionUpdated(subscription) {
     subscriptionStatus: subscription.status,
     plan,
   });
+  markOnboardingProgressAsync(clientId, {
+    step_subscription_active: ACTIVE_STATUSES.includes(subscription.status),
+  });
 }
 
 async function handleSubscriptionDeleted(subscription) {
@@ -352,6 +360,7 @@ async function handleSubscriptionDeleted(subscription) {
       })
       .eq('id', clientId);
     if (clientError) throw clientError;
+    markOnboardingProgressAsync(clientId, { step_subscription_active: false });
   }
 }
 

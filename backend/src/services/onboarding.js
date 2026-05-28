@@ -4,6 +4,7 @@ const {
   listMockShops,
   listMockProducts,
   getMockAnalyticsOverview,
+  getMockClientById,
 } = require('./mockStore');
 
 const ONBOARDING_STEPS = [
@@ -12,6 +13,7 @@ const ONBOARDING_STEPS = [
   'step_plugin_installed',
   'step_products_synced',
   'step_first_tryon',
+  'step_subscription_active',
 ];
 
 function isOnboardingTableMissing(err) {
@@ -27,6 +29,7 @@ function emptySteps() {
     step_plugin_installed: false,
     step_products_synced: false,
     step_first_tryon: false,
+    step_subscription_active: false,
   };
 }
 
@@ -69,6 +72,7 @@ function markOnboardingProgressAsync(clientId, patch) {
 }
 
 async function getDerivedProgressForMock(clientId) {
+  const client = getMockClientById(clientId);
   const shops = listMockShops(clientId) || [];
   const shopIds = shops.map((s) => s.id);
   let syncedProducts = 0;
@@ -87,15 +91,26 @@ async function getDerivedProgressForMock(clientId) {
     step_products_synced: syncedProducts > 0,
     step_plugin_installed: syncedProducts > 0 || tryonCompletions > 0,
     step_first_tryon: tryonCompletions > 0,
+    step_subscription_active: Boolean(client && client.status === 'active'),
   };
 }
 
 async function getDerivedProgressForSupabase(clientId) {
-  const { data: shops, error: shopsError } = await supabase
-    .from('shops')
-    .select('id')
-    .eq('client_id', clientId);
+  const [{ data: shops, error: shopsError }, { data: client, error: clientError }] = await Promise.all([
+    supabase
+      .from('shops')
+      .select('id')
+      .eq('client_id', clientId),
+    supabase
+      .from('clients')
+      .select('status')
+      .eq('id', clientId)
+      .maybeSingle(),
+  ]);
   if (shopsError) throw shopsError;
+  if (clientError) throw clientError;
+
+  const subscriptionActive = Boolean(client && client.status === 'active');
 
   const shopIds = (shops || []).map((s) => s.id);
   if (shopIds.length === 0) {
@@ -104,6 +119,7 @@ async function getDerivedProgressForSupabase(clientId) {
       step_products_synced: false,
       step_plugin_installed: false,
       step_first_tryon: false,
+      step_subscription_active: subscriptionActive,
     };
   }
 
@@ -135,6 +151,7 @@ async function getDerivedProgressForSupabase(clientId) {
     step_products_synced: (syncedProducts || 0) > 0,
     step_plugin_installed: (syncedProducts || 0) > 0 || hasWidgetActivity,
     step_first_tryon: hasTryonComplete,
+    step_subscription_active: subscriptionActive,
   };
 }
 
@@ -180,6 +197,7 @@ async function getOnboardingProgress(clientId) {
     step_plugin_installed: Boolean(merged.step_plugin_installed),
     step_products_synced: Boolean(merged.step_products_synced),
     step_first_tryon: Boolean(merged.step_first_tryon),
+    step_subscription_active: Boolean(merged.step_subscription_active),
   };
 
   const meta = withProgressMeta(steps, tableRow ? tableRow.completed_at : null);

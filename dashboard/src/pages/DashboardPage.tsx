@@ -87,6 +87,7 @@ export function DashboardPage() {
         { label: 'Wtyczka połączona', done: onboarding.step_plugin_installed },
         { label: 'Produkty zsynchronizowane', done: onboarding.step_products_synced },
         { label: 'Pierwsza przymiarka klienta', done: onboarding.step_first_tryon },
+        { label: 'Plan aktywny (płatność)', done: onboarding.step_subscription_active },
       ]
     : [];
 

@@ -88,6 +88,7 @@ export interface OnboardingProgress {
   step_plugin_installed: boolean;
   step_products_synced: boolean;
   step_first_tryon: boolean;
+  step_subscription_active: boolean;
   completed_at: string | null;
   completed_steps: number;
   total_steps: number;
