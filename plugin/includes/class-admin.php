@@ -116,6 +116,22 @@ class FashionFit_Admin {
 
 		$out['api_key'] = isset( $input['api_key'] ) ? sanitize_text_field( $input['api_key'] ) : '';
 
+		// Persist shop_id from hidden form field so it survives regular settings saves.
+		if ( isset( $input['shop_id'] ) ) {
+			$posted_shop_id = sanitize_text_field( $input['shop_id'] );
+			if ( '' !== $posted_shop_id ) {
+				$out['shop_id'] = $posted_shop_id;
+			}
+		}
+
+		// Persist sync snapshot from hidden fields updated by AJAX.
+		if ( isset( $input['last_sync_time'] ) ) {
+			$out['last_sync_time'] = sanitize_text_field( $input['last_sync_time'] );
+		}
+		if ( isset( $input['synced_count'] ) ) {
+			$out['synced_count'] = max( 0, (int) $input['synced_count'] );
+		}
+
 		if ( isset( $input['primary_color'] ) ) {
 			$color                = sanitize_hex_color( $input['primary_color'] );
 			$out['primary_color'] = $color ? $color : $current['primary_color'];
@@ -129,6 +145,11 @@ class FashionFit_Admin {
 		$out['position']  = ( isset( $input['position'] ) && in_array( $input['position'], $positions, true ) )
 			? $input['position']
 			: 'bottom-right';
+
+		$providers              = array( 'auto', 'google_vto', 'fashn', 'mock' );
+		$out['tryon_provider']  = ( isset( $input['tryon_provider'] ) && in_array( $input['tryon_provider'], $providers, true ) )
+			? $input['tryon_provider']
+			: 'auto';
 
 		$show_options    = array( 'products', 'cards', 'everywhere' );
 		$out['show_on']  = ( isset( $input['show_on'] ) && in_array( $input['show_on'], $show_options, true ) )

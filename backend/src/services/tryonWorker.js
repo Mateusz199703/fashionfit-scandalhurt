@@ -4,8 +4,9 @@ const {
   isRemoteUrl,
   createSignedUrl,
   uploadFromUrl,
+  uploadBase64,
 } = require('./storage');
-const fashn = require('./fashn');
+const { runTryOnWithProviders, normalizeProvider } = require('./tryonProviderRouter');
 
 const CONCURRENCY = 5;
 const MAX_RETRIES = 3;
@@ -162,26 +163,54 @@ async function processJob(job) {
     }
 
     const modelImage = await resolvePersonImageForFashn(claimed);
-    const predictionId = claimed.fashn_prediction_id || await fashn.run({
-      modelImage,
-      garmentImage: product.garment_image_url,
-      category: product.category,
-    });
-    if (!claimed.fashn_prediction_id && predictionId) {
-      await persistPredictionId(claimed.id, predictionId);
-    }
-
-    const prediction = await fashn.pollUntilComplete(predictionId);
-    const outputUrl = Array.isArray(prediction.output) ? prediction.output[0] : prediction.output;
-    if (!outputUrl) throw new Error('FASHN output is empty');
-
-    const storedPath = await uploadFromUrl(
-      config.storage.resultsBucket,
-      resultStoragePath(claimed),
-      outputUrl,
+    const preferredProvider = normalizeProvider(
+      claimed.ai_provider
+      || (metadata && metadata.preferredProvider)
+      || 'auto',
     );
 
-    await completeSession(claimed, storedPath, Date.now() - startedAt, predictionId);
+    const result = await runTryOnWithProviders({
+      sessionId: claimed.id,
+      modelImageUrl: modelImage,
+      garmentImageUrl: product.garment_image_url,
+      category: product.category,
+      preferredProvider,
+    });
+
+    let storedPath = '';
+    if (result.resultBase64) {
+      storedPath = await uploadBase64(
+        config.storage.resultsBucket,
+        resultStoragePath(claimed),
+        result.resultBase64,
+        result.mimeType || 'image/jpeg',
+      );
+    } else if (result.remoteImageUrl) {
+      storedPath = await uploadFromUrl(
+        config.storage.resultsBucket,
+        resultStoragePath(claimed),
+        result.remoteImageUrl,
+      );
+    } else {
+      throw new Error('Try-on provider returned no image output');
+    }
+
+    if (result.predictionId && !claimed.fashn_prediction_id) {
+      await persistPredictionId(claimed.id, result.predictionId);
+    }
+
+    await completeSession(claimed, storedPath, Date.now() - startedAt, result.predictionId || null);
+
+    const { error: providerMetaError } = await supabase
+      .from('tryon_sessions')
+      .update({
+        metadata: mergeMetadata(metadata, {
+          preferredProvider,
+          usedProvider: result.provider || 'unknown',
+        }),
+      })
+      .eq('id', claimed.id);
+    if (providerMetaError) throw providerMetaError;
   } catch (err) {
     await failOrRetrySession(claimed, attempt, err.message || 'Try-on processing failed');
   }

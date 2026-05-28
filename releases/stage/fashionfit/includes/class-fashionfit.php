@@ -64,6 +64,7 @@ class FashionFit {
 			'primary_color'  => '#C4883A',
 			'button_label'   => 'Przymierz wirtualnie ✨',
 			'position'       => 'bottom-right',
+			'tryon_provider' => 'auto',
 			'show_on'        => 'products',
 			'auto_sync'      => 0,
 			'last_sync_time' => '',

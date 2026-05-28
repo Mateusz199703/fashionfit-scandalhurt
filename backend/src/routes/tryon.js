@@ -13,6 +13,7 @@ const { isShopOwnedByClient } = require('../services/ownership');
 const { checkUsageQuota } = require('../middleware/usageCheck');
 const tryonWorker = require('../services/tryonWorker');
 const fashn = require('../services/fashn');
+const { ALLOWED_PROVIDERS, normalizeProvider } = require('../services/tryonProviderRouter');
 const { ApiError } = require('../middleware/errorHandler');
 
 // Mounted under /api/widget/tryon — API key auth is applied by the parent router.
@@ -58,11 +59,21 @@ async function fetchSessionById(sessionId) {
 
 // POST /api/widget/tryon/photo
 router.post('/photo', checkUsageQuota, async (req, res) => {
-  const { shopId, productId, personImageBase64, metadata } = req.body || {};
+  const {
+    shopId,
+    productId,
+    personImageBase64,
+    metadata,
+    preferredProvider: preferredProviderInput,
+  } = req.body || {};
   if (!shopId || !productId || !personImageBase64) {
     throw new ApiError(400, 'shopId, productId and personImageBase64 are required');
   }
   validatePersonImageBase64(personImageBase64);
+  const preferredProvider = normalizeProvider(preferredProviderInput || (metadata && metadata.preferredProvider) || 'auto');
+  if (!ALLOWED_PROVIDERS.includes(preferredProvider)) {
+    throw new ApiError(400, `Unsupported preferredProvider. Allowed: ${ALLOWED_PROVIDERS.join(', ')}`);
+  }
 
   const idempotencyKey = getIdempotencyKey(req);
   if (idempotencyKey) {
@@ -121,6 +132,7 @@ router.post('/photo', checkUsageQuota, async (req, res) => {
       person_image_url: personKey,
       metadata: {
         ...(metadata || {}),
+        preferredProvider,
         ...(idempotencyKey ? { idempotencyKey } : {}),
         processing_mode: 'background_queue',
       },

@@ -29,6 +29,7 @@ export function getConfig(scriptEl) {
     apiUrl: (global.apiUrl || data.fashionfitApi || 'https://api.fashionfit.app').replace(/\/$/, ''),
     primaryColor: global.primaryColor || data.fashionfitColor || '#C4883A',
     buttonLabel: global.buttonLabel || data.fashionfitLabel || 'Przymierz wirtualnie ✨',
+    tryonProvider: global.tryonProvider || data.fashionfitProvider || 'auto',
   };
 }
 

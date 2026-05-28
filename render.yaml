@@ -23,6 +23,20 @@ services:
         sync: false
       - key: FASHN_API_KEY
         sync: false
+      - key: GOOGLE_CLOUD_PROJECT
+        sync: false
+      - key: GOOGLE_CLOUD_LOCATION
+        sync: false
+      - key: GOOGLE_VTO_MODEL
+        sync: false
+      - key: GOOGLE_APPLICATION_CREDENTIALS
+        sync: false
+      - key: GOOGLE_CREDENTIALS_JSON
+        sync: false
+      - key: TRYON_DEFAULT_PROVIDER
+        sync: false
+      - key: TRYON_FALLBACK_PROVIDER
+        sync: false
       - key: STRIPE_SECRET_KEY
         sync: false
       - key: STRIPE_WEBHOOK_SECRET

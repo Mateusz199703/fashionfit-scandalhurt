@@ -16,7 +16,16 @@ export function createApi(config) {
     startPhotoTryon(productId, personImageBase64, metadata) {
       return request('/api/widget/tryon/photo', {
         method: 'POST',
-        body: JSON.stringify({ shopId: config.shopId, productId, personImageBase64, metadata }),
+        body: JSON.stringify({
+          shopId: config.shopId,
+          productId,
+          personImageBase64,
+          preferredProvider: config.tryonProvider || 'auto',
+          metadata: {
+            ...(metadata || {}),
+            preferredProvider: config.tryonProvider || 'auto',
+          },
+        }),
       });
     },
     getTryonStatus(sessionId) {

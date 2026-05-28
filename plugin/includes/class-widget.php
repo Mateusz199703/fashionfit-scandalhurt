@@ -34,6 +34,7 @@ class FashionFit_Widget {
 			'primaryColor' => $settings['primary_color'],
 			'buttonLabel'  => $settings['button_label'],
 			'position'     => $settings['position'],
+			'tryonProvider' => isset( $settings['tryon_provider'] ) ? $settings['tryon_provider'] : 'auto',
 		);
 
 		echo "\n<!-- FashionFit Virtual Try-On -->\n";

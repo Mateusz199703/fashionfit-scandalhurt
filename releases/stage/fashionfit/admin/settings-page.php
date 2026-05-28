@@ -47,6 +47,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 					<td>
 						<input type="text" id="fashionfit_shop_id" class="regular-text" readonly
 							value="<?php echo esc_attr( $settings['shop_id'] ); ?>" />
+						<input type="hidden" id="fashionfit_shop_id_hidden"
+							name="<?php echo esc_attr( FashionFit::OPTION ); ?>[shop_id]"
+							value="<?php echo esc_attr( $settings['shop_id'] ); ?>" />
 						<button type="button" class="button button-secondary" id="fashionfit-connect"
 							data-nonce="<?php echo esc_attr( $nonce ); ?>">
 							<?php esc_html_e( 'Połącz ze sklepem', 'fashionfit' ); ?>
@@ -90,6 +93,26 @@ if ( ! defined( 'ABSPATH' ) ) {
 					</td>
 				</tr>
 				<tr>
+					<th scope="row"><label for="fashionfit_tryon_provider"><?php esc_html_e( 'Silnik AI try-on', 'fashionfit' ); ?></label></th>
+					<td>
+						<select name="<?php echo esc_attr( FashionFit::OPTION ); ?>[tryon_provider]" id="fashionfit_tryon_provider">
+							<option value="auto" <?php selected( $settings['tryon_provider'], 'auto' ); ?>>
+								<?php esc_html_e( 'Auto (najlepszy dostępny)', 'fashionfit' ); ?>
+							</option>
+							<option value="google_vto" <?php selected( $settings['tryon_provider'], 'google_vto' ); ?>>
+								<?php esc_html_e( 'Google VTO', 'fashionfit' ); ?>
+							</option>
+							<option value="fashn" <?php selected( $settings['tryon_provider'], 'fashn' ); ?>>
+								<?php esc_html_e( 'FASHN.ai', 'fashionfit' ); ?>
+							</option>
+							<option value="mock" <?php selected( $settings['tryon_provider'], 'mock' ); ?>>
+								<?php esc_html_e( 'Mock (test UI)', 'fashionfit' ); ?>
+							</option>
+						</select>
+						<p class="description"><?php esc_html_e( 'Wybierz provider przymiarek dla tego sklepu. Polecane na teraz: Google VTO.', 'fashionfit' ); ?></p>
+					</td>
+				</tr>
+				<tr>
 					<th scope="row"><label for="fashionfit_show_on"><?php esc_html_e( 'Pokaż na', 'fashionfit' ); ?></label></th>
 					<td>
 						<select name="<?php echo esc_attr( FashionFit::OPTION ); ?>[show_on]" id="fashionfit_show_on">
@@ -117,11 +140,19 @@ if ( ! defined( 'ABSPATH' ) ) {
 						<span id="fashionfit-last-sync">
 							<?php echo $settings['last_sync_time'] ? esc_html( $settings['last_sync_time'] ) : esc_html__( 'Nigdy', 'fashionfit' ); ?>
 						</span>
+						<input type="hidden" id="fashionfit_last_sync_hidden"
+							name="<?php echo esc_attr( FashionFit::OPTION ); ?>[last_sync_time]"
+							value="<?php echo esc_attr( (string) $settings['last_sync_time'] ); ?>" />
 					</td>
 				</tr>
 				<tr>
 					<th scope="row"><?php esc_html_e( 'Zsynchronizowane produkty', 'fashionfit' ); ?></th>
-					<td><span id="fashionfit-synced-count"><?php echo esc_html( (string) $settings['synced_count'] ); ?></span></td>
+					<td>
+						<span id="fashionfit-synced-count"><?php echo esc_html( (string) $settings['synced_count'] ); ?></span>
+						<input type="hidden" id="fashionfit_synced_count_hidden"
+							name="<?php echo esc_attr( FashionFit::OPTION ); ?>[synced_count]"
+							value="<?php echo esc_attr( (string) $settings['synced_count'] ); ?>" />
+					</td>
 				</tr>
 				<tr>
 					<th scope="row"><?php esc_html_e( 'Synchronizuj', 'fashionfit' ); ?></th>
@@ -181,6 +212,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 				connectBtn.disabled = false;
 				if ( res && res.success ) {
 					document.getElementById( 'fashionfit_shop_id' ).value = res.data.shopId || '';
+					document.getElementById( 'fashionfit_shop_id_hidden' ).value = res.data.shopId || '';
 					status.textContent = res.data.message;
 					status.className = 'fashionfit-status fashionfit-ok';
 				} else {
@@ -207,8 +239,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 					status.textContent = res.data.message;
 					status.className = 'fashionfit-status fashionfit-ok';
 					document.getElementById( 'fashionfit-synced-count' ).textContent = res.data.synced;
+					document.getElementById( 'fashionfit_synced_count_hidden' ).value = String( res.data.synced || 0 );
 					if ( res.data.last_sync ) {
 						document.getElementById( 'fashionfit-last-sync' ).textContent = res.data.last_sync;
+						document.getElementById( 'fashionfit_last_sync_hidden' ).value = res.data.last_sync;
 					}
 				} else {
 					status.textContent = ( res && res.data && res.data.message ) ? res.data.message : 'Error';

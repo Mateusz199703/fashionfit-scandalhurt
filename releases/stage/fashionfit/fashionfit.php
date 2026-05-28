@@ -3,7 +3,7 @@
  * Plugin Name: FashionFit — Virtual Try-On
  * Plugin URI: https://fashionfit.app
  * Description: Wirtualna przymierzalnia dla Twojego sklepu WooCommerce
- * Version: 1.0.4
+ * Version: 1.0.8
  * Author: FashionFit
  * Text Domain: fashionfit
  * Requires at least: 5.8
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'FASHIONFIT_VERSION', '1.0.4' );
+define( 'FASHIONFIT_VERSION', '1.0.8' );
 define( 'FASHIONFIT_PLUGIN_FILE', __FILE__ );
 define( 'FASHIONFIT_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'FASHIONFIT_PLUGIN_URL', plugin_dir_url( __FILE__ ) );

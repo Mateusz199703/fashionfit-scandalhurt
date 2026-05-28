@@ -46,6 +46,17 @@ const config = {
     pollIntervalMs: 3000,
   },
 
+  google: {
+    projectId: process.env.GOOGLE_CLOUD_PROJECT || '',
+    location: process.env.GOOGLE_CLOUD_LOCATION || 'europe-west4',
+    vtoModel: process.env.GOOGLE_VTO_MODEL || 'virtual-try-on-001',
+  },
+
+  tryon: {
+    defaultProvider: process.env.TRYON_DEFAULT_PROVIDER || 'auto',
+    fallbackProvider: process.env.TRYON_FALLBACK_PROVIDER || 'mock',
+  },
+
   stripe: {
     secretKey: process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder',
     webhookSecret: process.env.STRIPE_WEBHOOK_SECRET || '',

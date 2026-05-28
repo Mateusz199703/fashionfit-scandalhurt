@@ -22,6 +22,8 @@ const demoRoutes = require('./routes/demo');
 const webhookRoutes = require('./routes/webhooks');
 const fashnService = require('./services/fashn');
 const tryonWorker = require('./services/tryonWorker');
+const googleVto = require('./services/googleVto');
+const { getTryOnProvidersStatus } = require('./services/tryonProviderRouter');
 
 const packageJson = require('../package.json');
 
@@ -64,7 +66,8 @@ app.use('/api/webhooks', webhookRoutes);
 
 app.use(express.json({ limit: '15mb' }));
 
-app.get('/health', (req, res) => {
+app.get('/health', async (req, res) => {
+  const googleAvailable = await googleVto.healthCheck();
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
@@ -73,6 +76,10 @@ app.get('/health', (req, res) => {
       database: 'unknown',
       redis: 'unknown',
       fashn_circuit: fashnService.getCircuitState(),
+      tryon_providers: {
+        ...getTryOnProvidersStatus(),
+        googleConnectivity: googleAvailable,
+      },
       tryon_worker: tryonWorker.getStats(),
     },
   });
