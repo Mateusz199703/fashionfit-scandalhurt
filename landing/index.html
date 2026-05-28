@@ -1316,6 +1316,11 @@
         demoState.selectedProductId = demoState.products[0] ? demoState.products[0].id : '';
         demoState.selectedModelId = demoState.models[0] ? demoState.models[0].id : '';
         setUsage(data.usage);
+        if (data.engine === 'mock') {
+          setStatus('Try-on działa obecnie w trybie mock. Aby zobaczyć realne nałożenie, ustaw FASHN_API_KEY w backendzie.');
+        } else {
+          setStatus('Try-on działa na silniku FASHN.ai.');
+        }
         renderDemo();
       } catch (err) {
         setStatus('Nie udało się załadować demo. Sprawdź backend API.');

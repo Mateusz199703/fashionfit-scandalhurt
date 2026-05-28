@@ -73,6 +73,8 @@ const config = {
     apiKey: process.env.DEMO_API_KEY || 'ff_demo_public_key',
     shopId: process.env.DEMO_SHOP_ID || 'demo-fashionfit-shop',
     dailyLimit: parseInt(process.env.DEMO_DAILY_LIMIT, 10) || 500,
+    productsSourceUrl: process.env.DEMO_PRODUCTS_SOURCE_URL
+      || 'https://scandalhurt.pl/wp-json/wc/store/v1/products?per_page=12&orderby=date&order=desc',
   },
 };
 

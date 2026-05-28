@@ -21,13 +21,15 @@ function assertAuthorized(req) {
 }
 
 // GET /api/demo/catalog
-router.get('/catalog', (req, res) => {
-  const catalog = getDemoCatalog();
+router.get('/catalog', async (req, res) => {
+  const catalog = await getDemoCatalog();
   res.json({
     shopId: catalog.shopId,
     usage: catalog.usage,
     products: catalog.products,
     models: catalog.models,
+    source: catalog.source,
+    engine: catalog.engine,
     // Public frontend can read this key to run the guided demo flow only.
     demoApiKey: config.demo.apiKey,
   });
