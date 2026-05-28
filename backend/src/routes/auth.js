@@ -38,6 +38,28 @@ function isTableMissingError(err, tableName) {
   return String(err.message || '').toLowerCase().includes(String(tableName || '').toLowerCase());
 }
 
+async function seedOnboardingProgress(clientId) {
+  try {
+    const { error } = await supabase
+      .from('onboarding_progress')
+      .upsert(
+        {
+          client_id: clientId,
+          step_account_created: true,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'client_id' },
+      );
+    if (error) throw error;
+  } catch (err) {
+    if (isTableMissingError(err, 'onboarding_progress')) {
+      console.warn('onboarding_progress table missing, skipping seed');
+      return;
+    }
+    throw err;
+  }
+}
+
 function signAccessToken(client) {
   return jwt.sign({ sub: client.id, email: client.email }, config.jwtSecret, {
     expiresIn: config.jwtExpiresIn,
@@ -188,6 +210,7 @@ router.post('/register', authLimiter, async (req, res) => {
   if (error) throw error;
 
   let issuedApiKey = data.api_key;
+  await seedOnboardingProgress(data.id);
   try {
     const generated = await generateApiKey(data.id, {
       name: 'Default key',

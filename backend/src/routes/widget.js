@@ -15,6 +15,7 @@ const tryonRoutes = require('./tryon');
 
 const ALLOWED_CATEGORIES = ['tops', 'bottoms', 'one-pieces', 'outerwear', 'accessories'];
 const mockTryonSessions = new Map();
+const MAX_BATCH_EVENTS = 50;
 
 function normalizeDomain(value) {
   if (!value) return null;
@@ -24,6 +25,80 @@ function normalizeDomain(value) {
     .replace(/^https?:\/\//, '')
     .replace(/^www\./, '')
     .replace(/\/.*$/, '');
+}
+
+function normalizeEvent(input) {
+  if (!input || typeof input !== 'object') return null;
+  const shopId = input.shopId || input.shop_id || null;
+  const eventType = input.eventType || input.event_type || null;
+  if (!shopId || !eventType) return null;
+  return {
+    shopId: String(shopId),
+    eventType: String(eventType),
+    productId: input.productId || input.product_id || null,
+    sessionId: input.sessionId || input.session_id || null,
+    metadata: input.metadata || null,
+  };
+}
+
+async function markFirstTryonComplete(clientId) {
+  try {
+    // If table is missing in older schema, keep analytics flow non-blocking.
+    const { data, error } = await supabase
+      .from('onboarding_progress')
+      .upsert(
+        {
+          client_id: clientId,
+          step_first_tryon: true,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'client_id' },
+      )
+      .select('client_id')
+      .maybeSingle();
+    if (error) {
+      if (error.code === '42P01' || /onboarding_progress/i.test(String(error.message || ''))) return;
+      throw error;
+    }
+    return data;
+  } catch (err) {
+    console.warn('onboarding_progress update skipped:', err.message);
+  }
+}
+
+function persistEventsAsync(rows, clientId) {
+  setImmediate(async () => {
+    if (!rows.length) return;
+    const payload = rows.map((event) => ({
+      shop_id: event.shopId,
+      event_type: event.eventType,
+      product_id: event.productId || null,
+      session_id: event.sessionId || null,
+      metadata: event.metadata || null,
+    }));
+
+    try {
+      const { error } = await supabase.from('analytics_events').insert(payload);
+      if (error) throw error;
+    } catch (err) {
+      console.warn('widget events insert failed:', err.message);
+    }
+
+    if (rows.some((event) => event.eventType === 'tryon_complete')) {
+      await markFirstTryonComplete(clientId);
+    }
+  });
+}
+
+async function validateEventShopOwnership(events, clientId) {
+  const uniqueShopIds = [...new Set(events.map((e) => e.shopId))];
+  for (const shopId of uniqueShopIds) {
+    // eslint-disable-next-line no-await-in-loop
+    const owned = await isShopOwnedByClient(shopId, clientId);
+    if (!owned) {
+      throw new ApiError(403, `Shop ${shopId} does not belong to this API key`);
+    }
+  }
 }
 
 // Public router for the embeddable widget. Auth via X-API-Key.
@@ -157,29 +232,50 @@ if (isMockBackendEnabled()) {
 
 // POST /api/widget/events
 router.post('/events', async (req, res) => {
-  const { shopId, eventType, productId, sessionId, metadata } = req.body || {};
-  if (!shopId || !eventType) throw new ApiError(400, 'shopId and eventType are required');
+  const event = normalizeEvent(req.body || {});
+  if (!event) throw new ApiError(400, 'shopId and eventType are required');
 
   if (isMockBackendEnabled()) {
-    const ok = trackMockAnalyticsEvent(shopId, req.clientId, eventType);
+    const ok = trackMockAnalyticsEvent(event.shopId, req.clientId, event.eventType);
     if (!ok) throw new ApiError(403, 'Shop does not belong to this API key');
-    res.status(201).json({ ok: true });
+    res.status(202).json({ accepted: 1 });
     return;
   }
 
-  if (!(await isShopOwnedByClient(shopId, req.clientId))) {
+  if (!(await isShopOwnedByClient(event.shopId, req.clientId))) {
     throw new ApiError(403, 'Shop does not belong to this API key');
   }
+  persistEventsAsync([event], req.clientId);
+  res.status(202).json({ accepted: 1 });
+});
 
-  const { error } = await supabase.from('analytics_events').insert({
-    shop_id: shopId,
-    event_type: eventType,
-    product_id: productId || null,
-    session_id: sessionId || null,
-    metadata: metadata || null,
-  });
-  if (error) throw error;
-  res.status(201).json({ ok: true });
+// POST /api/widget/events/batch
+router.post('/events/batch', async (req, res) => {
+  const events = Array.isArray(req.body && req.body.events) ? req.body.events : null;
+  if (!events) throw new ApiError(400, 'events array is required');
+  if (events.length === 0) return res.status(202).json({ accepted: 0 });
+  if (events.length > MAX_BATCH_EVENTS) {
+    throw new ApiError(400, `Maximum ${MAX_BATCH_EVENTS} events per batch`);
+  }
+
+  const normalized = events.map(normalizeEvent).filter(Boolean);
+  if (normalized.length !== events.length) {
+    throw new ApiError(400, 'Every event must include shopId and eventType');
+  }
+
+  if (isMockBackendEnabled()) {
+    for (const event of normalized) {
+      // eslint-disable-next-line no-await-in-loop
+      const ok = trackMockAnalyticsEvent(event.shopId, req.clientId, event.eventType);
+      if (!ok) throw new ApiError(403, `Shop ${event.shopId} does not belong to this API key`);
+    }
+    res.status(202).json({ accepted: normalized.length });
+    return;
+  }
+
+  await validateEventShopOwnership(normalized, req.clientId);
+  persistEventsAsync(normalized, req.clientId);
+  res.status(202).json({ accepted: normalized.length });
 });
 
 // GET /api/widget/products/:shopId

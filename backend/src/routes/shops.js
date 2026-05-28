@@ -67,6 +67,34 @@ function withDecryptedWooCredentials(shop) {
   }
 }
 
+function isOnboardingTableMissing(err) {
+  if (!err) return false;
+  if (err.code === '42P01') return true;
+  return /onboarding_progress/i.test(String(err.message || ''));
+}
+
+function markOnboardingProgressAsync(clientId, patch) {
+  setImmediate(async () => {
+    try {
+      const { error } = await supabase
+        .from('onboarding_progress')
+        .upsert(
+          {
+            client_id: clientId,
+            updated_at: new Date().toISOString(),
+            ...patch,
+          },
+          { onConflict: 'client_id' },
+        );
+      if (error) throw error;
+    } catch (err) {
+      if (!isOnboardingTableMissing(err)) {
+        console.warn('onboarding progress update failed:', err.message);
+      }
+    }
+  });
+}
+
 function resolveWidgetScriptUrl(req) {
   const base = config.apiPublicUrl || `${req.protocol}://${req.get('host')}`;
   return `${String(base).replace(/\/+$/, '')}/widget.js`;
@@ -137,6 +165,7 @@ router.post('/', async (req, res) => {
     .select('*')
     .single();
   if (error) throw error;
+  markOnboardingProgressAsync(req.clientId, { step_shop_added: true });
   res.status(201).json({ shop: sanitizeShop(data) });
 });
 
@@ -278,6 +307,7 @@ router.post('/:id/sync', async (req, res) => {
     throw new ApiError(400, 'Shop is missing WooCommerce API credentials');
   }
   const result = await syncShopProducts(shop);
+  markOnboardingProgressAsync(req.clientId, { step_products_synced: true });
   res.json(result);
 });
 
