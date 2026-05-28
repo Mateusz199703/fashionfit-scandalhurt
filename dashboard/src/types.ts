@@ -32,6 +32,7 @@ export interface Shop {
   platform: ShopPlatform;
   widget_config: WidgetConfig;
   is_active: boolean;
+  hasWooCredentials?: boolean;
   created_at: string;
 }
 

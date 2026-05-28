@@ -29,6 +29,7 @@ function validateEnv(config) {
     'JWT_SECRET',
     'FRONTEND_URL',
     'API_PUBLIC_URL',
+    'ENCRYPTION_KEY',
   ];
 
   if (isProduction) {
