@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { Check, CreditCard, Sparkles, Link2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { api, apiErrorMessage } from '../api/client';
+import { useAuth } from '../auth/AuthContext';
 import { Card, PlanBadge } from '../components/ui';
 import { Skeleton, RowsSkeleton } from '../components/Skeleton';
 import { PLANS } from '../config';
@@ -10,6 +11,7 @@ import { BillingOverview, BillingStatus, Payment, Plan } from '../types';
 import { formatDate, formatMoney } from '../utils';
 
 export function BillingPage() {
+  const { client } = useAuth();
   const [params, setParams] = useSearchParams();
   const [overview, setOverview] = useState<BillingOverview | null>(null);
   const [status, setStatus] = useState<BillingStatus | null>(null);
@@ -58,6 +60,11 @@ export function BillingPage() {
   const usagePct = overview && overview.usage.limit > 0
     ? Math.min(100, Math.round((overview.usage.used / overview.usage.limit) * 100))
     : 0;
+  const adminEmails = String(process.env.REACT_APP_ADMIN_EMAILS || '')
+    .split(',')
+    .map((x) => x.trim().toLowerCase())
+    .filter(Boolean);
+  const isAdmin = Boolean(client?.email && adminEmails.includes(String(client.email).toLowerCase()));
 
   const openPortal = async () => {
     setPortalLoading(true);
@@ -84,6 +91,7 @@ export function BillingPage() {
       </section>
 
       {!loading && status && (
+        isAdmin ? (
         <Card className="p-5">
           <h2 className="ff-section-title mb-4">Status integracji Stripe</h2>
           <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
@@ -111,17 +119,8 @@ export function BillingPage() {
               Ostatni webhook: {status.lastWebhookEvent.event_type} ({status.lastWebhookEvent.status}) - {formatDate(status.lastWebhookEvent.created_at)}
             </p>
           )}
-          <div className="mt-4">
-            <button
-              className="ff-btn-primary"
-              onClick={openPortal}
-              disabled={portalLoading || !status.stripeConfigured || !status.stripeCustomerLinked}
-            >
-              <Link2 size={15} />
-              {portalLoading ? 'Otwieranie...' : 'Zarządzaj subskrypcją (Stripe)'}
-            </button>
-          </div>
         </Card>
+        ) : null
       )}
 
       {loading || !overview ? (
@@ -155,6 +154,13 @@ export function BillingPage() {
               <div className="h-full rounded-full bg-black" style={{ width: `${usagePct}%` }} />
             </div>
           </div>
+
+          <div className="mt-5">
+            <button className="ff-btn-primary" onClick={openPortal} disabled={portalLoading}>
+              <Link2 size={15} />
+              {portalLoading ? 'Otwieranie...' : 'Zarządzaj subskrypcją (Stripe)'}
+            </button>
+          </div>
         </Card>
       )}
 
@@ -163,6 +169,7 @@ export function BillingPage() {
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           {PLANS.map((plan) => {
             const isCurrent = overview?.plan === plan.id;
+            const canCheckout = Boolean(overview?.checkoutEnabled && overview?.availablePlans?.[plan.id]);
             return (
               <Card key={plan.id} className={`flex flex-col p-5 ${isCurrent ? 'ring-1 ring-black/40' : ''}`}>
                 <div className="flex items-center justify-between">
@@ -182,11 +189,16 @@ export function BillingPage() {
                 </ul>
                 <button
                   className="ff-btn-primary mt-5"
-                  disabled={isCurrent || upgrading !== null}
+                  disabled={isCurrent || upgrading !== null || !canCheckout}
                   onClick={() => upgrade(plan.id)}
                 >
-                  {isCurrent ? 'Aktywny' : upgrading === plan.id ? 'Przekierowanie...' : 'Wybierz plan'}
+                  {isCurrent ? 'Aktywny' : !canCheckout ? 'Niedostępny teraz' : upgrading === plan.id ? 'Przekierowanie...' : 'Wybierz plan'}
                 </button>
+                {!canCheckout && !isCurrent && (
+                  <p className="mt-2 text-xs text-ink/55">
+                    Plan chwilowo niedostępny (brak konfiguracji płatności).
+                  </p>
+                )}
               </Card>
             );
           })}

@@ -9,6 +9,14 @@ function parseAllowedOrigins(value, fallback) {
     .filter(Boolean);
 }
 
+function parseCsvList(value) {
+  if (!value || !String(value).trim()) return [];
+  return String(value)
+    .split(',')
+    .map((item) => item.trim().toLowerCase())
+    .filter(Boolean);
+}
+
 const config = {
   env: process.env.NODE_ENV || 'development',
   isProduction: (process.env.NODE_ENV || 'development') === 'production',
@@ -18,6 +26,7 @@ const config = {
   frontendUrl: process.env.FRONTEND_URL || 'http://localhost:3000',
   allowedOrigins: parseAllowedOrigins(process.env.ALLOWED_ORIGINS, process.env.FRONTEND_URL || 'http://localhost:3000'),
   apiPublicUrl: process.env.API_PUBLIC_URL || '',
+  adminEmails: parseCsvList(process.env.ADMIN_EMAILS),
 
   jwtSecret: process.env.JWT_SECRET || 'dev-insecure-secret-change-me',
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '15m',

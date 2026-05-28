@@ -2,6 +2,7 @@ const express = require('express');
 const config = require('../config');
 const { supabase } = require('../services/supabase');
 const stripeService = require('../services/stripe');
+const { isAdminEmail } = require('../services/admin');
 const {
   isMockBackendEnabled,
   getMockClientById,
@@ -35,12 +36,24 @@ function isWebhookTableMissing(err) {
   return err.code === '42P01' || /stripe_webhook_events/i.test(String(err.message || ''));
 }
 
+function planAvailability() {
+  return {
+    STARTER: Boolean(config.stripe.prices.STARTER),
+    GROWTH: Boolean(config.stripe.prices.GROWTH),
+    SCALE: Boolean(config.stripe.prices.SCALE),
+  };
+}
+
 // GET /api/billing/overview → plan, period and this month's usage
 router.get('/overview', async (req, res) => {
   if (useMockBackend) {
     const data = getMockBillingOverview(req.clientId);
     if (!data) throw new ApiError(404, 'Client not found');
-    res.json(data);
+    res.json({
+      ...data,
+      checkoutEnabled: true,
+      availablePlans: { STARTER: true, GROWTH: true, SCALE: true },
+    });
     return;
   }
 
@@ -77,11 +90,17 @@ router.get('/overview', async (req, res) => {
     periodStart: sub ? sub.current_period_start : null,
     periodEnd: sub ? sub.current_period_end : null,
     usage: { used, limit: config.planLimits[client.plan] || 0 },
+    checkoutEnabled: stripeService.isStripeSecretConfigured(),
+    availablePlans: planAvailability(),
   });
 });
 
 // GET /api/billing/status → Stripe diagnostics for dashboard UI
 router.get('/status', async (req, res) => {
+  if (!isAdminEmail(req.client && req.client.email)) {
+    throw new ApiError(403, 'Forbidden');
+  }
+
   if (useMockBackend) {
     if (!getMockClientById(req.clientId)) throw new ApiError(404, 'Client not found');
     res.json({
@@ -156,10 +175,16 @@ router.post('/checkout', async (req, res) => {
   }
 
   const { plan, shopDomain } = req.body || {};
-  const priceId = config.stripe.prices[plan];
-  if (!priceId) throw new ApiError(400, 'This plan is not available for checkout');
+  const normalizedPlan = String(plan || '').toUpperCase();
+  const priceId = config.stripe.prices[normalizedPlan];
+  if (!config.planLimits[normalizedPlan]) {
+    throw new ApiError(400, 'Unknown plan');
+  }
   if (!stripeService.isStripeSecretConfigured()) {
     throw new ApiError(503, 'Stripe is not configured on the server yet');
+  }
+  if (!priceId) {
+    throw new ApiError(503, `Plan ${normalizedPlan} is not configured for checkout yet`, 'PLAN_NOT_CONFIGURED');
   }
 
   const client = await getClient(req.clientId);
@@ -184,7 +209,7 @@ router.post('/checkout', async (req, res) => {
   const session = await stripeService.createCheckoutSession({
     customerId,
     priceId,
-    plan,
+    plan: normalizedPlan,
     clientId: req.clientId,
     shopDomain: shopDomain || null,
     source: 'dashboard_upgrade',

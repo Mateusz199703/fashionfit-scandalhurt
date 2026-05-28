@@ -80,6 +80,8 @@ export interface BillingOverview {
   periodStart: string | null;
   periodEnd: string | null;
   usage: { used: number; limit: number };
+  checkoutEnabled: boolean;
+  availablePlans: Record<Plan, boolean>;
 }
 
 export interface BillingStatus {
