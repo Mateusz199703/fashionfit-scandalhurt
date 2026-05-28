@@ -1,5 +1,8 @@
 const config = require('./config');
 const app = require('./app');
+const tryonWorker = require('./services/tryonWorker');
+
+tryonWorker.start();
 
 const server = app.listen(config.port, () => {
   console.log(`FashionFit backend listening on port ${config.port}`);
@@ -7,6 +10,7 @@ const server = app.listen(config.port, () => {
 
 function shutdown(signal) {
   console.log(`${signal} received, shutting down gracefully...`);
+  tryonWorker.stop();
 
   const forceExitTimer = setTimeout(() => {
     console.error('Forced shutdown after 30s timeout');

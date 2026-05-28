@@ -19,6 +19,7 @@ const keysRoutes = require('./routes/keys');
 const widgetRoutes = require('./routes/widget');
 const webhookRoutes = require('./routes/webhooks');
 const fashnService = require('./services/fashn');
+const tryonWorker = require('./services/tryonWorker');
 
 const packageJson = require('../package.json');
 
@@ -70,6 +71,7 @@ app.get('/health', (req, res) => {
       database: 'unknown',
       redis: 'unknown',
       fashn_circuit: fashnService.getCircuitState(),
+      tryon_worker: tryonWorker.getStats(),
     },
   });
 });

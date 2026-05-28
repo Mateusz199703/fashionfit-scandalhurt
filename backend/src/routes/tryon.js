@@ -11,6 +11,7 @@ const {
 const { get: getIdempotencyEntry, set: setIdempotencyEntry } = require('../services/idempotencyStore');
 const { isShopOwnedByClient } = require('../services/ownership');
 const { checkUsageQuota } = require('../middleware/usageCheck');
+const tryonWorker = require('../services/tryonWorker');
 const fashn = require('../services/fashn');
 const { ApiError } = require('../middleware/errorHandler');
 
@@ -19,10 +20,6 @@ const router = express.Router();
 
 function personStoragePath(shopId, sessionToken) {
   return `${shopId}/${sessionToken}.jpg`;
-}
-
-function resultStoragePath(shopId, sessionId) {
-  return `${shopId}/${sessionId}.jpg`;
 }
 
 async function resolveResultImageUrl(storedValue) {
@@ -87,7 +84,7 @@ router.post('/photo', checkUsageQuota, async (req, res) => {
             resultImageUrl: await resolveResultImageUrl(session.result_image_url),
           });
         }
-        return res.status(202).json({ sessionId: session.id, status: session.status || 'processing' });
+        return res.status(202).json({ sessionId: session.id, status: session.status || 'pending' });
       }
     }
   }
@@ -112,13 +109,6 @@ router.post('/photo', checkUsageQuota, async (req, res) => {
     personStoragePath(shopId, sessionToken),
     personImageBase64,
   );
-  const personSignedUrl = await createSignedUrl(config.storage.uploadsBucket, personKey, 60 * 60);
-
-  const predictionId = await fashn.run({
-    modelImage: personSignedUrl,
-    garmentImage: product.garment_image_url,
-    category: product.category,
-  });
 
   const { data: session, error } = await supabase
     .from('tryon_sessions')
@@ -127,17 +117,19 @@ router.post('/photo', checkUsageQuota, async (req, res) => {
       product_id: productId,
       session_token: sessionToken,
       mode: 'photo',
-      status: 'processing',
+      status: 'pending',
       person_image_url: personKey,
-      fashn_prediction_id: predictionId,
       metadata: {
         ...(metadata || {}),
         ...(idempotencyKey ? { idempotencyKey } : {}),
+        processing_mode: 'background_queue',
       },
     })
     .select('id')
     .single();
   if (error) throw error;
+
+  tryonWorker.enqueue(session.id);
 
   if (idempotencyKey) {
     setIdempotencyEntry({
@@ -148,7 +140,7 @@ router.post('/photo', checkUsageQuota, async (req, res) => {
     });
   }
 
-  res.status(202).json({ sessionId: session.id, status: 'processing' });
+  res.status(202).json({ sessionId: session.id, status: 'pending' });
 });
 
 // GET /api/widget/tryon/status/:sessionId
@@ -173,39 +165,43 @@ router.get('/status/:sessionId', async (req, res) => {
   if (session.status === 'failed') {
     return res.json({ status: 'failed', resultImageUrl: null });
   }
-  if (!session.fashn_prediction_id) {
+  if (session.status === 'pending' || session.status === 'processing') {
+    if (!session.fashn_prediction_id) {
+      return res.json({ status: session.status, resultImageUrl: null });
+    }
+
+    // Backward compatibility for old sessions created before background queue.
+    const prediction = await fashn.getStatus(session.fashn_prediction_id);
+
+    if (prediction.status === 'completed') {
+      const outputUrl = Array.isArray(prediction.output) ? prediction.output[0] : prediction.output;
+      const storedPath = await uploadFromUrl(
+        config.storage.resultsBucket,
+        `${session.shop_id}/${session.id}.jpg`,
+        outputUrl,
+      );
+      await supabase
+        .from('tryon_sessions')
+        .update({
+          status: 'completed',
+          result_image_url: storedPath,
+          completed_at: new Date().toISOString(),
+        })
+        .eq('id', session.id);
+      return res.json({
+        status: 'completed',
+        resultImageUrl: await createSignedUrl(config.storage.resultsBucket, storedPath, 60 * 60),
+      });
+    }
+
+    if (prediction.status === 'failed') {
+      await supabase.from('tryon_sessions').update({ status: 'failed' }).eq('id', session.id);
+      return res.json({ status: 'failed', resultImageUrl: null });
+    }
+
     return res.json({ status: session.status, resultImageUrl: null });
   }
-
-  const prediction = await fashn.getStatus(session.fashn_prediction_id);
-
-  if (prediction.status === 'completed') {
-    const outputUrl = Array.isArray(prediction.output) ? prediction.output[0] : prediction.output;
-    const storedPath = await uploadFromUrl(
-      config.storage.resultsBucket,
-      resultStoragePath(session.shop_id, session.id),
-      outputUrl,
-    );
-    await supabase
-      .from('tryon_sessions')
-      .update({
-        status: 'completed',
-        result_image_url: storedPath,
-        completed_at: new Date().toISOString(),
-      })
-      .eq('id', session.id);
-    return res.json({
-      status: 'completed',
-      resultImageUrl: await createSignedUrl(config.storage.resultsBucket, storedPath, 60 * 60),
-    });
-  }
-
-  if (prediction.status === 'failed') {
-    await supabase.from('tryon_sessions').update({ status: 'failed' }).eq('id', session.id);
-    return res.json({ status: 'failed', resultImageUrl: null });
-  }
-
-  return res.json({ status: 'processing', resultImageUrl: null });
+  return res.json({ status: session.status || 'pending', resultImageUrl: null });
 });
 
 module.exports = router;
