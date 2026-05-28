@@ -12,7 +12,10 @@ const {
   createMockClient,
   getMockClientByEmail,
   getMockClientById,
+  createMockShop,
+  upsertMockWidgetProducts,
 } = require('../services/mockStore');
+const { markOnboardingProgressAsync } = require('../services/onboarding');
 const {
   registerRefreshToken,
   isRefreshTokenAllowed,
@@ -31,6 +34,24 @@ const { ApiError } = require('../middleware/errorHandler');
 const router = express.Router();
 const useMockAuth = isMockBackendEnabled();
 const BCRYPT_ROUNDS = 12;
+const SANDBOX_PHOTO_TRYON_LIMIT = 10;
+const SANDBOX_PRODUCTS = [
+  {
+    name: 'Top Noir Atelier',
+    category: 'tops',
+    garment_image_url: 'https://placehold.co/1200x1600/f5f5f5/111111/png?text=Top+Noir+Atelier',
+  },
+  {
+    name: 'Spodnie Tailored Flow',
+    category: 'bottoms',
+    garment_image_url: 'https://placehold.co/1200x1600/efefef/111111/png?text=Spodnie+Tailored+Flow',
+  },
+  {
+    name: 'Sukienka Ligne Blanche',
+    category: 'one-pieces',
+    garment_image_url: 'https://placehold.co/1200x1600/f2f2f2/111111/png?text=Sukienka+Ligne+Blanche',
+  },
+];
 
 function isTableMissingError(err, tableName) {
   if (!err) return false;
@@ -121,6 +142,112 @@ function isValidPolishNip(nip) {
   return checksum !== 10 && checksum === Number(nip[9]);
 }
 
+function buildSandboxDomain(email, clientId) {
+  const localPart = String(email || '').split('@')[0] || 'client';
+  const slug = localPart
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '')
+    .slice(0, 24) || 'client';
+  return `${slug}-${String(clientId || '').slice(0, 8)}.sandbox.fashionfit.app`;
+}
+
+function sandboxWidgetConfig() {
+  return {
+    primaryColor: '#111111',
+    buttonLabel: 'Przymierz wirtualnie',
+    position: 'bottom-right',
+    showLiveAR: true,
+    showPhotoAI: true,
+    sandbox: {
+      enabled: true,
+      photoTryonLimit: SANDBOX_PHOTO_TRYON_LIMIT,
+    },
+  };
+}
+
+async function bootstrapSandboxForMockClient(client) {
+  if (!client || !client.id) return null;
+  const domain = buildSandboxDomain(client.email, client.id);
+  const shop = createMockShop(client.id, {
+    name: `Sklep testowy ${client.email}`,
+    domain,
+    platform: 'custom',
+    widget_config: sandboxWidgetConfig(),
+  });
+
+  const products = SANDBOX_PRODUCTS.map((item, index) => ({
+    external_id: `sandbox-${index + 1}`,
+    name: item.name,
+    category: item.category,
+    garment_image_url: item.garment_image_url,
+    product_url: `https://${domain}/product/sandbox-${index + 1}`,
+    variants: { sizes: ['XS', 'S', 'M', 'L', 'XL'] },
+  }));
+  upsertMockWidgetProducts(shop.id, client.id, products);
+
+  return {
+    shopId: shop.id,
+    domain: shop.domain,
+    photoTryonLimit: SANDBOX_PHOTO_TRYON_LIMIT,
+  };
+}
+
+async function bootstrapSandboxForClient(client) {
+  if (!client || !client.id) return null;
+
+  const { data: existingShops, error: existingShopsError } = await supabase
+    .from('shops')
+    .select('id')
+    .eq('client_id', client.id)
+    .limit(1);
+  if (existingShopsError) throw existingShopsError;
+  if (existingShops && existingShops.length > 0) return null;
+
+  const domain = buildSandboxDomain(client.email, client.id);
+  const { data: shop, error: shopError } = await supabase
+    .from('shops')
+    .insert({
+      client_id: client.id,
+      name: `Sklep testowy ${client.email}`,
+      domain,
+      platform: 'custom',
+      widget_config: sandboxWidgetConfig(),
+    })
+    .select('id, domain')
+    .single();
+  if (shopError) throw shopError;
+
+  const now = new Date().toISOString();
+  const productRows = SANDBOX_PRODUCTS.map((item, index) => ({
+    shop_id: shop.id,
+    external_id: `sandbox-${index + 1}`,
+    name: item.name,
+    category: item.category,
+    garment_image_url: item.garment_image_url,
+    product_url: `https://${domain}/product/sandbox-${index + 1}`,
+    variants: { sizes: ['XS', 'S', 'M', 'L', 'XL'] },
+    is_synced: true,
+    last_synced_at: now,
+  }));
+
+  const { error: productsError } = await supabase
+    .from('products')
+    .insert(productRows);
+  if (productsError) throw productsError;
+
+  markOnboardingProgressAsync(client.id, {
+    step_shop_added: true,
+    step_products_synced: true,
+  });
+
+  return {
+    shopId: shop.id,
+    domain: shop.domain,
+    photoTryonLimit: SANDBOX_PHOTO_TRYON_LIMIT,
+  };
+}
+
 // POST /api/auth/register → create client, return JWT + api_key
 router.post('/register', authLimiter, async (req, res) => {
   const {
@@ -157,6 +284,7 @@ router.post('/register', authLimiter, async (req, res) => {
       company_nip: normalizedNip,
       passwordHash,
     });
+    const sandbox = await bootstrapSandboxForMockClient(client);
 
     const checkoutUrl = selectedPlan
       ? `${config.frontendUrl}/billing?status=success&plan=${selectedPlan.toLowerCase()}`
@@ -169,6 +297,7 @@ router.post('/register', authLimiter, async (req, res) => {
       apiKey: client.api_key,
       client: toClientResponse(client),
       checkoutUrl,
+      sandbox,
     });
     return;
   }
@@ -230,6 +359,13 @@ router.post('/register', authLimiter, async (req, res) => {
     console.warn('api_keys table missing, using legacy clients.api_key fallback');
   }
 
+  let sandbox = null;
+  try {
+    sandbox = await bootstrapSandboxForClient(data);
+  } catch (err) {
+    console.warn('sandbox bootstrap skipped:', err.message);
+  }
+
   let checkoutUrl = null;
   if (selectedPlan && stripeService.isStripeSecretConfigured()) {
     const priceId = config.stripe.prices[selectedPlan];
@@ -262,6 +398,7 @@ router.post('/register', authLimiter, async (req, res) => {
     refreshToken: auth.refreshToken,
     apiKey: issuedApiKey,
     checkoutUrl,
+    sandbox,
     client: {
       id: data.id,
       email: data.email,

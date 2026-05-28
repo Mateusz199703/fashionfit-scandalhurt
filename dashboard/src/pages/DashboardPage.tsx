@@ -115,6 +115,20 @@ export function DashboardPage() {
         </Card>
       )}
 
+      {!!billing?.sandbox?.enabled && (
+        <Card className="flex flex-wrap items-center justify-between gap-3 border-ink/20 bg-white p-4">
+          <span className="text-sm text-ink/70">
+            Środowisko testowe: wykorzystano {billing.sandbox.usedPhotoTryons}/{billing.sandbox.photoTryonLimit} darmowych przymiarek foto.
+            {billing.sandbox.exhausted ? ' Limit testowy został wyczerpany.' : ` Pozostało ${billing.sandbox.remainingPhotoTryons}.`}
+          </span>
+          {billing.sandbox.shopId ? (
+            <Link to={`/install/${billing.sandbox.shopId}`} className="ff-btn-primary">
+              Otwórz instalację sandbox
+            </Link>
+          ) : null}
+        </Card>
+      )}
+
       {!loading && onboarding && (
         <Card className="p-5">
           <div className="mb-4 flex items-center justify-between gap-3">

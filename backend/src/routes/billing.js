@@ -7,6 +7,7 @@ const {
   isMockBackendEnabled,
   getMockClientById,
   getMockBillingOverview,
+  listMockShops,
 } = require('../services/mockStore');
 const { authenticateJWT } = require('../middleware/auth');
 const { ApiError } = require('../middleware/errorHandler');
@@ -44,15 +45,43 @@ function planAvailability() {
   };
 }
 
+function toSandboxOverview(input) {
+  if (!input || !input.enabled) return null;
+  const limit = Number(input.photoTryonLimit || 10);
+  const used = Number(input.usedPhotoTryons || 0);
+  const remaining = Math.max(0, limit - used);
+  return {
+    enabled: true,
+    shopId: input.shopId || null,
+    photoTryonLimit: limit,
+    usedPhotoTryons: used,
+    remainingPhotoTryons: remaining,
+    exhausted: remaining <= 0,
+  };
+}
+
 // GET /api/billing/overview → plan, period and this month's usage
 router.get('/overview', async (req, res) => {
   if (useMockBackend) {
     const data = getMockBillingOverview(req.clientId);
     if (!data) throw new ApiError(404, 'Client not found');
+    const shops = listMockShops(req.clientId) || [];
+    const sandboxShop = shops.find((shop) => {
+      const cfg = shop && shop.widget_config && shop.widget_config.sandbox;
+      return Boolean(cfg && cfg.enabled);
+    });
+    const sandboxConfig = sandboxShop && sandboxShop.widget_config ? sandboxShop.widget_config.sandbox : null;
+
     res.json({
       ...data,
       checkoutEnabled: true,
       availablePlans: { STARTER: true, GROWTH: true, SCALE: true },
+      sandbox: toSandboxOverview({
+        enabled: Boolean(sandboxConfig && sandboxConfig.enabled),
+        shopId: sandboxShop ? sandboxShop.id : null,
+        photoTryonLimit: sandboxConfig && sandboxConfig.photoTryonLimit,
+        usedPhotoTryons: 0,
+      }),
     });
     return;
   }
@@ -61,9 +90,13 @@ router.get('/overview', async (req, res) => {
 
   const { data: shops } = await supabase
     .from('shops')
-    .select('id')
+    .select('id, widget_config')
     .eq('client_id', req.clientId);
   const shopIds = (shops || []).map((s) => s.id);
+  const sandboxShop = (shops || []).find((shop) => {
+    const cfg = shop && shop.widget_config && shop.widget_config.sandbox;
+    return Boolean(cfg && cfg.enabled);
+  });
 
   let used = 0;
   if (shopIds.length) {
@@ -73,6 +106,25 @@ router.get('/overview', async (req, res) => {
       .in('shop_id', shopIds)
       .gte('created_at', monthStartIso());
     used = count || 0;
+  }
+
+  let sandbox = null;
+  if (sandboxShop) {
+    const sandboxConfig = sandboxShop.widget_config ? sandboxShop.widget_config.sandbox : null;
+    const sandboxLimit = Number((sandboxConfig && sandboxConfig.photoTryonLimit) || 10);
+
+    const { count: sandboxUsedCount } = await supabase
+      .from('tryon_sessions')
+      .select('id', { count: 'exact', head: true })
+      .eq('shop_id', sandboxShop.id)
+      .eq('mode', 'photo');
+
+    sandbox = toSandboxOverview({
+      enabled: true,
+      shopId: sandboxShop.id,
+      photoTryonLimit: sandboxLimit,
+      usedPhotoTryons: sandboxUsedCount || 0,
+    });
   }
 
   const { data: sub } = await supabase
@@ -92,6 +144,7 @@ router.get('/overview', async (req, res) => {
     usage: { used, limit: config.planLimits[client.plan] || 0 },
     checkoutEnabled: stripeService.isStripeSecretConfigured(),
     availablePlans: planAvailability(),
+    sandbox,
   });
 });
 

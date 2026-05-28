@@ -82,6 +82,14 @@ export interface BillingOverview {
   usage: { used: number; limit: number };
   checkoutEnabled: boolean;
   availablePlans: Record<Plan, boolean>;
+  sandbox?: {
+    enabled: boolean;
+    shopId: string | null;
+    photoTryonLimit: number;
+    usedPhotoTryons: number;
+    remainingPhotoTryons: number;
+    exhausted: boolean;
+  } | null;
 }
 
 export interface BillingStatus {
