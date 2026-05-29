@@ -51,6 +51,7 @@ export interface Product {
 
 export interface AnalyticsOverview {
   period: string;
+  category_filter?: 'all' | ProductCategory;
   widget_opens: number;
   tryon_starts: number;
   completions: number;
@@ -58,10 +59,27 @@ export interface AnalyticsOverview {
   purchases: number;
   conversion_rate: number;
   purchase_rate: number;
+  tryon_completion_rate?: number;
+  cart_to_purchase_rate?: number;
+  average_order_value?: number;
   buyers_count: number;
   revenue: number;
   mode_split: { photo: number; live_ar: number };
-  top_products: Array<{ product_id: string; name: string | null; tryon_completions: number; add_to_carts: number; purchases: number }>;
+  top_products: Array<{
+    product_id: string;
+    name: string | null;
+    category?: ProductCategory | null;
+    tryon_completions: number;
+    add_to_carts: number;
+    purchases: number;
+  }>;
+  category_breakdown?: Array<{
+    category: ProductCategory;
+    tryon_completions: number;
+    add_to_carts: number;
+    purchases: number;
+    conversion_rate: number;
+  }>;
   daily_chart_data: Array<{
     date: string;
     widget_opens: number;

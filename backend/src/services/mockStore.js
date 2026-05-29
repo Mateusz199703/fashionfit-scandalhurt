@@ -298,7 +298,7 @@ function syncMockShopProducts(shopId, clientId) {
   return { synced: products.length };
 }
 
-function getMockAnalyticsOverview(shopId, clientId, period) {
+function getMockAnalyticsOverview(shopId, clientId, period, category = 'all') {
   const shop = getMockShop(shopId, clientId);
   if (!shop) return null;
   const base = analyticsByShopId.get(shopId) || {
@@ -311,26 +311,71 @@ function getMockAnalyticsOverview(shopId, clientId, period) {
     revenue: 0,
   };
 
-  const conversionRate = base.completions > 0
-    ? Number((base.add_to_carts / base.completions).toFixed(4))
+  const categoryRows = [
+    { category: 'tops', tryon_completions: Math.round(base.completions * 0.4), add_to_carts: Math.round(base.add_to_carts * 0.42), purchases: Math.round((base.purchases || 0) * 0.4) },
+    { category: 'bottoms', tryon_completions: Math.round(base.completions * 0.25), add_to_carts: Math.round(base.add_to_carts * 0.24), purchases: Math.round((base.purchases || 0) * 0.25) },
+    { category: 'one-pieces', tryon_completions: Math.round(base.completions * 0.2), add_to_carts: Math.round(base.add_to_carts * 0.2), purchases: Math.round((base.purchases || 0) * 0.23) },
+    { category: 'outerwear', tryon_completions: Math.round(base.completions * 0.1), add_to_carts: Math.round(base.add_to_carts * 0.1), purchases: Math.round((base.purchases || 0) * 0.1) },
+    { category: 'accessories', tryon_completions: Math.round(base.completions * 0.05), add_to_carts: Math.round(base.add_to_carts * 0.04), purchases: Math.round((base.purchases || 0) * 0.02) },
+  ].map((row) => ({
+    ...row,
+    conversion_rate: row.tryon_completions > 0
+      ? Number((row.add_to_carts / row.tryon_completions).toFixed(4))
+      : 0,
+  }));
+
+  const multiplierByCategory = {
+    all: 1,
+    tops: 0.4,
+    bottoms: 0.25,
+    'one-pieces': 0.2,
+    outerwear: 0.1,
+    accessories: 0.05,
+  };
+  const m = multiplierByCategory[category] || 1;
+  const scoped = category === 'all'
+    ? base
+    : {
+        widget_opens: Math.round(base.widget_opens * m),
+        tryon_starts: Math.round(base.tryon_starts * m),
+        completions: Math.round(base.completions * m),
+        add_to_carts: Math.round(base.add_to_carts * m),
+        purchases: Math.round((base.purchases || 0) * m),
+      };
+  const conversionRate = scoped.completions > 0
+    ? Number((scoped.add_to_carts / scoped.completions).toFixed(4))
     : 0;
-  const purchaseRate = base.completions > 0
-    ? Number(((base.purchases || 0) / base.completions).toFixed(4))
+  const purchaseRate = scoped.completions > 0
+    ? Number(((scoped.purchases || 0) / scoped.completions).toFixed(4))
+    : 0;
+  const tryonCompletionRate = scoped.tryon_starts > 0
+    ? Number((scoped.completions / scoped.tryon_starts).toFixed(4))
+    : 0;
+  const cartToPurchaseRate = scoped.add_to_carts > 0
+    ? Number(((scoped.purchases || 0) / scoped.add_to_carts).toFixed(4))
+    : 0;
+  const averageOrderValue = scoped.purchases > 0
+    ? Number(((category === 'all' ? (base.revenue || 0) : (base.revenue || 0) * m) / scoped.purchases).toFixed(2))
     : 0;
 
   return {
     period,
-    widget_opens: base.widget_opens,
-    tryon_starts: base.tryon_starts,
-    completions: base.completions,
-    add_to_carts: base.add_to_carts,
-    purchases: base.purchases || 0,
+    category_filter: category,
+    widget_opens: scoped.widget_opens,
+    tryon_starts: scoped.tryon_starts,
+    completions: scoped.completions,
+    add_to_carts: scoped.add_to_carts,
+    purchases: scoped.purchases || 0,
     conversion_rate: conversionRate,
     purchase_rate: purchaseRate,
+    tryon_completion_rate: tryonCompletionRate,
+    cart_to_purchase_rate: cartToPurchaseRate,
+    average_order_value: averageOrderValue,
     buyers_count: base.buyers_count || base.purchases || 0,
-    revenue: base.revenue || 0,
-    mode_split: { photo: Math.round(base.tryon_starts * 0.7), live_ar: Math.round(base.tryon_starts * 0.3) },
+    revenue: category === 'all' ? (base.revenue || 0) : Number(((base.revenue || 0) * m).toFixed(2)),
+    mode_split: { photo: Math.round(scoped.tryon_starts * 0.7), live_ar: Math.round(scoped.tryon_starts * 0.3) },
     top_products: [],
+    category_breakdown: categoryRows,
     daily_chart_data: [],
   };
 }
