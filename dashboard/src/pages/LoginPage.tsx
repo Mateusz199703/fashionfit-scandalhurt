@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { ArrowRight, Shirt } from 'lucide-react';
+import { ArrowRight, Shirt, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 import { apiErrorMessage } from '../api/client';
 
@@ -12,6 +12,7 @@ export function LoginPage() {
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const [submitting, setSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const validate = () => {
     const next: typeof errors = {};
@@ -90,9 +91,26 @@ export function LoginPage() {
             </div>
             <div>
               <label className="ff-label" htmlFor="password">Hasło</label>
-              <input id="password" type="password" className="ff-input" value={password} onChange={(e) => setPassword(e.target.value)} />
+              <div className="relative">
+                <input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  className="ff-input pr-11"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+                <button
+                  type="button"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md p-1 text-ink/55 hover:bg-black/5 hover:text-ink"
+                  onClick={() => setShowPassword((s) => !s)}
+                  aria-label={showPassword ? 'Ukryj hasło' : 'Pokaż hasło'}
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
               {errors.password && <p className="mt-1 text-xs text-red-600">{errors.password}</p>}
             </div>
+            <p className="text-xs text-ink/55">Dla bezpieczeństwa używaj hasła minimum 8 znaków.</p>
             <button type="submit" className="ff-btn-primary ff-auth-submit" disabled={submitting}>
               {submitting ? 'Logowanie...' : 'Zaloguj się'}
               {!submitting && <ArrowRight size={16} />}

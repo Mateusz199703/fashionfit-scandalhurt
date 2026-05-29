@@ -38,12 +38,30 @@ export function MetricCard({
   value,
   hint,
   icon,
+  trend,
+  sparkline,
 }: {
   label: string;
   value: React.ReactNode;
   hint?: string;
   icon?: React.ReactNode;
+  trend?: number | null;
+  sparkline?: number[];
 }) {
+  const hasTrend = typeof trend === 'number' && Number.isFinite(trend);
+  const trendUp = (trend || 0) >= 0;
+  const points = (sparkline || []).filter((x) => Number.isFinite(x));
+  const max = Math.max(1, ...points);
+  const min = Math.min(...points, 0);
+  const range = Math.max(1, max - min);
+  const path = points
+    .map((point, i) => {
+      const x = points.length === 1 ? 0 : (i / (points.length - 1)) * 100;
+      const y = 100 - ((point - min) / range) * 100;
+      return `${x},${y}`;
+    })
+    .join(' ');
+
   return (
     <Card className="ff-kpi-card p-5">
       <div className="flex items-center justify-between">
@@ -51,6 +69,26 @@ export function MetricCard({
         {icon && <span className="text-ink/60">{icon}</span>}
       </div>
       <div className="mt-2 text-3xl font-bold leading-none tracking-tight text-ink">{value}</div>
+      {points.length > 1 && (
+        <div className="mt-3 h-10">
+          <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="h-full w-full">
+            <polyline
+              points={path}
+              fill="none"
+              stroke={trendUp ? '#111111' : '#8a8a8a'}
+              strokeWidth="4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </div>
+      )}
+      {hasTrend && (
+        <div className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${trendUp ? 'bg-emerald-50 text-emerald-700' : 'bg-zinc-100 text-zinc-600'}`}>
+          {trendUp ? '+' : ''}
+          {trend!.toFixed(1)}% vs 7 dni wcześniej
+        </div>
+      )}
       {hint && <div className="mt-2 text-xs text-ink/55">{hint}</div>}
     </Card>
   );

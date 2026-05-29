@@ -59,6 +59,7 @@
     background:
       radial-gradient(36rem 13rem at 100% 0%, rgba(0, 0, 0, 0.03) 0%, transparent 65%),
       rgba(255, 255, 255, 0.94);
+    min-height: 12.5rem;
   }
 
   .ff-btn {
@@ -395,6 +396,7 @@
     background:
       radial-gradient(24rem 12rem at 100% 0%, rgba(0, 0, 0, 0.025), transparent 72%),
       linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.92));
+    color: #101010;
   }
 
   .ff-auth-panel-kicker {

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { ArrowRight, Shirt } from 'lucide-react';
+import { ArrowRight, Shirt, Eye, EyeOff, CheckCircle2, Circle } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 import { apiErrorMessage } from '../api/client';
 import { Plan } from '../types';
@@ -16,6 +16,7 @@ export function RegisterPage() {
   const [selectedPlan, setSelectedPlan] = useState<Plan | ''>(initialPlan);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const set = (key: string) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((prev) => ({ ...prev, [key]: e.target.value }));
@@ -30,6 +31,16 @@ export function RegisterPage() {
     setErrors(next);
     return Object.keys(next).length === 0;
   };
+
+  const passwordChecks = [
+    { label: 'Minimum 8 znaków', ok: form.password.length >= 8 },
+    { label: 'Co najmniej 1 duża litera', ok: /[A-Z]/.test(form.password) },
+    { label: 'Co najmniej 1 cyfra', ok: /\d/.test(form.password) },
+    { label: 'Co najmniej 1 znak specjalny', ok: /[^A-Za-z0-9]/.test(form.password) },
+  ];
+  const score = passwordChecks.filter((x) => x.ok).length;
+  const scorePct = (score / passwordChecks.length) * 100;
+  const scoreLabel = score <= 1 ? 'Słabe' : score <= 2 ? 'Średnie' : score === 3 ? 'Dobre' : 'Mocne';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -126,8 +137,41 @@ export function RegisterPage() {
             </div>
             <div>
               <label className="ff-label" htmlFor="password">Hasło</label>
-              <input id="password" type="password" className="ff-input" value={form.password} onChange={set('password')} />
+              <div className="relative">
+                <input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  className="ff-input pr-11"
+                  value={form.password}
+                  onChange={set('password')}
+                />
+                <button
+                  type="button"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md p-1 text-ink/55 hover:bg-black/5 hover:text-ink"
+                  onClick={() => setShowPassword((s) => !s)}
+                  aria-label={showPassword ? 'Ukryj hasło' : 'Pokaż hasło'}
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
               {errors.password && <p className="mt-1 text-xs text-red-600">{errors.password}</p>}
+              <div className="mt-2">
+                <div className="mb-1 flex items-center justify-between text-xs text-ink/60">
+                  <span>Siła hasła</span>
+                  <span className="font-semibold text-ink/75">{scoreLabel}</span>
+                </div>
+                <div className="h-2 w-full rounded-full bg-black/10">
+                  <div className="h-full rounded-full bg-black transition-all" style={{ width: `${scorePct}%` }} />
+                </div>
+              </div>
+              <div className="mt-2 grid grid-cols-1 gap-1 sm:grid-cols-2">
+                {passwordChecks.map((check) => (
+                  <div key={check.label} className="flex items-center gap-1.5 text-xs">
+                    {check.ok ? <CheckCircle2 size={13} className="text-emerald-700" /> : <Circle size={13} className="text-ink/35" />}
+                    <span className={check.ok ? 'text-emerald-800' : 'text-ink/55'}>{check.label}</span>
+                  </div>
+                ))}
+              </div>
             </div>
 
             <div>
