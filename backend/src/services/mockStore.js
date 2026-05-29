@@ -322,6 +322,9 @@ function getMockAnalyticsOverview(shopId, clientId, period, category = 'all') {
     conversion_rate: row.tryon_completions > 0
       ? Number((row.add_to_carts / row.tryon_completions).toFixed(4))
       : 0,
+    purchase_rate: row.tryon_completions > 0
+      ? Number((row.purchases / row.tryon_completions).toFixed(4))
+      : 0,
   }));
 
   const multiplierByCategory = {
@@ -357,9 +360,70 @@ function getMockAnalyticsOverview(shopId, clientId, period, category = 'all') {
   const averageOrderValue = scoped.purchases > 0
     ? Number(((category === 'all' ? (base.revenue || 0) : (base.revenue || 0) * m) / scoped.purchases).toFixed(2))
     : 0;
+  const previousMultiplier = 0.86;
+  const prev = {
+    widget_opens: Math.round(scoped.widget_opens * previousMultiplier),
+    tryon_starts: Math.round(scoped.tryon_starts * previousMultiplier),
+    completions: Math.round(scoped.completions * previousMultiplier),
+    add_to_carts: Math.round(scoped.add_to_carts * previousMultiplier),
+    purchases: Math.round((scoped.purchases || 0) * previousMultiplier),
+    revenue: Number(((category === 'all' ? (base.revenue || 0) : (base.revenue || 0) * m) * previousMultiplier).toFixed(2)),
+  };
+  const prevConversionRate = prev.completions > 0
+    ? Number((prev.add_to_carts / prev.completions).toFixed(4))
+    : 0;
+  const prevPurchaseRate = prev.completions > 0
+    ? Number((prev.purchases / prev.completions).toFixed(4))
+    : 0;
+  const prevTryonCompletionRate = prev.tryon_starts > 0
+    ? Number((prev.completions / prev.tryon_starts).toFixed(4))
+    : 0;
+  const prevCartToPurchaseRate = prev.add_to_carts > 0
+    ? Number((prev.purchases / prev.add_to_carts).toFixed(4))
+    : 0;
+  const periodDays = period === '7d' ? 7 : period === '90d' ? 90 : 30;
+  const now = Date.now();
+  const periodStart = new Date(now - periodDays * 24 * 60 * 60 * 1000).toISOString();
+  const periodCompareStart = new Date(now - periodDays * 2 * 24 * 60 * 60 * 1000).toISOString();
+
+  const withDelta = (current, previous) => ({
+    current,
+    previous,
+    delta: Number((current - previous).toFixed(2)),
+    delta_pct: previous ? Number(((current - previous) / previous).toFixed(4)) : (current ? 1 : 0),
+  });
+
+  const sizeRanking = [
+    { size: 'XS', tryon_completions: Math.round(scoped.completions * 0.12), add_to_carts: Math.round(scoped.add_to_carts * 0.12), purchases: Math.round((scoped.purchases || 0) * 0.08) },
+    { size: 'S', tryon_completions: Math.round(scoped.completions * 0.21), add_to_carts: Math.round(scoped.add_to_carts * 0.2), purchases: Math.round((scoped.purchases || 0) * 0.16) },
+    { size: 'M', tryon_completions: Math.round(scoped.completions * 0.29), add_to_carts: Math.round(scoped.add_to_carts * 0.3), purchases: Math.round((scoped.purchases || 0) * 0.34) },
+    { size: 'L', tryon_completions: Math.round(scoped.completions * 0.2), add_to_carts: Math.round(scoped.add_to_carts * 0.21), purchases: Math.round((scoped.purchases || 0) * 0.22) },
+    { size: 'XL', tryon_completions: Math.round(scoped.completions * 0.12), add_to_carts: Math.round(scoped.add_to_carts * 0.11), purchases: Math.round((scoped.purchases || 0) * 0.12) },
+    { size: 'XXL', tryon_completions: Math.round(scoped.completions * 0.06), add_to_carts: Math.round(scoped.add_to_carts * 0.06), purchases: Math.round((scoped.purchases || 0) * 0.08) },
+  ].map((row) => ({
+    ...row,
+    conversion_rate: row.tryon_completions ? Number((row.add_to_carts / row.tryon_completions).toFixed(4)) : 0,
+    purchase_rate: row.tryon_completions ? Number((row.purchases / row.tryon_completions).toFixed(4)) : 0,
+  }));
+
+  const imageQualityBreakdown = [
+    { bucket: 'ultra', started: Math.round(scoped.tryon_starts * 0.3), completed: Math.round(scoped.completions * 0.33), failed: 1 },
+    { bucket: 'high', started: Math.round(scoped.tryon_starts * 0.38), completed: Math.round(scoped.completions * 0.4), failed: 2 },
+    { bucket: 'medium', started: Math.round(scoped.tryon_starts * 0.22), completed: Math.round(scoped.completions * 0.2), failed: 3 },
+    { bucket: 'low', started: Math.round(scoped.tryon_starts * 0.1), completed: Math.round(scoped.completions * 0.07), failed: 4 },
+  ].map((row) => ({
+    ...row,
+    completion_rate: row.started > 0 ? Number((row.completed / row.started).toFixed(4)) : 0,
+  }));
+
+  const totalCohorts = base.buyers_count || scoped.purchases || 0;
+  const newCustomers = Math.round(totalCohorts * 0.62);
+  const returningCustomers = Math.max(0, totalCohorts - newCustomers);
 
   return {
     period,
+    period_start: periodStart,
+    period_compare_start: periodCompareStart,
     category_filter: category,
     widget_opens: scoped.widget_opens,
     tryon_starts: scoped.tryon_starts,
@@ -376,6 +440,32 @@ function getMockAnalyticsOverview(shopId, clientId, period, category = 'all') {
     mode_split: { photo: Math.round(scoped.tryon_starts * 0.7), live_ar: Math.round(scoped.tryon_starts * 0.3) },
     top_products: [],
     category_breakdown: categoryRows,
+    period_comparison: {
+      widget_opens: withDelta(scoped.widget_opens, prev.widget_opens),
+      tryon_starts: withDelta(scoped.tryon_starts, prev.tryon_starts),
+      completions: withDelta(scoped.completions, prev.completions),
+      add_to_carts: withDelta(scoped.add_to_carts, prev.add_to_carts),
+      purchases: withDelta(scoped.purchases || 0, prev.purchases || 0),
+      revenue: withDelta(category === 'all' ? (base.revenue || 0) : Number(((base.revenue || 0) * m).toFixed(2)), prev.revenue || 0),
+      conversion_rate: withDelta(conversionRate, prevConversionRate),
+      purchase_rate: withDelta(purchaseRate, prevPurchaseRate),
+      tryon_completion_rate: withDelta(tryonCompletionRate, prevTryonCompletionRate),
+      cart_to_purchase_rate: withDelta(cartToPurchaseRate, prevCartToPurchaseRate),
+    },
+    cohorts: {
+      new_customers: newCustomers,
+      returning_customers: returningCustomers,
+      total_customers: totalCohorts,
+      new_share: totalCohorts ? Number((newCustomers / totalCohorts).toFixed(4)) : 0,
+      returning_share: totalCohorts ? Number((returningCustomers / totalCohorts).toFixed(4)) : 0,
+    },
+    time_to_purchase: {
+      avg_hours: 7.4,
+      median_hours: 4.2,
+      samples: Math.max(0, Math.round((scoped.purchases || 0) * 0.7)),
+    },
+    size_ranking: sizeRanking,
+    image_quality_breakdown: imageQualityBreakdown,
     daily_chart_data: [],
   };
 }

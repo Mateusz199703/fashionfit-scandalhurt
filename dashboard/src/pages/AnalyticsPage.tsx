@@ -19,7 +19,7 @@ import { api, apiErrorMessage } from '../api/client';
 import { Card } from '../components/ui';
 import { Skeleton } from '../components/Skeleton';
 import { AnalyticsOverview } from '../types';
-import { formatPercent } from '../utils';
+import { formatMoney, formatPercent } from '../utils';
 
 type Range = '7d' | '30d' | '90d' | 'custom';
 type CategoryFilter = 'all' | 'tops' | 'bottoms' | 'one-pieces' | 'outerwear' | 'accessories';
@@ -41,6 +41,24 @@ const CATEGORY_LABEL: Record<CategoryFilter, string> = {
   outerwear: 'Outerwear',
   accessories: 'Akcesoria',
 };
+const QUALITY_LABEL: Record<string, string> = {
+  ultra: 'Ultra',
+  high: 'High',
+  medium: 'Medium',
+  low: 'Low',
+  unknown: 'Nieznana',
+};
+
+function formatDeltaPct(value?: number) {
+  if (value == null || Number.isNaN(value)) return '0.0%';
+  const sign = value > 0 ? '+' : '';
+  return `${sign}${(value * 100).toFixed(1)}%`;
+}
+
+function deltaClass(value?: number) {
+  if (!value || Number.isNaN(value)) return 'text-ink/65';
+  return value > 0 ? 'text-emerald-700' : 'text-rose-700';
+}
 
 export function AnalyticsPage() {
   const { id = '' } = useParams();
@@ -138,6 +156,17 @@ export function AnalyticsPage() {
         { label: 'Cart -> Purchase', value: formatPercent(view.cartToPurchaseRate), icon: CircleGauge },
       ]
     : [];
+  const periodComparison = data?.period_comparison;
+  const comparisonCards = periodComparison
+    ? [
+        { label: 'Otwarcia widgetu', value: periodComparison.widget_opens },
+        { label: 'Starty przymiarek', value: periodComparison.tryon_starts },
+        { label: 'Ukończone przymiarki', value: periodComparison.completions },
+        { label: 'Dodane do koszyka', value: periodComparison.add_to_carts },
+        { label: 'Zakupy', value: periodComparison.purchases },
+        { label: 'Przychód', value: periodComparison.revenue, money: true },
+      ]
+    : [];
 
   return (
     <div className="space-y-6">
@@ -204,6 +233,31 @@ export function AnalyticsPage() {
               </Card>
             ))}
           </div>
+
+          {comparisonCards.length > 0 && (
+            <Card className="p-5">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="ff-section-title">Porównanie z poprzednim okresem</h2>
+                <span className="text-xs text-ink/55">Current vs previous ({data?.period})</span>
+              </div>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {comparisonCards.map((metric) => (
+                  <div key={metric.label} className="rounded-2xl border border-black/10 bg-white p-4">
+                    <p className="text-xs uppercase tracking-[0.1em] text-ink/50">{metric.label}</p>
+                    <p className="mt-2 text-2xl font-bold text-ink">
+                      {metric.money ? formatMoney(metric.value.current || 0) : metric.value.current}
+                    </p>
+                    <p className={`mt-1 text-sm font-semibold ${deltaClass(metric.value.delta_pct)}`}>
+                      {formatDeltaPct(metric.value.delta_pct)}
+                    </p>
+                    <p className="mt-1 text-xs text-ink/55">
+                      poprzednio: {metric.money ? formatMoney(metric.value.previous || 0) : metric.value.previous}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
 
           <Card className="p-5">
             <div className="flex items-center justify-between">
@@ -286,6 +340,66 @@ export function AnalyticsPage() {
             </Card>
           </div>
 
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <Card className="p-5">
+              <h2 className="ff-section-title mb-4">Cohorty kupujących</h2>
+              {data?.cohorts ? (
+                <div className="space-y-3 text-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="text-ink/70">Nowi klienci</span>
+                    <span className="font-semibold text-ink">
+                      {data.cohorts.new_customers} ({formatPercent(data.cohorts.new_share)})
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-ink/70">Powracający</span>
+                    <span className="font-semibold text-ink">
+                      {data.cohorts.returning_customers} ({formatPercent(data.cohorts.returning_share)})
+                    </span>
+                  </div>
+                  <div className="h-2.5 w-full overflow-hidden rounded-full bg-black/10">
+                    <div className="h-full bg-black" style={{ width: `${Math.min(100, data.cohorts.new_share * 100)}%` }} />
+                  </div>
+                  <p className="text-xs text-ink/55">Razem klientów kupujących: {data.cohorts.total_customers}</p>
+                </div>
+              ) : (
+                <p className="py-6 text-center text-sm text-ink/45">Brak danych.</p>
+              )}
+            </Card>
+
+            <Card className="p-5">
+              <h2 className="ff-section-title mb-4">Time to purchase</h2>
+              {data?.time_to_purchase ? (
+                <div className="space-y-2">
+                  <p className="text-sm text-ink/65">Średni czas od try-on do zakupu</p>
+                  <p className="text-3xl font-bold text-ink">{data.time_to_purchase.avg_hours.toFixed(1)} h</p>
+                  <p className="text-sm text-ink/65">Mediana: {data.time_to_purchase.median_hours.toFixed(1)} h</p>
+                  <p className="text-xs text-ink/55">Próbek: {data.time_to_purchase.samples}</p>
+                </div>
+              ) : (
+                <p className="py-6 text-center text-sm text-ink/45">Brak danych.</p>
+              )}
+            </Card>
+
+            <Card className="p-5">
+              <h2 className="ff-section-title mb-4">AOV i skuteczność</h2>
+              <div className="space-y-2 text-sm">
+                <div className="flex items-center justify-between">
+                  <span className="text-ink/70">AOV</span>
+                  <span className="font-semibold text-ink">{formatMoney(view.avgOrderValue || 0)}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-ink/70">Purchase rate</span>
+                  <span className="font-semibold text-ink">{formatPercent(view.purchaseRate)}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-ink/70">Cart → Purchase</span>
+                  <span className="font-semibold text-ink">{formatPercent(view.cartToPurchaseRate)}</span>
+                </div>
+              </div>
+            </Card>
+          </div>
+
           <Card className="p-5">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="ff-section-title">Wynik wg kategorii ubrań</h2>
@@ -322,6 +436,62 @@ export function AnalyticsPage() {
               <p className="py-6 text-center text-sm text-ink/45">Brak danych kategorii.</p>
             )}
           </Card>
+
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <Card className="p-5">
+              <h2 className="ff-section-title mb-4">Ranking rozmiarów</h2>
+              {data?.size_ranking && data.size_ranking.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="ff-table min-w-[560px]">
+                    <thead>
+                      <tr>
+                        <th>Rozmiar</th>
+                        <th>Przymiarki</th>
+                        <th>Zakupy</th>
+                        <th>Purchase rate</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {data.size_ranking.map((row) => (
+                        <tr key={row.size}>
+                          <td className="font-semibold text-ink">{row.size}</td>
+                          <td>{row.tryon_completions}</td>
+                          <td>{row.purchases}</td>
+                          <td>{formatPercent(row.purchase_rate)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p className="py-6 text-center text-sm text-ink/45">Brak danych rozmiarów.</p>
+              )}
+            </Card>
+
+            <Card className="p-5">
+              <h2 className="ff-section-title mb-4">Jakość zdjęć vs skuteczność</h2>
+              {data?.image_quality_breakdown && data.image_quality_breakdown.length > 0 ? (
+                <div className="space-y-3">
+                  {data.image_quality_breakdown.map((row) => (
+                    <div key={row.bucket} className="rounded-xl border border-black/10 p-3">
+                      <div className="mb-1 flex items-center justify-between">
+                        <span className="font-semibold text-ink">{QUALITY_LABEL[row.bucket] || row.bucket}</span>
+                        <span className="text-sm text-ink/65">{formatPercent(row.completion_rate)}</span>
+                      </div>
+                      <div className="h-2 w-full overflow-hidden rounded-full bg-black/10">
+                        <div className="h-full bg-black" style={{ width: `${Math.min(100, row.completion_rate * 100)}%` }} />
+                      </div>
+                      <p className="mt-1 text-xs text-ink/55">
+                        Start: {row.started} · Ukończone: {row.completed} · Błędy: {row.failed}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="py-6 text-center text-sm text-ink/45">Brak danych jakości zdjęć.</p>
+              )}
+            </Card>
+          </div>
 
           <Card className="p-5">
             <h2 className="ff-section-title mb-4">Top 10 produktów</h2>

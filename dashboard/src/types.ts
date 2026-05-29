@@ -51,6 +51,8 @@ export interface Product {
 
 export interface AnalyticsOverview {
   period: string;
+  period_start?: string;
+  period_compare_start?: string;
   category_filter?: 'all' | ProductCategory;
   widget_opens: number;
   tryon_starts: number;
@@ -79,6 +81,46 @@ export interface AnalyticsOverview {
     add_to_carts: number;
     purchases: number;
     conversion_rate: number;
+    purchase_rate?: number;
+  }>;
+  period_comparison?: {
+    widget_opens: { current: number; previous: number; delta: number; delta_pct: number };
+    tryon_starts: { current: number; previous: number; delta: number; delta_pct: number };
+    completions: { current: number; previous: number; delta: number; delta_pct: number };
+    add_to_carts: { current: number; previous: number; delta: number; delta_pct: number };
+    purchases: { current: number; previous: number; delta: number; delta_pct: number };
+    revenue: { current: number; previous: number; delta: number; delta_pct: number };
+    conversion_rate: { current: number; previous: number; delta: number; delta_pct: number };
+    purchase_rate: { current: number; previous: number; delta: number; delta_pct: number };
+    tryon_completion_rate: { current: number; previous: number; delta: number; delta_pct: number };
+    cart_to_purchase_rate: { current: number; previous: number; delta: number; delta_pct: number };
+  };
+  cohorts?: {
+    new_customers: number;
+    returning_customers: number;
+    total_customers: number;
+    new_share: number;
+    returning_share: number;
+  };
+  time_to_purchase?: {
+    avg_hours: number;
+    median_hours: number;
+    samples: number;
+  };
+  size_ranking?: Array<{
+    size: string;
+    tryon_completions: number;
+    add_to_carts: number;
+    purchases: number;
+    conversion_rate: number;
+    purchase_rate: number;
+  }>;
+  image_quality_breakdown?: Array<{
+    bucket: string;
+    started: number;
+    completed: number;
+    failed: number;
+    completion_rate: number;
   }>;
   daily_chart_data: Array<{
     date: string;
