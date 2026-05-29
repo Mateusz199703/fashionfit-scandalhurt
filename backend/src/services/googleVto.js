@@ -45,6 +45,15 @@ function normalizePrediction(prediction) {
   return null;
 }
 
+function pickBestPrediction(predictions) {
+  if (!Array.isArray(predictions) || !predictions.length) return null;
+  const normalized = predictions
+    .map(normalizePrediction)
+    .filter((item) => item && item.resultBase64);
+  if (!normalized.length) return null;
+  return normalized.sort((a, b) => (b.resultBase64.length || 0) - (a.resultBase64.length || 0))[0];
+}
+
 async function generateTryOnFromUrls({ modelImageUrl, garmentImageUrl }) {
   const endpoint = getEndpoint();
   const token = await getAccessToken();
@@ -53,6 +62,21 @@ async function generateTryOnFromUrls({ modelImageUrl, garmentImageUrl }) {
     fetchToBase64(modelImageUrl),
     fetchToBase64(garmentImageUrl),
   ]);
+
+  const mimeType = String(config.google.vto.outputMimeType || 'image/png').toLowerCase();
+  const outputOptions = { mimeType };
+  if (mimeType === 'image/jpeg' || mimeType === 'image/jpg') {
+    outputOptions.compressionQuality = config.google.vto.jpegQuality;
+  }
+
+  const parameters = {
+    sampleCount: config.google.vto.sampleCount,
+    addWatermark: config.google.vto.addWatermark,
+    outputOptions,
+  };
+  if (Number.isFinite(config.google.vto.baseSteps) && config.google.vto.baseSteps > 0) {
+    parameters.baseSteps = config.google.vto.baseSteps;
+  }
 
   const payload = {
     instances: [
@@ -71,14 +95,7 @@ async function generateTryOnFromUrls({ modelImageUrl, garmentImageUrl }) {
         ],
       },
     ],
-    parameters: {
-      sampleCount: 1,
-      addWatermark: true,
-      outputOptions: {
-        mimeType: 'image/jpeg',
-        compressionQuality: 90,
-      },
-    },
+    parameters,
   };
 
   const response = await fetch(endpoint, {
@@ -105,8 +122,7 @@ async function generateTryOnFromUrls({ modelImageUrl, garmentImageUrl }) {
     throw new Error(message);
   }
 
-  const prediction = Array.isArray(body.predictions) ? body.predictions[0] : null;
-  const normalized = normalizePrediction(prediction);
+  const normalized = pickBestPrediction(body.predictions);
   if (!normalized || !normalized.resultBase64) {
     throw new Error('Google VTO did not return a valid image result');
   }

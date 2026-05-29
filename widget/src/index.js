@@ -61,6 +61,11 @@ async function init() {
     console.warn('[FashionFit] Nie znaleziono zsynchronizowanego produktu dla id, uruchamiam fallback:', externalId);
   }
 
+  if (String(product.category || '').toLowerCase() === 'accessories') {
+    console.info('[FashionFit] Pomijam widget try-on dla kategorii accessories.');
+    return;
+  }
+
   createWidget({ config, api, product, externalId }).mount();
 }
 

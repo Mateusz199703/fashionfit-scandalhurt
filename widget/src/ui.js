@@ -224,10 +224,24 @@ export function createWidget({ config, api, product, externalId }) {
   function renderResult(resultUrl) {
     api.trackEvent('tryon_complete', { productId: product.id, metadata: { size: selectedSize } });
     setBody(
-      h('h2', { class: 'ff-h' }, 'Twoja przymiarka ✨'),
-      h('img', { class: 'ff-result', src: resultUrl, alt: 'Wynik przymiarki' }),
+      h('div', { class: 'ff-result-head' },
+        h('h2', { class: 'ff-h' }, 'Twoja przymiarka'),
+        h('div', { class: 'ff-result-pills' },
+          h('span', { class: 'ff-pill' }, `Rozmiar ${selectedSize}`),
+          h('span', { class: 'ff-pill' }, 'HD'),
+        ),
+      ),
+      h('div', { class: 'ff-result-stage' },
+        h('img', { class: 'ff-result', src: resultUrl, alt: 'Wynik przymiarki' }),
+      ),
+      h('div', { class: 'ff-result-note' }, 'Wskazówka: najlepiej działa zdjęcie samego ubrania bez torebki i dodatków.'),
       h('div', { class: 'ff-actions' },
-        h('button', { class: 'ff-btn', type: 'button', onclick: addToCart }, '🛒 Dodaj do koszyka'),
+        h('button', { class: 'ff-btn', type: 'button', onclick: addToCart }, 'Dodaj do koszyka'),
+        h('button', {
+          class: 'ff-btn ff-btn-ghost',
+          type: 'button',
+          onclick: () => window.open(resultUrl, '_blank', 'noopener,noreferrer'),
+        }, 'Otwórz pełny podgląd'),
         h('button', {
           class: 'ff-btn ff-btn-ghost',
           type: 'button',
@@ -235,8 +249,8 @@ export function createWidget({ config, api, product, externalId }) {
             api.trackEvent('download', { productId: product.id });
             downloadImage(resultUrl, 'fashionfit.jpg');
           },
-        }, '⬇️ Pobierz zdjęcie'),
-        h('button', { class: 'ff-btn ff-btn-ghost', type: 'button', onclick: renderModeScreen }, '🔁 Przymierz inne'),
+        }, 'Pobierz zdjęcie'),
+        h('button', { class: 'ff-btn ff-btn-ghost', type: 'button', onclick: renderModeScreen }, 'Przymierz inne'),
       ),
     );
   }

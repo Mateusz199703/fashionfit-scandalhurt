@@ -30,6 +30,12 @@ function parseIntOrDefault(value, fallback) {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
+function parseIntOptional(value) {
+  if (value == null || value === '') return null;
+  const parsed = parseInt(value, 10);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
 function parseWidgetAllowedOrigins() {
   const raw = process.env.WIDGET_ALLOWED_ORIGINS;
   if (raw && String(raw).trim()) return parseAllowedOrigins(raw, process.env.FRONTEND_URL || 'http://localhost:3000');
@@ -74,6 +80,13 @@ const config = {
     projectId: process.env.GOOGLE_CLOUD_PROJECT || '',
     location: process.env.GOOGLE_CLOUD_LOCATION || 'europe-west4',
     vtoModel: process.env.GOOGLE_VTO_MODEL || 'virtual-try-on-001',
+    vto: {
+      sampleCount: Math.min(4, Math.max(1, parseIntOrDefault(process.env.GOOGLE_VTO_SAMPLE_COUNT, 1))),
+      outputMimeType: process.env.GOOGLE_VTO_OUTPUT_MIME_TYPE || 'image/png',
+      jpegQuality: Math.min(100, Math.max(70, parseIntOrDefault(process.env.GOOGLE_VTO_JPEG_QUALITY, 95))),
+      addWatermark: parseBoolean(process.env.GOOGLE_VTO_ADD_WATERMARK, true),
+      baseSteps: parseIntOptional(process.env.GOOGLE_VTO_BASE_STEPS),
+    },
   },
 
   tryon: {

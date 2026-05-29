@@ -176,7 +176,45 @@ const CSS = `
 .ff-drop.ff-over { border-color: var(--ff-primary); background: rgba(0,0,0,.02); }
 
 .ff-preview { width: 100%; border-radius: 14px; margin: 8px 0; display: block; }
-.ff-result { width: 100%; border-radius: 14px; display: block; background: #f3f4f6; }
+.ff-result-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.ff-result-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.ff-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 8px 12px;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  color: #111827;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .02em;
+}
+.ff-result-stage {
+  margin-top: 8px;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  background: linear-gradient(180deg, #f7f7f8 0%, #f1f2f4 100%);
+}
+.ff-result {
+  width: 100%;
+  max-height: 64vh;
+  object-fit: contain;
+  display: block;
+  background: #f3f4f6;
+}
+.ff-result-note {
+  margin-top: 12px;
+  color: #4b5563;
+  font-size: 13px;
+  line-height: 1.5;
+  border: 1px solid #eceef2;
+  background: #fafbfc;
+  border-radius: 12px;
+  padding: 10px 12px;
+}
 
 .ff-btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%;
@@ -225,6 +263,9 @@ const CSS = `
     font-size: 15px;
   }
   .ff-privacy { font-size: 13px; }
+  .ff-result {
+    max-height: 54vh;
+  }
 }
 `;
 

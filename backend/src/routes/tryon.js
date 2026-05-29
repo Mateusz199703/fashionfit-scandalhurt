@@ -113,6 +113,13 @@ router.post('/photo', checkUsageQuota, async (req, res) => {
   if (productError) throw productError;
   if (!product) throw new ApiError(404, 'Product not found for this shop');
   if (!product.garment_image_url) throw new ApiError(422, 'Product has no garment image to try on');
+  if (String(product.category || '').toLowerCase() === 'accessories') {
+    throw new ApiError(
+      422,
+      'Try-on supports only clothing categories (tops, bottoms, one-pieces, outerwear). Accessories are not supported.',
+      'CATEGORY_NOT_SUPPORTED',
+    );
+  }
 
   const sessionToken = uuidv4();
   const personKey = await uploadBase64(
