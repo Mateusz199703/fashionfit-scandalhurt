@@ -81,6 +81,8 @@ async function tryGoogleVto({ modelImageUrl, garmentImageUrl }) {
     provider: 'google_vto',
     resultBase64: result.resultBase64,
     mimeType: result.mimeType || 'image/jpeg',
+    resultMeta: result.resultMeta || null,
+    inputMeta: result.inputMeta || null,
   };
 }
 

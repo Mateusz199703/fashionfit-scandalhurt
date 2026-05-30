@@ -109,7 +109,11 @@ async function persistPredictionId(sessionId, predictionId) {
 async function failOrRetrySession(session, attempt, errorMessage) {
   const nextAttempt = attempt + 1;
   if (nextAttempt <= MAX_RETRIES) {
-    const delayMs = RETRY_DELAYS_MS[Math.min(attempt - 1, RETRY_DELAYS_MS.length - 1)] || 5000;
+    const retryAfterSec = Number(session._retryAfterSec || 0);
+    const providerDelayMs = Number.isFinite(retryAfterSec) && retryAfterSec > 0
+      ? retryAfterSec * 1000
+      : 0;
+    const delayMs = providerDelayMs || RETRY_DELAYS_MS[Math.min(attempt - 1, RETRY_DELAYS_MS.length - 1)] || 5000;
     const metadata = mergeMetadata(session.metadata, {
       retry_count: nextAttempt - 1,
       last_error: errorMessage,
@@ -216,11 +220,14 @@ async function processJob(job) {
           ...QUALITY_METADATA,
           preferredProvider,
           usedProvider: result.provider || 'unknown',
+          provider_result_meta: result.resultMeta || null,
+          provider_input_meta: result.inputMeta || null,
         }),
       })
       .eq('id', claimed.id);
     if (providerMetaError) throw providerMetaError;
   } catch (err) {
+    claimed._retryAfterSec = Number(err && err.retryAfterSec ? err.retryAfterSec : 0);
     await failOrRetrySession(claimed, attempt, err.message || 'Try-on processing failed');
   }
 }

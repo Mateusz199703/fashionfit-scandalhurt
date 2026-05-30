@@ -19,6 +19,43 @@ function baseUrl(shop) {
   return domain.startsWith('http') ? domain : `https://${domain}`;
 }
 
+function sanitizeLabel(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
+function scoreGarmentImageCandidate(image) {
+  const src = sanitizeLabel(image && image.src);
+  const name = sanitizeLabel(image && image.name);
+  const alt = sanitizeLabel(image && image.alt);
+  const label = `${name} ${alt} ${src}`;
+  let score = 0;
+
+  if (!src) return Number.POSITIVE_INFINITY;
+
+  // Prefer clean packshots/front-only garment photos.
+  if (/(flat|flatlay|packshot|ghost|front|studio|cutout|white|biale|na-bialym)/.test(label)) score -= 4;
+  if (/(detail|zoom|back|tyl|bok|side|lifestyle|lookbook|campaign|model|on-model|street)/.test(label)) score += 5;
+  if (/(toreb|bag|hat|jewel|kolczyk|necklace|bracelet|belt|pasek|szalik|scarf)/.test(label)) score += 6;
+  if (/\.(png)(\?|$)/.test(src)) score -= 1;
+
+  // Lower position in Woo gallery often means more editorial angle; prefer first slots.
+  const position = Number(image && image.position);
+  if (Number.isFinite(position)) score += Math.min(position, 8) * 0.6;
+
+  return score;
+}
+
+function selectGarmentImage(images = []) {
+  if (!Array.isArray(images) || !images.length) return null;
+  const sorted = images
+    .filter((img) => img && img.src)
+    .map((img) => ({ img, score: scoreGarmentImageCandidate(img) }))
+    .sort((a, b) => a.score - b.score);
+
+  if (!sorted.length) return null;
+  return sorted[0].img.src || null;
+}
+
 async function fetchProducts(shop, { perPage = 100, maxPages = 50 } = {}) {
   const auth = Buffer.from(`${shop.wc_consumer_key}:${shop.wc_consumer_secret}`).toString('base64');
   const all = [];
@@ -45,7 +82,7 @@ async function syncShopProducts(shop) {
     external_id: String(p.id),
     name: p.name || null,
     category: mapCategory(p.categories),
-    garment_image_url: Array.isArray(p.images) && p.images[0] ? p.images[0].src : null,
+    garment_image_url: selectGarmentImage(p.images),
     product_url: p.permalink || null,
     variants: Array.isArray(p.variations) && p.variations.length ? { variation_ids: p.variations } : null,
     is_synced: true,
@@ -64,4 +101,10 @@ async function syncShopProducts(shop) {
   return { synced: rows.length };
 }
 
-module.exports = { fetchProducts, syncShopProducts, mapCategory };
+module.exports = {
+  fetchProducts,
+  syncShopProducts,
+  mapCategory,
+  selectGarmentImage,
+  scoreGarmentImageCandidate,
+};

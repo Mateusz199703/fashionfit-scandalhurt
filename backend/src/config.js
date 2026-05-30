@@ -81,11 +81,16 @@ const config = {
     location: process.env.GOOGLE_CLOUD_LOCATION || 'europe-west4',
     vtoModel: process.env.GOOGLE_VTO_MODEL || 'virtual-try-on-001',
     vto: {
-      sampleCount: Math.min(4, Math.max(1, parseIntOrDefault(process.env.GOOGLE_VTO_SAMPLE_COUNT, 1))),
+      sampleCount: Math.min(4, Math.max(1, parseIntOrDefault(process.env.GOOGLE_VTO_SAMPLE_COUNT, 2))),
       outputMimeType: process.env.GOOGLE_VTO_OUTPUT_MIME_TYPE || 'image/png',
       jpegQuality: Math.min(100, Math.max(70, parseIntOrDefault(process.env.GOOGLE_VTO_JPEG_QUALITY, 95))),
-      addWatermark: parseBoolean(process.env.GOOGLE_VTO_ADD_WATERMARK, true),
+      addWatermark: parseBoolean(process.env.GOOGLE_VTO_ADD_WATERMARK, false),
       baseSteps: parseIntOptional(process.env.GOOGLE_VTO_BASE_STEPS),
+      safetySetting: process.env.GOOGLE_VTO_SAFETY_SETTING || process.env.GOOGLE_VTO_SAFETY_FILTER_LEVEL || 'block_only_high',
+      timeoutMs: parseIntOrDefault(process.env.GOOGLE_VTO_TIMEOUT_MS, 45000),
+      inputLongEdgePx: parseIntOrDefault(process.env.GOOGLE_VTO_INPUT_LONG_EDGE_PX, 2048),
+      assetFetchTimeoutMs: parseIntOrDefault(process.env.GOOGLE_VTO_ASSET_FETCH_TIMEOUT_MS, 20000),
+      safeRequestsPerMin: parseIntOrDefault(process.env.GOOGLE_VTO_SAFE_REQUESTS_PER_MIN, 45),
     },
   },
 
