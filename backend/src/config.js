@@ -91,6 +91,12 @@ const config = {
       inputLongEdgePx: parseIntOrDefault(process.env.GOOGLE_VTO_INPUT_LONG_EDGE_PX, 2048),
       assetFetchTimeoutMs: parseIntOrDefault(process.env.GOOGLE_VTO_ASSET_FETCH_TIMEOUT_MS, 20000),
       safeRequestsPerMin: parseIntOrDefault(process.env.GOOGLE_VTO_SAFE_REQUESTS_PER_MIN, 45),
+      segmentationEnabled: parseBoolean(process.env.GOOGLE_VTO_SEGMENTATION_ENABLED, true),
+      segmentationMaxEdgePx: parseIntOrDefault(process.env.GOOGLE_VTO_SEGMENTATION_MAX_EDGE_PX, 1800),
+      segmentationBgDistanceLow: parseIntOrDefault(process.env.GOOGLE_VTO_SEGMENTATION_BG_DISTANCE_LOW, 22),
+      segmentationBgDistanceHigh: parseIntOrDefault(process.env.GOOGLE_VTO_SEGMENTATION_BG_DISTANCE_HIGH, 72),
+      garmentCacheTtlSec: parseIntOrDefault(process.env.GOOGLE_VTO_GARMENT_CACHE_TTL_SEC, 3600),
+      garmentCacheMaxItems: parseIntOrDefault(process.env.GOOGLE_VTO_GARMENT_CACHE_MAX_ITEMS, 300),
     },
   },
 

@@ -1,4 +1,5 @@
 const { GoogleAuth } = require('google-auth-library');
+let cachedAuthClientPromise = null;
 
 function getCredentialsFromEnv() {
   const raw = process.env.GOOGLE_CREDENTIALS_JSON;
@@ -29,9 +30,20 @@ function getGoogleAuthClient() {
   });
 }
 
+async function getAuthorizedClient() {
+  if (!cachedAuthClientPromise) {
+    cachedAuthClientPromise = getGoogleAuthClient()
+      .getClient()
+      .catch((error) => {
+        cachedAuthClientPromise = null;
+        throw error;
+      });
+  }
+  return cachedAuthClientPromise;
+}
+
 async function getAccessToken() {
-  const auth = getGoogleAuthClient();
-  const client = await auth.getClient();
+  const client = await getAuthorizedClient();
   const tokenResponse = await client.getAccessToken();
   const token = typeof tokenResponse === 'string' ? tokenResponse : tokenResponse && tokenResponse.token;
   if (!token) throw new Error('Could not resolve Google access token');

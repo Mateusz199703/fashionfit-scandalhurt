@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const fetch = require('node-fetch');
 const sharp = require('sharp');
 const config = require('../config');
@@ -21,6 +22,7 @@ const DEFAULT_PRESET = Object.freeze({
 
 let windowStartMs = 0;
 let requestsInWindow = 0;
+const garmentPreprocessCache = new Map();
 
 function getEndpoint() {
   const projectId = config.google.projectId;
@@ -140,6 +142,258 @@ async function padToPortraitRatio(buffer, background) {
     .toBuffer();
 }
 
+function getGarmentCacheSettings() {
+  return {
+    ttlMs: clamp(Number(config.google.vto.garmentCacheTtlSec || 3600) * 1000, 30 * 1000, 24 * 60 * 60 * 1000),
+    maxItems: clamp(Number(config.google.vto.garmentCacheMaxItems || 300), 1, 3000),
+  };
+}
+
+function getGarmentCacheKey(imageUrl) {
+  const signature = [
+    imageUrl,
+    String(config.google.vto.inputLongEdgePx || 2048),
+    String(config.google.vto.segmentationEnabled),
+    String(config.google.vto.segmentationMaxEdgePx || 1800),
+    String(config.google.vto.segmentationBgDistanceLow || 22),
+    String(config.google.vto.segmentationBgDistanceHigh || 72),
+  ].join('|');
+
+  return crypto.createHash('sha256').update(signature).digest('hex');
+}
+
+function clearExpiredGarmentCache() {
+  const now = Date.now();
+  for (const [key, entry] of garmentPreprocessCache.entries()) {
+    if (!entry || entry.expiresAt <= now) {
+      garmentPreprocessCache.delete(key);
+    }
+  }
+}
+
+function enforceGarmentCacheSize(maxItems) {
+  while (garmentPreprocessCache.size > maxItems) {
+    const firstKey = garmentPreprocessCache.keys().next().value;
+    if (!firstKey) break;
+    garmentPreprocessCache.delete(firstKey);
+  }
+}
+
+function cacheGarmentPreprocess(cacheKey, build) {
+  const { ttlMs, maxItems } = getGarmentCacheSettings();
+  clearExpiredGarmentCache();
+
+  const now = Date.now();
+  const cached = garmentPreprocessCache.get(cacheKey);
+  if (cached && cached.expiresAt > now) {
+    garmentPreprocessCache.delete(cacheKey);
+    garmentPreprocessCache.set(cacheKey, cached);
+    return cached.promise;
+  }
+
+  const promise = build().catch((error) => {
+    garmentPreprocessCache.delete(cacheKey);
+    throw error;
+  });
+
+  garmentPreprocessCache.set(cacheKey, {
+    promise,
+    expiresAt: now + ttlMs,
+  });
+
+  enforceGarmentCacheSize(maxItems);
+  return promise;
+}
+
+function estimateBackgroundColor(rawRgba, width, height) {
+  const sampleWidth = Math.max(12, Math.floor(width * 0.08));
+  const sampleHeight = Math.max(12, Math.floor(height * 0.08));
+  const step = Math.max(1, Math.floor(Math.min(width, height) / 220));
+
+  const corners = [
+    { x0: 0, y0: 0 },
+    { x0: Math.max(0, width - sampleWidth), y0: 0 },
+    { x0: 0, y0: Math.max(0, height - sampleHeight) },
+    { x0: Math.max(0, width - sampleWidth), y0: Math.max(0, height - sampleHeight) },
+  ];
+
+  let r = 0;
+  let g = 0;
+  let b = 0;
+  let count = 0;
+
+  for (const corner of corners) {
+    for (let y = corner.y0; y < corner.y0 + sampleHeight; y += step) {
+      for (let x = corner.x0; x < corner.x0 + sampleWidth; x += step) {
+        const idx = (y * width + x) * 4;
+        r += rawRgba[idx] || 0;
+        g += rawRgba[idx + 1] || 0;
+        b += rawRgba[idx + 2] || 0;
+        count += 1;
+      }
+    }
+  }
+
+  if (!count) return { r: 245, g: 245, b: 245 };
+
+  return {
+    r: Math.round(r / count),
+    g: Math.round(g / count),
+    b: Math.round(b / count),
+  };
+}
+
+function keepLargestConnectedComponent(alphaMask, width, height, threshold = 42) {
+  const size = width * height;
+  const visited = new Uint8Array(size);
+  const queue = new Int32Array(size);
+  let bestPixels = null;
+
+  for (let start = 0; start < size; start += 1) {
+    if (visited[start] || alphaMask[start] <= threshold) continue;
+
+    let head = 0;
+    let tail = 0;
+    const pixels = [];
+
+    queue[tail++] = start;
+    visited[start] = 1;
+
+    while (head < tail) {
+      const idx = queue[head++];
+      pixels.push(idx);
+
+      const x = idx % width;
+      const y = Math.floor(idx / width);
+
+      const neighbors = [
+        idx - 1,
+        idx + 1,
+        idx - width,
+        idx + width,
+      ];
+
+      for (let n = 0; n < neighbors.length; n += 1) {
+        const next = neighbors[n];
+        if (next < 0 || next >= size) continue;
+
+        if ((n === 0 && x === 0) || (n === 1 && x === width - 1)) continue;
+        if ((n === 2 && y === 0) || (n === 3 && y === height - 1)) continue;
+
+        if (!visited[next] && alphaMask[next] > threshold) {
+          visited[next] = 1;
+          queue[tail++] = next;
+        }
+      }
+    }
+
+    if (!bestPixels || pixels.length > bestPixels.length) {
+      bestPixels = pixels;
+    }
+  }
+
+  if (!bestPixels || !bestPixels.length) {
+    return alphaMask;
+  }
+
+  const filtered = Buffer.alloc(size);
+  for (let i = 0; i < bestPixels.length; i += 1) {
+    filtered[bestPixels[i]] = alphaMask[bestPixels[i]];
+  }
+  return filtered;
+}
+
+async function segmentGarmentForeground(buffer) {
+  const segmentationEdgePx = clamp(
+    Number(config.google.vto.segmentationMaxEdgePx || 1800),
+    900,
+    VTO_LIMITS.maxLongEdgePx,
+  );
+
+  const normalized = await sharp(buffer, { failOn: 'none', limitInputPixels: false })
+    .rotate()
+    .toColorspace('srgb')
+    .ensureAlpha()
+    .resize({
+      width: segmentationEdgePx,
+      height: segmentationEdgePx,
+      fit: 'inside',
+      withoutEnlargement: true,
+    })
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+
+  const width = Number(normalized.info.width || 0);
+  const height = Number(normalized.info.height || 0);
+  if (!width || !height) {
+    throw new Error('Could not read garment image dimensions for segmentation');
+  }
+
+  const rgba = normalized.data;
+  const bg = estimateBackgroundColor(rgba, width, height);
+
+  const low = clamp(Number(config.google.vto.segmentationBgDistanceLow || 22), 4, 120);
+  const high = clamp(Number(config.google.vto.segmentationBgDistanceHigh || 72), low + 4, 220);
+  const span = Math.max(1, high - low);
+
+  const alphaMask = Buffer.alloc(width * height);
+  for (let i = 0; i < width * height; i += 1) {
+    const idx = i * 4;
+    const r = rgba[idx];
+    const g = rgba[idx + 1];
+    const b = rgba[idx + 2];
+    const srcA = rgba[idx + 3];
+
+    if (srcA < 8) {
+      alphaMask[i] = 0;
+      continue;
+    }
+
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    const sat = max - min;
+    const lightness = (r + g + b) / 3;
+    const dist = Math.sqrt(((r - bg.r) ** 2) + ((g - bg.g) ** 2) + ((b - bg.b) ** 2));
+
+    let alpha = clamp(Math.round(((dist - low) / span) * 255), 0, 255);
+
+    if (sat > 34 && dist > low * 0.7) alpha = clamp(alpha + 24, 0, 255);
+    if (lightness > 246 && sat < 12 && dist < high) alpha = clamp(alpha - 72, 0, 255);
+
+    alphaMask[i] = Math.min(srcA, alpha);
+  }
+
+  const largestComponent = keepLargestConnectedComponent(alphaMask, width, height, 42);
+
+  const softenedMaskRaw = await sharp(largestComponent, { raw: { width, height, channels: 1 } })
+    .blur(1.2)
+    .linear(1.28, -20)
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  const softenedMask = softenedMaskRaw.data;
+  const softenedChannels = Number(softenedMaskRaw.info.channels || 1);
+
+  const rgbaMasked = Buffer.alloc(width * height * 4);
+  for (let i = 0; i < width * height; i += 1) {
+    const srcIdx = i * 4;
+    const outIdx = i * 4;
+    rgbaMasked[outIdx] = rgba[srcIdx];
+    rgbaMasked[outIdx + 1] = rgba[srcIdx + 1];
+    rgbaMasked[outIdx + 2] = rgba[srcIdx + 2];
+    rgbaMasked[outIdx + 3] = softenedMask[i * softenedChannels];
+  }
+
+  return sharp(rgbaMasked, {
+    raw: {
+      width,
+      height,
+      channels: 4,
+    },
+  })
+    .png()
+    .toBuffer();
+}
+
 async function preprocessForVto(buffer, type) {
   validateInputSize(buffer, type);
 
@@ -149,20 +403,27 @@ async function preprocessForVto(buffer, type) {
     VTO_LIMITS.maxLongEdgePx,
   );
 
-  let img = sharp(buffer, { failOn: 'none', limitInputPixels: false })
-    .rotate() // respects EXIF orientation
-    .toColorspace('srgb');
+  let preprocessed;
 
   if (type === 'garment') {
-    // Garment-only prep: remove empty margins and normalize to clean white canvas.
-    img = img.flatten({ background: '#ffffff' });
-  }
+    const segmentationEnabled = Boolean(config.google.vto.segmentationEnabled);
+    const segmented = segmentationEnabled
+      ? await segmentGarmentForeground(buffer)
+      : await sharp(buffer, { failOn: 'none', limitInputPixels: false })
+        .rotate()
+        .toColorspace('srgb')
+        .ensureAlpha()
+        .png()
+        .toBuffer();
 
-  let preprocessed = await img.toBuffer();
-
-  if (type === 'garment') {
-    preprocessed = await sharp(preprocessed, { failOn: 'none' })
-      .trim({ threshold: 12 })
+    preprocessed = await sharp(segmented, { failOn: 'none' })
+      .trim({ threshold: 10 })
+      .flatten({ background: '#ffffff' })
+      .toBuffer();
+  } else {
+    preprocessed = await sharp(buffer, { failOn: 'none', limitInputPixels: false })
+      .rotate()
+      .toColorspace('srgb')
       .toBuffer();
   }
 
@@ -214,7 +475,6 @@ function pickBestPrediction(predictions) {
   if (!Array.isArray(predictions) || !predictions.length) return null;
   const normalized = predictions.map(normalizePrediction).filter((item) => item && item.resultBase64);
   if (!normalized.length) return null;
-  // Vertex usually returns best sample first.
   return normalized[0];
 }
 
@@ -269,6 +529,11 @@ function buildParameters() {
   };
 }
 
+async function getPreprocessedGarmentImage(garmentImageUrl, garmentRawBuffer) {
+  const cacheKey = getGarmentCacheKey(garmentImageUrl);
+  return cacheGarmentPreprocess(cacheKey, () => preprocessForVto(ensureBuffer(garmentRawBuffer), 'garment'));
+}
+
 async function generateTryOnFromUrls({ modelImageUrl, garmentImageUrl }) {
   markLocalQuotaUsage();
 
@@ -280,8 +545,10 @@ async function generateTryOnFromUrls({ modelImageUrl, garmentImageUrl }) {
     fetchBinary(garmentImageUrl, 'garment'),
   ]);
 
-  const personImage = await preprocessForVto(ensureBuffer(personRaw), 'person');
-  const garmentImage = await preprocessForVto(ensureBuffer(garmentRaw), 'garment');
+  const [personImage, garmentImage] = await Promise.all([
+    preprocessForVto(ensureBuffer(personRaw), 'person'),
+    getPreprocessedGarmentImage(garmentImageUrl, garmentRaw),
+  ]);
 
   const payload = {
     instances: [
@@ -381,4 +648,6 @@ module.exports = {
   preprocessForVto,
   validateResultImage,
   buildParameters,
+  segmentGarmentForeground,
+  keepLargestConnectedComponent,
 };
