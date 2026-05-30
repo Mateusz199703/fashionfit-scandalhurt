@@ -122,6 +122,11 @@ router.post('/photo', checkUsageQuota, async (req, res) => {
   }
 
   const sessionToken = uuidv4();
+  const normalizedMetadata = {
+    ...(metadata || {}),
+    output_quality: 'max',
+    processing_preset: 'premium_max',
+  };
   const personKey = await uploadBase64(
     config.storage.uploadsBucket,
     personStoragePath(shopId, sessionToken),
@@ -138,7 +143,7 @@ router.post('/photo', checkUsageQuota, async (req, res) => {
       status: 'pending',
       person_image_url: personKey,
       metadata: {
-        ...(metadata || {}),
+        ...normalizedMetadata,
         preferredProvider,
         ...(idempotencyKey ? { idempotencyKey } : {}),
         processing_mode: 'background_queue',

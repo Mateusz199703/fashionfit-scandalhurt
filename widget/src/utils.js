@@ -78,6 +78,32 @@ export function fileToDataUrl(file) {
   });
 }
 
+export function analyzeImageDataUrl(dataUrl) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const width = Number(img.naturalWidth || img.width || 0);
+      const height = Number(img.naturalHeight || img.height || 0);
+      const megapixels = width > 0 && height > 0 ? Number(((width * height) / 1000000).toFixed(2)) : 0;
+      let bucket = 'unknown';
+      if (megapixels >= 4.5) bucket = 'ultra';
+      else if (megapixels >= 2.0) bucket = 'high';
+      else if (megapixels >= 0.9) bucket = 'medium';
+      else if (megapixels > 0) bucket = 'low';
+
+      resolve({
+        image_width: width,
+        image_height: height,
+        image_megapixels: megapixels,
+        image_quality_bucket: bucket,
+        output_quality: 'max',
+      });
+    };
+    img.onerror = () => reject(new Error('Nie udało się odczytać rozdzielczości zdjęcia'));
+    img.src = dataUrl;
+  });
+}
+
 // Download a (possibly cross-origin) image by fetching it into a blob first.
 export async function downloadImage(url, filename) {
   try {

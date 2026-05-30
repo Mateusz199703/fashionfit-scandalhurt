@@ -89,15 +89,16 @@ const CSS = `
   position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
   min-height: 138px;
   padding: 18px 16px; border: 1px solid #e6e8ec; border-radius: 20px; cursor: pointer;
-  background: linear-gradient(180deg, #ffffff 0%, #f8f9fb 100%); color: #111827; font-weight: 600; text-align: center;
+  background: linear-gradient(180deg, #ffffff 0%, #f8f9fb 100%) !important; color: #111827 !important; font-weight: 600; text-align: center;
   line-height: 1.2;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.92);
   transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
 }
 .ff-mode:hover {
   transform: translateY(-1px);
-  border-color: #101114;
+  border-color: #101114 !important;
   box-shadow: 0 10px 24px rgba(16,17,20,.14), inset 0 1px 0 rgba(255,255,255,.95);
+  color: #111827 !important;
 }
 .ff-mode .ff-emoji {
   display: block !important;
@@ -126,8 +127,12 @@ const CSS = `
   font-size: 16px !important;
   line-height: 1.2 !important;
   font-weight: 800 !important;
-  color: inherit !important;
+  color: #111827 !important;
   text-transform: none !important;
+}
+.ff-mode:hover .ff-mode-label,
+.ff-mode:focus-visible .ff-mode-label {
+  color: #111827 !important;
 }
 .ff-badge {
   position: absolute; top: 10px; right: 10px; padding: 4px 10px; border-radius: 999px;
@@ -168,6 +173,9 @@ const CSS = `
   background: #fafafb;
 }
 
+.ff-upload-wrap {
+  border-radius: 16px;
+}
 .ff-drop {
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
   padding: 36px 16px; border: 2px dashed #d1d5db; border-radius: 14px; cursor: pointer;
@@ -175,7 +183,21 @@ const CSS = `
 }
 .ff-drop.ff-over { border-color: var(--ff-primary); background: rgba(0,0,0,.02); }
 
+.ff-upload-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #fcfcfd 0%, #f6f7f9 100%);
+  padding: 12px;
+  margin-top: 6px;
+}
 .ff-preview { width: 100%; border-radius: 14px; margin: 8px 0; display: block; }
+.ff-upload-meta {
+  color: #4b5563;
+  font-size: 12px;
+  line-height: 1.45;
+  margin: 2px 0 10px;
+}
+
 .ff-result-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .ff-result-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
 .ff-pill {
@@ -233,6 +255,32 @@ const CSS = `
 .ff-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
 
 .ff-loading { text-align: center; padding: 18px 0; }
+.ff-steps {
+  margin: 10px auto 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  text-align: left;
+}
+.ff-step {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 7px 9px;
+  font-size: 12px;
+  color: #6b7280;
+  background: #fafafa;
+}
+.ff-step-active {
+  border-color: #0f1115;
+  background: #f3f4f6;
+  color: #111827;
+  font-weight: 700;
+}
+.ff-step-done {
+  border-color: #c7ced8;
+  color: #1f2937;
+  background: #f8fbf8;
+}
 .ff-spinner {
   width: 42px; height: 42px; margin: 0 auto 14px; border-radius: 50%;
   border: 4px solid #e5e7eb; border-top-color: var(--ff-primary);
@@ -265,6 +313,9 @@ const CSS = `
   .ff-privacy { font-size: 13px; }
   .ff-result {
     max-height: 54vh;
+  }
+  .ff-steps {
+    grid-template-columns: 1fr;
   }
 }
 `;

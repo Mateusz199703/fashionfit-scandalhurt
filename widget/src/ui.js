@@ -1,4 +1,11 @@
-import { h, validateImageFile, fileToDataUrl, downloadImage, getPageProductInfo } from './utils.js';
+import {
+  h,
+  validateImageFile,
+  fileToDataUrl,
+  analyzeImageDataUrl,
+  downloadImage,
+  getPageProductInfo,
+} from './utils.js';
 import { createArSession } from './ar.js';
 
 const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
@@ -107,14 +114,25 @@ export function createWidget({ config, api, product, externalId }) {
   // -- Screen 2A: photo AI --------------------------------------------------
   function renderPhotoScreen() {
     let dataUrl = null;
+    let imageMeta = null;
     const input = h('input', { type: 'file', accept: 'image/jpeg,image/png', style: { display: 'none' } });
     const errorBox = h('div', { class: 'ff-error', style: { display: 'none' } });
     const tryBtn = h('button', { class: 'ff-btn', type: 'button', disabled: 'true', onclick: () => runTryon() }, 'Przymierz');
-    const previewWrap = h('div', {});
     const drop = h('div', { class: 'ff-drop' },
       h('span', { class: 'ff-emoji' }, '⬆️'),
       h('span', {}, 'Przeciągnij zdjęcie lub kliknij, aby wgrać'),
       h('span', { class: 'ff-sub' }, 'JPG lub PNG, maks. 10MB'),
+    );
+    const uploadWrap = h('div', { class: 'ff-upload-wrap' }, drop);
+    const previewImage = h('img', { class: 'ff-preview', alt: 'Podgląd zdjęcia' });
+    const previewMeta = h('div', { class: 'ff-upload-meta' });
+    const changeBtn = h('button', { class: 'ff-btn ff-btn-ghost', type: 'button', onclick: () => input.click() }, 'Zmień zdjęcie');
+    const previewCard = h(
+      'div',
+      { class: 'ff-upload-card', style: { display: 'none' } },
+      previewImage,
+      previewMeta,
+      changeBtn,
     );
 
     function showError(msg) {
@@ -127,8 +145,17 @@ export function createWidget({ config, api, product, externalId }) {
       if (err) { showError(err); return; }
       showError('');
       dataUrl = await fileToDataUrl(file);
-      previewWrap.innerHTML = '';
-      previewWrap.appendChild(h('img', { class: 'ff-preview', src: dataUrl, alt: 'Podgląd' }));
+      try {
+        imageMeta = await analyzeImageDataUrl(dataUrl);
+      } catch {
+        imageMeta = { output_quality: 'max' };
+      }
+      previewImage.src = dataUrl;
+      previewMeta.textContent = imageMeta && imageMeta.image_width && imageMeta.image_height
+        ? `Rozdzielczość: ${imageMeta.image_width}×${imageMeta.image_height} · ${imageMeta.image_megapixels} MP · jakość wejściowa: ${imageMeta.image_quality_bucket}`
+        : 'Jakość wejściowa: automatycznie wykryta';
+      drop.style.display = 'none';
+      previewCard.style.display = 'block';
       tryBtn.removeAttribute('disabled');
     }
 
@@ -144,10 +171,16 @@ export function createWidget({ config, api, product, externalId }) {
 
     async function runTryon() {
       if (!dataUrl) return;
-      api.trackEvent('tryon_start', { productId: product.id, metadata: { mode: 'photo', size: selectedSize } });
+      const metadata = {
+        mode: 'photo',
+        size: selectedSize,
+        output_quality: 'max',
+        ...(imageMeta || {}),
+      };
+      api.trackEvent('tryon_start', { productId: product.id, metadata });
       renderLoading();
       try {
-        const { sessionId } = await api.startPhotoTryon(product.id, dataUrl, { size: selectedSize });
+        const { sessionId } = await api.startPhotoTryon(product.id, dataUrl, metadata);
         pollResult(sessionId);
       } catch (e) {
         renderPhotoError(e.message);
@@ -156,9 +189,9 @@ export function createWidget({ config, api, product, externalId }) {
 
     setBody(
       h('h2', { class: 'ff-h' }, '📸 Wgraj swoje zdjęcie'),
-      drop,
+      uploadWrap,
+      previewCard,
       input,
-      previewWrap,
       errorBox,
       h('div', { class: 'ff-actions' },
         tryBtn,
@@ -169,22 +202,46 @@ export function createWidget({ config, api, product, externalId }) {
 
   function renderLoading() {
     const bar = h('span', {});
+    const steps = [
+      h('div', { class: 'ff-step ff-step-active' }, '1. Analiza zdjęcia'),
+      h('div', { class: 'ff-step' }, '2. Dopasowanie produktu'),
+      h('div', { class: 'ff-step' }, '3. Render HD'),
+      h('div', { class: 'ff-step' }, '4. Finalizacja'),
+    ];
+    const stepsWrap = h('div', { class: 'ff-steps' }, steps);
     setBody(
       h('div', { class: 'ff-loading' },
         h('div', { class: 'ff-spinner' }),
         h('b', {}, 'Generuję dla Ciebie...'),
-        h('div', { class: 'ff-sub' }, 'To potrwa około 10 sekund'),
+        h('div', { class: 'ff-sub' }, 'Zachowujemy najwyższą jakość finalnego zdjęcia'),
+        stepsWrap,
         h('div', { class: 'ff-progress' }, bar),
       ),
     );
     // Animate towards 90% while we wait; the result handler completes it.
     let pct = 5;
+    let activeStep = 0;
     const timer = setInterval(() => {
       pct = Math.min(90, pct + 6);
       bar.style.width = `${pct}%`;
+      if (pct >= 25 && activeStep < 1) activeStep = 1;
+      if (pct >= 55 && activeStep < 2) activeStep = 2;
+      if (pct >= 80 && activeStep < 3) activeStep = 3;
+      steps.forEach((el, idx) => {
+        el.classList.remove('ff-step-done', 'ff-step-active');
+        if (idx < activeStep) el.classList.add('ff-step-done');
+        if (idx === activeStep) el.classList.add('ff-step-active');
+      });
       if (!overlay) clearInterval(timer);
     }, 700);
-    return () => { clearInterval(timer); bar.style.width = '100%'; };
+    return () => {
+      clearInterval(timer);
+      bar.style.width = '100%';
+      steps.forEach((el) => {
+        el.classList.remove('ff-step-active');
+        el.classList.add('ff-step-done');
+      });
+    };
   }
 
   function pollResult(sessionId) {
@@ -222,13 +279,13 @@ export function createWidget({ config, api, product, externalId }) {
   }
 
   function renderResult(resultUrl) {
-    api.trackEvent('tryon_complete', { productId: product.id, metadata: { size: selectedSize } });
+    api.trackEvent('tryon_complete', { productId: product.id, metadata: { size: selectedSize, output_quality: 'max' } });
     setBody(
       h('div', { class: 'ff-result-head' },
         h('h2', { class: 'ff-h' }, 'Twoja przymiarka'),
         h('div', { class: 'ff-result-pills' },
           h('span', { class: 'ff-pill' }, `Rozmiar ${selectedSize}`),
-          h('span', { class: 'ff-pill' }, 'HD'),
+          h('span', { class: 'ff-pill' }, 'MAX QUALITY'),
         ),
       ),
       h('div', { class: 'ff-result-stage' },

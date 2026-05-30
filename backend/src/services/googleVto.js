@@ -2,6 +2,13 @@ const fetch = require('node-fetch');
 const config = require('../config');
 const { getAccessToken } = require('./googleAuth');
 
+const MAX_QUALITY_PRESET = Object.freeze({
+  sampleCount: 4,
+  outputMimeType: 'image/png',
+  addWatermark: false,
+  minBaseSteps: 32,
+});
+
 function getEndpoint() {
   const projectId = config.google.projectId;
   const location = config.google.location;
@@ -63,20 +70,22 @@ async function generateTryOnFromUrls({ modelImageUrl, garmentImageUrl }) {
     fetchToBase64(garmentImageUrl),
   ]);
 
-  const mimeType = String(config.google.vto.outputMimeType || 'image/png').toLowerCase();
+  const mimeType = MAX_QUALITY_PRESET.outputMimeType;
   const outputOptions = { mimeType };
   if (mimeType === 'image/jpeg' || mimeType === 'image/jpg') {
-    outputOptions.compressionQuality = config.google.vto.jpegQuality;
+    outputOptions.compressionQuality = 100;
   }
 
   const parameters = {
-    sampleCount: config.google.vto.sampleCount,
-    addWatermark: config.google.vto.addWatermark,
+    sampleCount: MAX_QUALITY_PRESET.sampleCount,
+    addWatermark: MAX_QUALITY_PRESET.addWatermark,
     outputOptions,
   };
-  if (Number.isFinite(config.google.vto.baseSteps) && config.google.vto.baseSteps > 0) {
-    parameters.baseSteps = config.google.vto.baseSteps;
-  }
+  const configuredSteps = Number(config.google.vto.baseSteps);
+  const baseSteps = Number.isFinite(configuredSteps) && configuredSteps > 0
+    ? Math.max(MAX_QUALITY_PRESET.minBaseSteps, configuredSteps)
+    : MAX_QUALITY_PRESET.minBaseSteps;
+  parameters.baseSteps = baseSteps;
 
   const payload = {
     instances: [

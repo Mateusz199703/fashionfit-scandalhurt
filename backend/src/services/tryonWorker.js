@@ -24,6 +24,11 @@ function mergeMetadata(base, patch) {
   };
 }
 
+const QUALITY_METADATA = {
+  output_quality: 'max',
+  processing_preset: 'premium_max',
+};
+
 function enqueue(sessionId, attempt = 1, delayMs = 0) {
   if (!sessionId) return;
   const add = () => {
@@ -75,7 +80,10 @@ function resultStoragePath(session) {
 }
 
 async function completeSession(session, storedPath, completionTimeMs, predictionId) {
-  const metadata = mergeMetadata(session.metadata, { completion_time_ms: completionTimeMs });
+  const metadata = mergeMetadata(session.metadata, {
+    ...QUALITY_METADATA,
+    completion_time_ms: completionTimeMs,
+  });
   const { error } = await supabase
     .from('tryon_sessions')
     .update({
@@ -205,6 +213,7 @@ async function processJob(job) {
       .from('tryon_sessions')
       .update({
         metadata: mergeMetadata(metadata, {
+          ...QUALITY_METADATA,
           preferredProvider,
           usedProvider: result.provider || 'unknown',
         }),
