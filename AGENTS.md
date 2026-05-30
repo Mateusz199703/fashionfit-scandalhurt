@@ -34,3 +34,34 @@ A task is done only when:
 - Relevant UI states are implemented.
 - Commands/checks were run or clearly explained if unavailable.
 - The final response lists changed files, verification, and remaining risks.
+
+- ## Project source of truth
+
+The main product brief is stored in PROJECT_BRIEF.md.
+
+Before planning or implementing major features, always read PROJECT_BRIEF.md.
+
+Fashion Fit AI is one modular SaaS platform for fashion ecommerce stores.
+
+Do not create separate repositories or standalone apps for individual modules.
+
+Core modules:
+- AI Fashion Stylist Advisor
+- Virtual Try-On
+- Size Recommendation
+- Product Recommendations
+- Outfit Builder
+- WooCommerce Integration
+- Merchant Dashboard
+- Storefront Widget
+- Analytics
+- Billing and subscription plans
+
+Subscription plans control which modules are enabled for each store/account.
+
+When adding features:
+- Reuse existing backend, dashboard, widget, plugin and database patterns.
+- Keep modules isolated internally but integrated into the same SaaS platform.
+- Add module access checks for paid features.
+- Show locked or upgrade states for unavailable modules.
+- Do not build advanced PRO features before the MVP core flow works.
