@@ -23,6 +23,11 @@ This project is a fashion/e-commerce AI application. It may include WooCommerce 
 - Prefer a working MVP over advanced features.
 - Run lint/typecheck/build/tests when available and report the results.
 
+## UI implementation reference
+
+- Before implementing any dashboard, widget, app UI, or visual component, always read `docs/BRAND_GUIDELINES.md`.
+- Use `docs/reference/fashionfit-landing-reference.html` as the visual reference for style direction and component feel.
+
 ## Definition of done
 
 A task is done only when:
