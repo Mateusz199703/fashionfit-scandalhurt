@@ -122,7 +122,9 @@ export function createWidget({ config, api, product, externalId }) {
 
   function setBody(...nodes) {
     modalBody.innerHTML = '';
-    nodes.forEach((n) => modalBody.appendChild(n));
+    nodes.forEach((n) => {
+      if (n instanceof Node) modalBody.appendChild(n);
+    });
   }
 
   function detectModuleEnabled(snapshot, moduleKey) {
