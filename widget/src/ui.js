@@ -18,6 +18,7 @@ const TRYON_CTA_TEXT_MAX = 40;
 const DEFAULT_TRYON_CTA_TEXT = 'Przymierz wirtualnie';
 const TRYON_CTA_MARKER = 'data-fashionfit-tryon-cta';
 const ADVISOR_BUBBLE_KEY_PREFIX = 'fashionfit:advisor-bubble-dismissed:';
+const ADVISOR_GREETING_MESSAGE = 'Cześć ✨ Powiedz mi, czego szukasz — okazja, styl, kolor albo rozmiar. Dobiorę coś z produktów tego sklepu.';
 
 export function createWidget({ config, api, product, externalId }) {
   const page = getPageProductInfo();
@@ -534,7 +535,11 @@ export function createWidget({ config, api, product, externalId }) {
         h('div', { class: 'ff-chat-bubble' }, msg.text || ''),
         msg.role === 'assistant' ? renderAdvisorRecommendations(msg.recommendations || []) : null,
       ))
-      : [h('div', { class: 'ff-advisor-empty' }, 'Napisz, czego szukasz, a AI Stylist podpowie produkty z katalogu tego sklepu.')];
+      : [
+        h('div', { class: 'ff-chat-row ff-chat-assistant' },
+          h('div', { class: 'ff-chat-bubble' }, ADVISOR_GREETING_MESSAGE),
+        ),
+      ];
 
     if (advisorPending) {
       chatRows.push(
@@ -548,23 +553,39 @@ export function createWidget({ config, api, product, externalId }) {
       class: 'ff-advisor-input',
       rows: '3',
       maxlength: '1000',
-      placeholder: 'Np. Szukam letniej sukienki na wesele',
+      placeholder: 'Napisz, czego szukasz...',
       value: advisorDraft,
       oninput: (e) => {
         advisorDraft = e.target.value || '';
-        if (advisorError) {
-          advisorError = '';
-          renderAdvisorScreen();
+        updateSendButtonState();
+        if (advisorError) advisorError = '';
+      },
+      onkeydown: (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          sendAdvisorMessage(advisorDraft);
         }
       },
     });
-    if (advisorPending) {
-      input.setAttribute('disabled', 'true');
+    const sendButton = h('button', {
+      class: 'ff-btn ff-advisor-send',
+      type: 'button',
+      onclick: () => sendAdvisorMessage(advisorDraft),
+    }, advisorPending ? 'Wysyłanie...' : 'Wyślij');
+
+    function updateSendButtonState() {
+      if (advisorPending || !advisorDraft.trim()) {
+        sendButton.setAttribute('disabled', 'true');
+      } else {
+        sendButton.removeAttribute('disabled');
+      }
     }
+
+    if (advisorPending) input.setAttribute('disabled', 'true');
+    updateSendButtonState();
 
     setBody(
       h('h2', { class: 'ff-h' }, '✨ AI Stylist'),
-      productHeader(),
       h('div', { class: 'ff-chat-list' }, chatRows),
       advisorError
         ? h('div', { class: 'ff-error ff-advisor-inline-error' },
@@ -579,17 +600,19 @@ export function createWidget({ config, api, product, externalId }) {
             : null,
         )
         : null,
-      h('div', { class: 'ff-advisor-input-wrap' }, input),
-      h('div', { class: 'ff-actions' },
-        h('button', {
-          class: 'ff-btn',
-          type: 'button',
-          onclick: () => sendAdvisorMessage(advisorDraft),
-          disabled: advisorPending || !advisorDraft.trim() ? 'true' : null,
-        }, advisorPending ? 'Wysyłanie...' : 'Wyślij'),
+      h('div', { class: 'ff-advisor-composer' },
+        h('div', { class: 'ff-advisor-input-wrap' }, input),
+        sendButton,
+      ),
+      h('div', { class: 'ff-actions ff-advisor-nav' },
         h('button', { class: 'ff-btn ff-btn-ghost', type: 'button', onclick: renderModeScreen }, '← Wróć'),
       ),
     );
+
+    requestAnimationFrame(() => {
+      if (!overlay || advisorPending) return;
+      if (document.activeElement !== input) input.focus();
+    });
   }
 
   // -- Screen 2A: photo AI --------------------------------------------------

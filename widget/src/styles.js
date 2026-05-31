@@ -632,12 +632,14 @@ const CSS = `
   background: rgba(255, 255, 255, 0.1);
 }
 .ff-advisor-input-wrap {
-  margin-top: 10px;
+  margin-top: 0;
+  flex: 1 1 auto;
 }
 .ff-advisor-input {
   width: 100%;
   resize: vertical;
-  min-height: 82px;
+  min-height: 74px;
+  max-height: 180px;
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 12px;
   padding: 10px 12px;
@@ -652,6 +654,25 @@ const CSS = `
 .ff-advisor-input:disabled {
   background: rgba(255, 255, 255, 0.08);
   color: rgba(255, 255, 255, 0.58);
+}
+.ff-advisor-composer {
+  position: sticky;
+  bottom: 0;
+  z-index: 3;
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 8px;
+  background: linear-gradient(180deg, rgba(10, 10, 16, 0), rgba(10, 10, 16, 0.88) 36%);
+}
+.ff-advisor-send {
+  width: auto;
+  min-width: 104px;
+  align-self: stretch;
+}
+.ff-advisor-nav {
+  margin-top: 8px;
 }
 .ff-advisor-empty {
   border: 1px dashed rgba(255, 255, 255, 0.22);
@@ -782,6 +803,13 @@ const CSS = `
   }
   .ff-chat-list {
     max-height: 36vh;
+  }
+  .ff-advisor-composer {
+    gap: 6px;
+    padding-top: 6px;
+  }
+  .ff-advisor-send {
+    min-width: 96px;
   }
   .ff-advisor-fab {
     bottom: max(16px, env(safe-area-inset-bottom)) !important;
