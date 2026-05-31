@@ -2,6 +2,7 @@ export type Plan = 'STARTER' | 'GROWTH' | 'SCALE';
 export type ClientStatus = 'trial' | 'active' | 'inactive';
 export type ShopPlatform = 'woocommerce' | 'shopify' | 'custom';
 export type ProductCategory = 'tops' | 'bottoms' | 'one-pieces' | 'outerwear' | 'accessories';
+export type AdvisorTone = 'neutral' | 'friendly' | 'luxury';
 
 export interface Client {
   id: string;
@@ -22,6 +23,11 @@ export interface WidgetConfig {
   position?: 'bottom-right' | 'bottom-left';
   showLiveAR?: boolean;
   showPhotoAI?: boolean;
+  advisor?: {
+    tone?: AdvisorTone;
+    welcomeMessage?: string;
+    maxRecommendations?: number;
+  };
 }
 
 export interface Shop {

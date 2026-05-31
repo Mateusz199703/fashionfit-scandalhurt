@@ -5,10 +5,82 @@ import toast from 'react-hot-toast';
 import { api, apiErrorMessage } from '../api/client';
 import { Card } from '../components/ui';
 import { RowsSkeleton } from '../components/Skeleton';
-import { Product, Shop, WidgetConfig } from '../types';
+import { AdvisorTone, Product, Shop, WidgetConfig } from '../types';
 import { formatDate } from '../utils';
 
-type Tab = 'products' | 'settings' | 'widget';
+type Tab = 'products' | 'settings' | 'advisor' | 'widget';
+
+const ADVISOR_MODULE_KEY = 'ai_stylist_advisor';
+const ADVISOR_WELCOME_MAX_LENGTH = 300;
+const ADVISOR_MIN_RECOMMENDATIONS = 1;
+const ADVISOR_MAX_RECOMMENDATIONS = 3;
+
+type AdvisorSettingsForm = {
+  tone: AdvisorTone;
+  welcomeMessage: string;
+  maxRecommendations: number;
+};
+
+type ModuleSnapshot = {
+  modules?: Array<{
+    key: string;
+    enabled: boolean;
+    source: string;
+  }>;
+};
+
+type AdvisorConversation = {
+  id: string;
+  preview: string;
+  updatedAt: string | null;
+  messageCount: number | null;
+};
+
+function clampRecommendations(value: number): number {
+  if (!Number.isFinite(value)) return ADVISOR_MAX_RECOMMENDATIONS;
+  return Math.min(ADVISOR_MAX_RECOMMENDATIONS, Math.max(ADVISOR_MIN_RECOMMENDATIONS, Math.round(value)));
+}
+
+function normalizeAdvisorSettings(config: WidgetConfig | null | undefined): AdvisorSettingsForm {
+  const advisor = config && config.advisor ? config.advisor : {};
+  const toneCandidate = advisor && advisor.tone ? advisor.tone : 'friendly';
+  const tone = toneCandidate === 'neutral' || toneCandidate === 'friendly' || toneCandidate === 'luxury'
+    ? toneCandidate
+    : 'friendly';
+
+  const welcomeMessage = String(advisor && advisor.welcomeMessage ? advisor.welcomeMessage : '').slice(0, ADVISOR_WELCOME_MAX_LENGTH);
+  const maxRecommendations = clampRecommendations(Number(advisor && advisor.maxRecommendations));
+
+  return {
+    tone,
+    welcomeMessage,
+    maxRecommendations,
+  };
+}
+
+function parseConversationRow(row: unknown): AdvisorConversation | null {
+  if (!row || typeof row !== 'object') return null;
+  const raw = row as Record<string, unknown>;
+  const id = raw.id ? String(raw.id) : '';
+  if (!id) return null;
+
+  const previewCandidates = [raw.preview, raw.lastMessage, raw.last_message, raw.reply];
+  const preview = previewCandidates.find((value) => typeof value === 'string' && value.trim()) as string | undefined;
+  const updatedAt = raw.updated_at || raw.updatedAt || raw.created_at || raw.createdAt;
+  const messageCountRaw = raw.message_count ?? raw.messageCount;
+
+  return {
+    id,
+    preview: preview ? String(preview) : 'Brak podglądu wiadomości.',
+    updatedAt: updatedAt ? String(updatedAt) : null,
+    messageCount: Number.isFinite(Number(messageCountRaw)) ? Number(messageCountRaw) : null,
+  };
+}
+
+function isUnavailableEndpointError(error: unknown): boolean {
+  const err = error as { response?: { status?: number }; code?: string };
+  return err?.response?.status === 404 || err?.code === 'NOT_FOUND';
+}
 
 export function ShopDetailPage() {
   const { id = '' } = useParams();
@@ -35,6 +107,7 @@ export function ShopDetailPage() {
   const tabs: Array<{ key: Tab; label: string }> = [
     { key: 'products', label: 'Produkty' },
     { key: 'settings', label: 'Ustawienia' },
+    { key: 'advisor', label: 'AI Stylist' },
     { key: 'widget', label: 'Widget' },
   ];
 
@@ -73,6 +146,7 @@ export function ShopDetailPage() {
 
       {tab === 'products' && <ProductsTab shopId={id} />}
       {tab === 'settings' && <SettingsTab shop={shop} onSaved={setShop} />}
+      {tab === 'advisor' && <AdvisorTab shop={shop} onSaved={setShop} />}
       {tab === 'widget' && <WidgetTab shopId={id} />}
     </div>
   );
@@ -165,14 +239,26 @@ function ProductsTab({ shopId }: { shopId: string }) {
 }
 
 function SettingsTab({ shop, onSaved }: { shop: Shop; onSaved: (s: Shop) => void }) {
-  const [cfg, setCfg] = useState<WidgetConfig>({
+  const [cfg, setCfg] = useState<WidgetConfig>(() => ({
+    ...(shop.widget_config || {}),
     primaryColor: shop.widget_config?.primaryColor || '#111111',
     buttonLabel: shop.widget_config?.buttonLabel || 'Przymierz wirtualnie ✨',
     position: shop.widget_config?.position || 'bottom-right',
     showLiveAR: shop.widget_config?.showLiveAR ?? true,
     showPhotoAI: shop.widget_config?.showPhotoAI ?? true,
-  });
+  }));
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    setCfg({
+      ...(shop.widget_config || {}),
+      primaryColor: shop.widget_config?.primaryColor || '#111111',
+      buttonLabel: shop.widget_config?.buttonLabel || 'Przymierz wirtualnie ✨',
+      position: shop.widget_config?.position || 'bottom-right',
+      showLiveAR: shop.widget_config?.showLiveAR ?? true,
+      showPhotoAI: shop.widget_config?.showPhotoAI ?? true,
+    });
+  }, [shop]);
 
   const save = async () => {
     setSaving(true);
@@ -254,6 +340,276 @@ function SettingsTab({ shop, onSaved }: { shop: Shop; onSaved: (s: Shop) => void
         >
           {cfg.buttonLabel}
         </button>
+      </Card>
+    </div>
+  );
+}
+
+function AdvisorTab({ shop, onSaved }: { shop: Shop; onSaved: (s: Shop) => void }) {
+  const [settings, setSettings] = useState<AdvisorSettingsForm>(() => normalizeAdvisorSettings(shop.widget_config));
+  const [moduleLoading, setModuleLoading] = useState(true);
+  const [moduleError, setModuleError] = useState('');
+  const [advisorEnabled, setAdvisorEnabled] = useState(false);
+  const [moduleSource, setModuleSource] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [conversations, setConversations] = useState<AdvisorConversation[]>([]);
+  const [conversationsLoading, setConversationsLoading] = useState(false);
+  const [conversationsError, setConversationsError] = useState('');
+  const [conversationsUnavailable, setConversationsUnavailable] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
+
+  useEffect(() => {
+    setSettings(normalizeAdvisorSettings(shop.widget_config));
+  }, [shop]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function load() {
+      setModuleLoading(true);
+      setModuleError('');
+      setConversationsError('');
+      setConversationsUnavailable(false);
+      setConversationsLoading(false);
+
+      try {
+        const { data } = await api.get<ModuleSnapshot>('/api/modules', { params: { shopId: shop.id } });
+        if (!mounted) return;
+
+        const moduleEntry = (data.modules || []).find((item) => item && item.key === ADVISOR_MODULE_KEY);
+        const isEnabled = Boolean(moduleEntry && moduleEntry.enabled);
+        setAdvisorEnabled(isEnabled);
+        setModuleSource(moduleEntry && moduleEntry.source ? moduleEntry.source : null);
+
+        if (!isEnabled) {
+          setConversations([]);
+          return;
+        }
+
+        setConversationsLoading(true);
+        try {
+          const response = await api.get<{ conversations?: unknown[] }>('/api/advisor/conversations', {
+            params: { shopId: shop.id, limit: 10 },
+          });
+          if (!mounted) return;
+          const rows = Array.isArray(response.data && response.data.conversations) ? response.data.conversations : [];
+          const parsed = rows.map(parseConversationRow).filter((item): item is AdvisorConversation => Boolean(item));
+          setConversations(parsed);
+        } catch (err) {
+          if (!mounted) return;
+          if (isUnavailableEndpointError(err)) {
+            setConversationsUnavailable(true);
+            setConversations([]);
+          } else {
+            setConversationsError(apiErrorMessage(err, 'Nie udało się pobrać ostatnich rozmów.'));
+          }
+        } finally {
+          if (mounted) setConversationsLoading(false);
+        }
+      } catch (err) {
+        if (!mounted) return;
+        setAdvisorEnabled(false);
+        setModuleSource(null);
+        setConversations([]);
+        setModuleError(apiErrorMessage(err, 'Nie udało się pobrać statusu modułu.'));
+      } finally {
+        if (mounted) setModuleLoading(false);
+      }
+    }
+
+    load();
+
+    return () => {
+      mounted = false;
+    };
+  }, [shop.id, reloadKey]);
+
+  const saveAdvisorSettings = async () => {
+    const cleanedWelcome = settings.welcomeMessage.slice(0, ADVISOR_WELCOME_MAX_LENGTH);
+    const clampedMaxRecommendations = clampRecommendations(settings.maxRecommendations);
+    const mergedWidgetConfig: WidgetConfig = {
+      ...(shop.widget_config || {}),
+      advisor: {
+        tone: settings.tone,
+        welcomeMessage: cleanedWelcome,
+        maxRecommendations: clampedMaxRecommendations,
+      },
+    };
+
+    setSaving(true);
+    try {
+      const { data } = await api.put<{ shop: Shop }>(`/api/shops/${shop.id}`, {
+        widget_config: mergedWidgetConfig,
+      });
+      onSaved(data.shop);
+      setSettings(normalizeAdvisorSettings(data.shop.widget_config));
+      toast.success('Zapisano ustawienia AI Stylist');
+    } catch (err) {
+      toast.error(apiErrorMessage(err, 'Nie udało się zapisać ustawień AI Stylist.'));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const hasModuleError = Boolean(moduleError);
+  const disabled = moduleLoading || hasModuleError || !advisorEnabled || saving;
+  const currentWelcomeLength = settings.welcomeMessage.length;
+
+  return (
+    <div className="space-y-4">
+      <Card className="p-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 className="ff-section-title">Status modułu AI Stylist Advisor</h3>
+            <p className="mt-1 text-sm text-ink/60">
+              {moduleLoading
+                ? 'Sprawdzam dostępność modułu dla tego sklepu...'
+                : hasModuleError
+                  ? 'Wystąpił błąd podczas sprawdzania dostępności modułu.'
+                  : advisorEnabled
+                    ? `Moduł aktywny${moduleSource ? ` (${moduleSource})` : ''}.`
+                    : 'Moduł jest zablokowany w bieżącym planie.'}
+            </p>
+          </div>
+          <span
+            className={`rounded-full px-3 py-1 text-xs font-semibold ${
+              moduleLoading
+                ? 'border border-ink/20 bg-white/70 text-ink/60'
+                : hasModuleError
+                  ? 'border border-red-300 bg-red-50 text-red-700'
+                  : advisorEnabled
+                    ? 'border border-emerald-300 bg-emerald-50 text-emerald-700'
+                    : 'border border-amber-300 bg-amber-50 text-amber-700'
+            }`}
+          >
+            {moduleLoading ? 'SPRAWDZANIE' : hasModuleError ? 'BŁĄD' : advisorEnabled ? 'AKTYWNY' : 'ZABLOKOWANY'}
+          </span>
+        </div>
+        {moduleError ? (
+          <div className="mt-4 space-y-2">
+            <p className="text-sm text-red-600">{moduleError}</p>
+            <button className="ff-btn-secondary" onClick={() => setReloadKey((value) => value + 1)}>
+              Spróbuj ponownie
+            </button>
+          </div>
+        ) : null}
+      </Card>
+
+      {!moduleLoading && !hasModuleError && !advisorEnabled ? (
+        <Card className="border border-amber-300 bg-amber-50 p-5">
+          <h4 className="ff-section-title text-amber-800">AI Stylist niedostępny w tym planie</h4>
+          <p className="mt-2 text-sm text-amber-800/90">
+            Aby odblokować ustawienia i rozmowy AI Stylist Advisor, przejdź na plan zawierający ten moduł.
+          </p>
+          <div className="mt-4">
+            <Link to="/billing" className="ff-btn-primary inline-flex">
+              Przejdź do planów i upgrade
+            </Link>
+          </div>
+        </Card>
+      ) : null}
+
+      <Card className="space-y-4 p-5">
+        <h3 className="ff-section-title">Ustawienia AI Stylist</h3>
+        <div>
+          <label className="ff-label">Ton asystenta</label>
+          <select
+            className="ff-input"
+            value={settings.tone}
+            disabled={disabled}
+            onChange={(e) => setSettings((prev) => ({ ...prev, tone: e.target.value as AdvisorTone }))}
+          >
+            <option value="friendly">Przyjazny</option>
+            <option value="neutral">Neutralny</option>
+            <option value="luxury">Premium / Luxury</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="ff-label">Wiadomość powitalna</label>
+          <textarea
+            className="ff-input min-h-[110px]"
+            value={settings.welcomeMessage}
+            disabled={disabled}
+            maxLength={ADVISOR_WELCOME_MAX_LENGTH}
+            onChange={(e) => setSettings((prev) => ({ ...prev, welcomeMessage: e.target.value }))}
+            placeholder="Np. Cześć! Napisz, jakiej stylizacji szukasz, a dobiorę propozycje z Twojego katalogu."
+          />
+          <p className="mt-1 text-xs text-ink/55">
+            {currentWelcomeLength}/{ADVISOR_WELCOME_MAX_LENGTH}
+          </p>
+        </div>
+
+        <div>
+          <label className="ff-label">Maksymalna liczba rekomendacji</label>
+          <input
+            type="number"
+            className="ff-input max-w-[160px]"
+            value={settings.maxRecommendations}
+            disabled={disabled}
+            min={ADVISOR_MIN_RECOMMENDATIONS}
+            max={ADVISOR_MAX_RECOMMENDATIONS}
+            onChange={(e) => {
+              const rawValue = Number(e.target.value);
+              setSettings((prev) => ({
+                ...prev,
+                maxRecommendations: clampRecommendations(rawValue),
+              }));
+            }}
+          />
+          <p className="mt-1 text-xs text-ink/55">Zakres: {ADVISOR_MIN_RECOMMENDATIONS}–{ADVISOR_MAX_RECOMMENDATIONS}</p>
+        </div>
+
+        <button
+          className="ff-btn-primary"
+          onClick={saveAdvisorSettings}
+          disabled={disabled}
+        >
+          {saving ? 'Zapisywanie...' : 'Zapisz ustawienia AI Stylist'}
+        </button>
+      </Card>
+
+      <Card className="p-5">
+        <h3 className="ff-section-title">Ostatnie rozmowy AI Stylist</h3>
+        {conversationsLoading ? <p className="mt-3 text-sm text-ink/60">Ładowanie rozmów...</p> : null}
+        {!conversationsLoading && conversationsUnavailable ? (
+          <p className="mt-3 text-sm text-ink/60">Not available yet.</p>
+        ) : null}
+        {!conversationsLoading && !conversationsUnavailable && conversationsError ? (
+          <div className="mt-3 space-y-2">
+            <p className="text-sm text-red-600">{conversationsError}</p>
+            <button className="ff-btn-secondary" onClick={() => setReloadKey((value) => value + 1)}>
+              Spróbuj ponownie
+            </button>
+          </div>
+        ) : null}
+        {!conversationsLoading && !conversationsUnavailable && !conversationsError && conversations.length === 0 ? (
+          <p className="mt-3 text-sm text-ink/60">Brak rozmów dla tego sklepu.</p>
+        ) : null}
+        {!conversationsLoading && !conversationsUnavailable && !conversationsError && conversations.length > 0 ? (
+          <div className="mt-3 overflow-x-auto">
+            <table className="ff-table min-w-[620px]">
+              <thead>
+                <tr>
+                  <th>ID rozmowy</th>
+                  <th>Podgląd</th>
+                  <th>Wiadomości</th>
+                  <th>Ostatnia aktywność</th>
+                </tr>
+              </thead>
+              <tbody>
+                {conversations.map((item) => (
+                  <tr key={item.id}>
+                    <td className="font-mono text-xs text-ink/70">{item.id}</td>
+                    <td className="text-ink/85">{item.preview}</td>
+                    <td>{item.messageCount == null ? '—' : item.messageCount}</td>
+                    <td>{formatDate(item.updatedAt)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : null}
       </Card>
     </div>
   );

@@ -1,6 +1,6 @@
 # FashionFit AI — Brand Guidelines
 
-Source reference: `docs/reference/ fashionfit-landing-reference.html` (landing visual identity).
+Source reference: `docs/reference/fashionfit-landing-reference.html` (landing visual identity).
 
 ## 1) Brand Style
 
@@ -175,4 +175,3 @@ Interaction:
 - Reuse component patterns across dashboard/widget for familiarity.
 - Keep dark and light theme parity for readability and state semantics.
 - Respect reduced-motion preferences for all animated UI.
-
