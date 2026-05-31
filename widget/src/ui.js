@@ -115,19 +115,20 @@ export function createWidget({ config, api, product, externalId }) {
 
     setBody(
       h('h2', { class: 'ff-h' }, 'Wirtualna przymierzalnia'),
+      h('div', { class: 'ff-sub' }, 'Try-On i AI Stylist w jednym miejscu'),
       productHeader(),
       h('div', { class: 'ff-modes' },
         h('button', { class: 'ff-mode', type: 'button', onclick: renderPhotoScreen },
-          h('span', { class: 'ff-emoji' }, '📸'),
+          h('span', { class: 'ff-emoji' }, '↗'),
           h('span', { class: 'ff-mode-label' }, 'Wgraj zdjęcie'),
         ),
         h('button', { class: 'ff-mode', type: 'button', onclick: renderArScreen },
           h('span', { class: 'ff-badge' }, 'Nowe'),
-          h('span', { class: 'ff-emoji' }, '📹'),
+          h('span', { class: 'ff-emoji' }, '◉'),
           h('span', { class: 'ff-mode-label' }, 'Użyj kamerki'),
         ),
         h('button', { class: 'ff-mode', type: 'button', onclick: renderAdvisorScreen },
-          h('span', { class: 'ff-emoji' }, '✨'),
+          h('span', { class: 'ff-emoji' }, '✦'),
           h('span', { class: 'ff-mode-label' }, 'AI Stylist'),
         ),
       ),
@@ -188,6 +189,7 @@ export function createWidget({ config, api, product, externalId }) {
     return h('div', { class: 'ff-advisor-cards' },
       ...recommendations.slice(0, 3).map((item) => {
         const safeProductUrl = getSafeProductUrl(item && item.productUrl);
+        const productCode = item && (item.externalId || item.productId) ? String(item.externalId || item.productId) : '';
         return h('div', { class: 'ff-advisor-card' },
           item && item.garmentImageUrl
           ? h('img', { class: 'ff-advisor-card-image', src: item.garmentImageUrl, alt: item.name || 'Produkt' })
@@ -195,6 +197,7 @@ export function createWidget({ config, api, product, externalId }) {
           h('div', { class: 'ff-advisor-card-body' },
             h('b', { class: 'ff-advisor-card-name' }, item && item.name ? item.name : 'Produkt'),
             item && item.category ? h('div', { class: 'ff-advisor-card-category' }, item.category) : null,
+            productCode ? h('div', { class: 'ff-advisor-card-code' }, `ID: ${productCode}`) : null,
             safeProductUrl
               ? h('button', {
                 class: 'ff-btn ff-btn-ghost ff-advisor-card-cta',

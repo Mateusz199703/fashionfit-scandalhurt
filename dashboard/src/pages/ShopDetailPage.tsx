@@ -282,7 +282,7 @@ function SettingsTab({ shop, onSaved }: { shop: Shop; onSaved: (s: Shop) => void
           <div className="flex items-center gap-3">
             <input
               type="color"
-              className="h-10 w-14 cursor-pointer rounded-lg border border-ink/20"
+              className="h-10 w-14 cursor-pointer rounded-lg border border-white/20"
               value={cfg.primaryColor}
               onChange={(e) => setCfg({ ...cfg, primaryColor: e.target.value })}
             />
@@ -323,9 +323,9 @@ function SettingsTab({ shop, onSaved }: { shop: Shop; onSaved: (s: Shop) => void
         </button>
       </Card>
 
-      <Card className="relative min-h-[280px] overflow-hidden bg-[#0a0a0a] p-5 text-white">
+      <Card className="relative min-h-[280px] overflow-hidden bg-[rgba(8,8,12,0.75)] p-5 text-white">
         <p className="text-[11px] uppercase tracking-[0.12em] text-white/55">Podgląd na żywo</p>
-        <div className="mt-4 rounded-xl border border-white/10 bg-white/5 p-4">
+        <div className="mt-4 rounded-xl border border-white/15 bg-white/5 p-4">
           <div className="h-28 rounded-lg bg-white/10" />
           <div className="mt-3 h-3 w-2/3 rounded bg-white/15" />
           <div className="mt-2 h-3 w-1/3 rounded bg-white/15" />
@@ -662,7 +662,7 @@ function WidgetTab({ shopId }: { shopId: string }) {
             {copied ? <Check size={15} /> : <Copy size={15} />} {copied ? 'Skopiowano' : 'Kopiuj'}
           </button>
         </div>
-        <pre className="overflow-x-auto rounded-xl bg-black p-4 text-xs leading-relaxed text-gray-100">
+        <pre className="overflow-x-auto rounded-xl border border-white/10 bg-[#06060a] p-4 text-xs leading-relaxed text-gray-100">
           <code>{snippet}</code>
         </pre>
       </Card>

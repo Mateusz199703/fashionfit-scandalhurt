@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&family=Sora:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,22 +6,32 @@
 
 @layer base {
   :root {
-    --ff-bg-a: #f4f4f3;
-    --ff-bg-b: #ffffff;
-    --ff-text: #111111;
-    --ff-muted: #666666;
-    --ff-card: rgba(255, 255, 255, 0.86);
-    --ff-border: rgba(17, 17, 17, 0.12);
+    --ff-bg-a: #08080f;
+    --ff-bg-b: #050507;
+    --ff-text: #ffffff;
+    --ff-muted: rgba(255, 255, 255, 0.62);
+    --ff-card: rgba(255, 255, 255, 0.9);
+    --ff-card-strong: rgba(255, 255, 255, 0.95);
+    --ff-border: rgba(255, 255, 255, 0.2);
+    --ff-border-strong: rgba(255, 255, 255, 0.32);
+    --ff-accent: #7b61ff;
+    --ff-accent-2: #4f46e5;
+    --ff-accent-soft: rgba(123, 97, 255, 0.3);
+    --ff-danger: #f87171;
+    --ff-success: #4ade80;
+    --ff-warning: #ffb15c;
   }
 
   html,
   body {
     @apply text-ink antialiased;
     background:
-      radial-gradient(55rem 32rem at -10% -20%, #ececec 10%, transparent 70%),
-      radial-gradient(45rem 28rem at 110% 0%, #f1f1f1 8%, transparent 68%),
+      radial-gradient(55rem 32rem at -10% -20%, rgba(123, 97, 255, 0.24) 8%, transparent 70%),
+      radial-gradient(46rem 29rem at 110% 0%, rgba(79, 70, 229, 0.2) 5%, transparent 68%),
+      radial-gradient(48rem 34rem at 52% 120%, rgba(255, 177, 92, 0.09) 0%, transparent 70%),
       linear-gradient(165deg, var(--ff-bg-a), var(--ff-bg-b));
-    font-family: 'Sora', system-ui, -apple-system, sans-serif;
+    color: var(--ff-text);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
     min-height: 100%;
   }
 
@@ -32,14 +42,14 @@
   h1,
   h2,
   h3 {
-    font-family: 'Space Grotesk', 'Sora', system-ui, -apple-system, sans-serif;
+    font-family: 'Space Grotesk', 'Inter', system-ui, -apple-system, sans-serif;
     letter-spacing: -0.02em;
   }
 }
 
 @layer components {
   .font-display {
-    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
     letter-spacing: -0.02em;
   }
 
@@ -49,16 +59,16 @@
     background: var(--ff-card);
     border-color: var(--ff-border);
     box-shadow:
-      0 20px 40px -26px rgba(0, 0, 0, 0.22),
-      0 10px 20px -16px rgba(0, 0, 0, 0.18);
-    backdrop-filter: blur(14px);
+      0 24px 54px -34px rgba(0, 0, 0, 0.52),
+      0 14px 34px -28px rgba(123, 97, 255, 0.24);
+    backdrop-filter: blur(18px);
     animation: ff-fade-up 0.35s ease both;
   }
 
   .ff-kpi-card {
     background:
-      radial-gradient(36rem 13rem at 100% 0%, rgba(0, 0, 0, 0.03) 0%, transparent 65%),
-      rgba(255, 255, 255, 0.94);
+      radial-gradient(36rem 13rem at 100% 0%, rgba(123, 97, 255, 0.14) 0%, transparent 65%),
+      rgba(255, 255, 255, 0.96);
     min-height: 12.5rem;
   }
 
@@ -68,35 +78,35 @@
 
   .ff-btn-primary {
     @apply ff-btn text-white;
-    background: linear-gradient(120deg, #0c0c0c, #1b1b1b 55%, #2b2b2b);
-    box-shadow: 0 14px 28px -16px rgba(0, 0, 0, 0.58);
+    background: linear-gradient(120deg, var(--ff-accent), var(--ff-accent-2));
+    box-shadow: 0 18px 36px -24px rgba(123, 97, 255, 0.95);
   }
 
   .ff-btn-primary:hover {
     transform: translateY(-1px);
-    box-shadow: 0 18px 30px -16px rgba(0, 0, 0, 0.68);
+    box-shadow: 0 24px 42px -24px rgba(123, 97, 255, 1);
   }
 
   .ff-btn-secondary {
     @apply ff-btn border text-ink;
     background: rgba(255, 255, 255, 0.82);
-    border-color: rgba(0, 0, 0, 0.14);
+    border-color: rgba(17, 17, 17, 0.14);
   }
 
   .ff-btn-secondary:hover {
-    background: rgba(255, 255, 255, 0.96);
-    border-color: rgba(0, 0, 0, 0.24);
+    background: rgba(255, 255, 255, 0.95);
+    border-color: rgba(17, 17, 17, 0.26);
   }
 
   .ff-input {
     @apply w-full rounded-xl border px-3 py-2.5 text-sm text-ink outline-none transition-all;
     background: rgba(255, 255, 255, 0.92);
-    border-color: rgba(0, 0, 0, 0.16);
+    border-color: rgba(17, 17, 17, 0.2);
   }
 
   .ff-input:focus {
-    border-color: rgba(0, 0, 0, 0.55);
-    box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.08);
+    border-color: rgba(123, 97, 255, 0.88);
+    box-shadow: 0 0 0 4px rgba(123, 97, 255, 0.2);
   }
 
   .ff-label {
@@ -105,17 +115,19 @@
 
   .ff-app-shell {
     background:
-      radial-gradient(42rem 21rem at 100% 0%, rgba(255, 255, 255, 0.45) 0%, transparent 70%),
-      linear-gradient(180deg, #ededed 0%, #f5f5f5 45%, #fafafa 100%);
+      radial-gradient(42rem 21rem at 100% 0%, rgba(79, 70, 229, 0.15) 0%, transparent 70%),
+      radial-gradient(36rem 19rem at 0% 0%, rgba(123, 97, 255, 0.22) 0%, transparent 72%),
+      linear-gradient(180deg, #0b0b0f 0%, #07070a 45%, #050507 100%);
   }
 
   .ff-main-wrap {
     border-radius: 30px;
-    border: 1px solid rgba(255, 255, 255, 0.65);
+    border: 1px solid var(--ff-border);
     background:
-      radial-gradient(34rem 22rem at 100% 0%, rgba(0, 0, 0, 0.03) 0%, transparent 68%),
-      rgba(250, 250, 250, 0.88);
-    box-shadow: 0 35px 75px -55px rgba(0, 0, 0, 0.4);
+      radial-gradient(34rem 22rem at 100% 0%, rgba(123, 97, 255, 0.14) 0%, transparent 68%),
+      rgba(255, 255, 255, 0.7);
+    box-shadow: 0 35px 75px -55px rgba(0, 0, 0, 0.88);
+    backdrop-filter: blur(16px);
     padding: clamp(0.95rem, 2vw, 1.5rem);
   }
 
@@ -124,24 +136,24 @@
   }
 
   .ff-nav-link-active {
-    background: #ffffff;
-    color: #0f0f0f;
-    box-shadow: 0 10px 20px -14px rgba(0, 0, 0, 0.55);
+    background: linear-gradient(120deg, var(--ff-accent), var(--ff-accent-2));
+    color: #ffffff;
+    box-shadow: 0 18px 30px -18px rgba(123, 97, 255, 0.9);
   }
 
   .ff-nav-link-idle {
-    color: rgba(255, 255, 255, 0.72);
+    color: rgba(255, 255, 255, 0.74);
   }
 
   .ff-nav-link-idle:hover {
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.1);
     color: #ffffff;
   }
 
   .ff-hero-panel {
     @apply ff-surface flex flex-wrap items-center justify-between gap-4 p-5 sm:p-6;
     background:
-      radial-gradient(30rem 12rem at 100% 0%, rgba(0, 0, 0, 0.03), transparent 70%),
+      radial-gradient(30rem 12rem at 100% 0%, rgba(123, 97, 255, 0.2), transparent 70%),
       rgba(255, 255, 255, 0.92);
   }
 
@@ -150,22 +162,22 @@
     font-size: 0.7rem;
     letter-spacing: 0.15em;
     text-transform: uppercase;
-    color: rgba(17, 17, 17, 0.48);
+    color: rgba(17, 17, 17, 0.52);
     font-weight: 700;
   }
 
   .ff-page-title {
     margin: 0.2rem 0 0;
-    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
     font-size: clamp(2.2rem, 4.2vw, 3.35rem);
-    line-height: 0.95;
-    font-weight: 600;
+    line-height: 1.02;
+    font-weight: 700;
     color: #101010;
   }
 
   .ff-section-title {
     margin: 0;
-    font-family: 'Space Grotesk', 'Sora', system-ui, sans-serif;
+    font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
     font-size: 1.02rem;
     font-weight: 700;
     color: #111;
@@ -175,7 +187,7 @@
     display: flex;
     gap: 0.35rem;
     padding: 0.3rem;
-    border: 1px solid rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(17, 17, 17, 0.12);
     border-radius: 14px;
     background: rgba(255, 255, 255, 0.88);
     width: fit-content;
@@ -190,12 +202,12 @@
   }
 
   .ff-tab-active {
-    background: #111;
+    background: linear-gradient(120deg, var(--ff-accent), var(--ff-accent-2));
     color: #fff;
   }
 
   .ff-tab-idle {
-    color: rgba(17, 17, 17, 0.6);
+    color: rgba(17, 17, 17, 0.68);
   }
 
   .ff-tab-idle:hover {
@@ -211,18 +223,18 @@
   }
 
   .ff-range-active {
-    background: #111;
+    background: linear-gradient(120deg, var(--ff-accent), var(--ff-accent-2));
     color: #fff;
   }
 
   .ff-range-idle {
-    border: 1px solid rgba(0, 0, 0, 0.13);
-    background: #fff;
-    color: rgba(17, 17, 17, 0.7);
+    border: 1px solid rgba(17, 17, 17, 0.15);
+    background: rgba(255, 255, 255, 0.86);
+    color: rgba(17, 17, 17, 0.74);
   }
 
   .ff-range-idle:hover {
-    border-color: rgba(0, 0, 0, 0.24);
+    border-color: rgba(17, 17, 17, 0.26);
     color: #111;
   }
 
@@ -236,16 +248,16 @@
     font-size: 0.68rem;
     letter-spacing: 0.11em;
     text-transform: uppercase;
-    color: rgba(17, 17, 17, 0.5);
-    border-bottom: 1px solid rgba(0, 0, 0, 0.09);
+    color: rgba(17, 17, 17, 0.52);
+    border-bottom: 1px solid rgba(17, 17, 17, 0.1);
     padding: 0.75rem 1rem;
-    background: rgba(255, 255, 255, 0.78);
+    background: rgba(255, 255, 255, 0.72);
   }
 
   .ff-table tbody td {
     padding: 0.85rem 1rem;
-    color: rgba(17, 17, 17, 0.72);
-    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    color: rgba(17, 17, 17, 0.74);
+    border-bottom: 1px solid rgba(17, 17, 17, 0.08);
   }
 
   .ff-table tbody tr:hover {
@@ -341,7 +353,7 @@
     position: relative;
     z-index: 1;
     margin: 0;
-    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
     font-size: clamp(2.4rem, 4.4vw, 4rem);
     font-weight: 600;
     line-height: 0.92;
@@ -410,7 +422,7 @@
 
   .ff-auth-panel-title {
     margin: 0;
-    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
     font-size: clamp(2.05rem, 3vw, 2.75rem);
     font-weight: 600;
     line-height: 1;
@@ -419,7 +431,7 @@
   }
 
   .ff-auth-panel .ff-input {
-    font-family: 'Manrope', 'Sora', system-ui, -apple-system, sans-serif;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
     background: rgba(255, 255, 255, 0.94);
     border-color: rgba(0, 0, 0, 0.18);
     border-radius: 14px;
@@ -433,7 +445,7 @@
   }
 
   .ff-auth-panel .ff-label {
-    font-family: 'Manrope', 'Sora', system-ui, -apple-system, sans-serif;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
     font-size: 0.8rem;
     letter-spacing: 0.03em;
     text-transform: uppercase;
@@ -449,6 +461,15 @@
     padding-bottom: 0.82rem;
     font-size: 0.9rem;
     letter-spacing: 0.03em;
+  }
+
+  .ff-btn:focus-visible,
+  .ff-input:focus-visible,
+  .ff-tab:focus-visible,
+  .ff-range:focus-visible,
+  .ff-nav-link:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(123, 97, 255, 0.24);
   }
 }
 
@@ -500,5 +521,16 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
