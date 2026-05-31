@@ -294,6 +294,143 @@ const CSS = `
 .ff-slider { width: 100%; margin: 14px 0; accent-color: var(--ff-primary); }
 .ff-error { color: #b91c1c; font-size: 13px; margin: 8px 0; }
 
+.ff-advisor-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 0 4px;
+}
+.ff-advisor-locked {
+  border: 1px solid #f0d7d7;
+  background: #fff8f8;
+  border-radius: 14px;
+  padding: 14px;
+  color: #7f1d1d;
+  line-height: 1.45;
+}
+.ff-chat-list {
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  background: #fafbfc;
+  max-height: 320px;
+  overflow: auto;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.ff-chat-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ff-chat-user {
+  align-items: flex-end;
+}
+.ff-chat-assistant {
+  align-items: flex-start;
+}
+.ff-chat-bubble {
+  max-width: min(92%, 500px);
+  border-radius: 14px;
+  padding: 10px 12px;
+  line-height: 1.4;
+  font-size: 14px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  color: #111827;
+}
+.ff-chat-user .ff-chat-bubble {
+  border-color: #111827;
+  background: #111827;
+  color: #fff;
+}
+.ff-chat-bubble-loading {
+  color: #4b5563;
+  background: #f3f4f6;
+}
+.ff-advisor-input-wrap {
+  margin-top: 10px;
+}
+.ff-advisor-input {
+  width: 100%;
+  resize: vertical;
+  min-height: 82px;
+  border: 1px solid #d7dbe2;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 14px;
+  line-height: 1.4;
+  color: #111827;
+  background: #fff;
+}
+.ff-advisor-input:disabled {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+.ff-advisor-empty {
+  border: 1px dashed #d4d9e1;
+  border-radius: 12px;
+  padding: 12px;
+  color: #4b5563;
+  font-size: 13px;
+  background: #fff;
+}
+.ff-advisor-cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  width: 100%;
+}
+.ff-advisor-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+  overflow: hidden;
+}
+.ff-advisor-card-image {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  display: block;
+  background: #f3f4f6;
+}
+.ff-advisor-card-body {
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ff-advisor-card-name {
+  color: #111827 !important;
+  font-size: 14px !important;
+  line-height: 1.35 !important;
+}
+.ff-advisor-card-category {
+  color: #6b7280;
+  font-size: 12px;
+}
+.ff-advisor-card-cta {
+  width: auto;
+  align-self: flex-start;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+}
+.ff-advisor-inline-error {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ff-advisor-retry {
+  width: auto;
+  align-self: flex-start;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+}
+
 @keyframes ff-spin { to { transform: rotate(360deg); } }
 @keyframes ff-fade-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes ff-slide-up { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }

@@ -5,7 +5,13 @@ export function createApi(config) {
   async function request(path, options = {}) {
     const res = await fetch(config.apiUrl + path, { headers, ...options });
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data.error || `Żądanie nie powiodło się (${res.status})`);
+    if (!res.ok) {
+      const err = new Error(data.error || data.message || `Żądanie nie powiodło się (${res.status})`);
+      err.status = res.status;
+      err.code = data.code || null;
+      err.payload = data;
+      throw err;
+    }
     return data;
   }
 
@@ -30,6 +36,21 @@ export function createApi(config) {
     },
     getTryonStatus(sessionId) {
       return request(`/api/widget/tryon/status/${sessionId}`);
+    },
+    getModules() {
+      return request(`/api/widget/modules/${config.shopId}`);
+    },
+    advisorChat(message, conversationId = null) {
+      const payload = {
+        shopId: config.shopId,
+        message,
+      };
+      if (conversationId) payload.conversationId = conversationId;
+
+      return request('/api/widget/advisor/chat', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
     },
     // Fire-and-forget analytics; never let tracking break the UX.
     trackEvent(eventType, extra = {}) {

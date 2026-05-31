@@ -21,6 +21,17 @@ export function createWidget({ config, api, product, externalId }) {
   let modalBody = null;
   let arSession = null;
   let selectedSize = 'M';
+  let advisorConversationId = null;
+  let advisorMessages = [];
+  let advisorDraft = '';
+  let advisorPending = false;
+  let advisorError = '';
+  let advisorLastAttemptMessage = '';
+  let advisorModuleChecked = false;
+  let advisorModuleEnabled = false;
+  let advisorLockedPayload = null;
+  let advisorModuleCheckError = '';
+  let advisorChecking = false;
 
   const fab = h('button', { class: 'ff-fab', type: 'button', 'aria-label': 'FashionFit', onclick: open }, config.buttonLabel);
 
@@ -30,6 +41,17 @@ export function createWidget({ config, api, product, externalId }) {
 
   function open() {
     if (overlay) overlay.remove();
+    advisorConversationId = null;
+    advisorMessages = [];
+    advisorDraft = '';
+    advisorPending = false;
+    advisorError = '';
+    advisorLastAttemptMessage = '';
+    advisorModuleChecked = false;
+    advisorModuleEnabled = false;
+    advisorLockedPayload = null;
+    advisorModuleCheckError = '';
+    advisorChecking = false;
     modalBody = h('div', { class: 'ff-modal-body' });
     overlay = h('div', { class: 'ff-overlay', onclick: (e) => { if (e.target === overlay) close(); } },
       h('div', { class: 'ff-modal' },
@@ -104,10 +126,257 @@ export function createWidget({ config, api, product, externalId }) {
           h('span', { class: 'ff-emoji' }, '📹'),
           h('span', { class: 'ff-mode-label' }, 'Użyj kamerki'),
         ),
+        h('button', { class: 'ff-mode', type: 'button', onclick: renderAdvisorScreen },
+          h('span', { class: 'ff-emoji' }, '✨'),
+          h('span', { class: 'ff-mode-label' }, 'AI Stylist'),
+        ),
       ),
       h('div', { class: 'ff-sub' }, 'Wybierz rozmiar'),
       sizeRow,
       h('div', { class: 'ff-privacy' }, '🔒 Twoje zdjęcia nie są zapisywane'),
+    );
+  }
+
+  function detectAdvisorEnabled(snapshot) {
+    const modules = Array.isArray(snapshot && snapshot.modules) ? snapshot.modules : [];
+    const advisor = modules.find((item) => item && item.key === 'ai_stylist_advisor');
+    return Boolean(advisor && advisor.enabled);
+  }
+
+  function getSafeProductUrl(value) {
+    if (!value) return null;
+    try {
+      const parsed = new URL(String(value));
+      return parsed.protocol === 'http:' || parsed.protocol === 'https:' ? parsed.toString() : null;
+    } catch {
+      return null;
+    }
+  }
+
+  async function checkAdvisorModuleAccess() {
+    if (advisorChecking) return;
+    advisorChecking = true;
+    advisorModuleCheckError = '';
+    advisorLockedPayload = null;
+    try {
+      const snapshot = await api.getModules();
+      advisorModuleChecked = true;
+      advisorModuleEnabled = detectAdvisorEnabled(snapshot);
+      if (!advisorModuleEnabled) {
+        advisorLockedPayload = {
+          code: 'MODULE_LOCKED',
+          message: 'Advisor module is locked for this shop',
+          upgrade: {
+            requiredModule: 'ai_stylist_advisor',
+            action: 'upgrade_plan',
+          },
+        };
+      }
+    } catch (err) {
+      advisorModuleCheckError = err && err.message ? err.message : 'Nie udało się sprawdzić dostępności modułu.';
+    } finally {
+      advisorChecking = false;
+      if (overlay) renderAdvisorScreen();
+    }
+  }
+
+  function renderAdvisorRecommendations(recommendations) {
+    if (!Array.isArray(recommendations) || recommendations.length === 0) {
+      return h('div', { class: 'ff-advisor-empty' }, 'Brak dopasowanych produktów dla tej wiadomości.');
+    }
+
+    return h('div', { class: 'ff-advisor-cards' },
+      ...recommendations.slice(0, 3).map((item) => {
+        const safeProductUrl = getSafeProductUrl(item && item.productUrl);
+        return h('div', { class: 'ff-advisor-card' },
+          item && item.garmentImageUrl
+          ? h('img', { class: 'ff-advisor-card-image', src: item.garmentImageUrl, alt: item.name || 'Produkt' })
+          : null,
+          h('div', { class: 'ff-advisor-card-body' },
+            h('b', { class: 'ff-advisor-card-name' }, item && item.name ? item.name : 'Produkt'),
+            item && item.category ? h('div', { class: 'ff-advisor-card-category' }, item.category) : null,
+            safeProductUrl
+              ? h('button', {
+                class: 'ff-btn ff-btn-ghost ff-advisor-card-cta',
+                type: 'button',
+                onclick: () => window.open(safeProductUrl, '_blank', 'noopener,noreferrer'),
+              }, 'Zobacz produkt')
+              : null,
+          ),
+        );
+      }),
+    ),
+    );
+  }
+
+  function renderAdvisorScreen() {
+    stopAr();
+
+    if (!advisorModuleChecked && !advisorModuleCheckError && !advisorLockedPayload) {
+      setBody(
+        h('h2', { class: 'ff-h' }, '✨ AI Stylist'),
+        h('div', { class: 'ff-advisor-loading' },
+          h('div', { class: 'ff-spinner' }),
+          h('div', { class: 'ff-sub' }, 'Sprawdzam dostępność modułu...'),
+        ),
+        h('div', { class: 'ff-actions' },
+          h('button', { class: 'ff-btn ff-btn-ghost', type: 'button', onclick: renderModeScreen }, '← Wróć'),
+        ),
+      );
+      checkAdvisorModuleAccess();
+      return;
+    }
+
+    if (advisorModuleCheckError) {
+      setBody(
+        h('h2', { class: 'ff-h' }, '✨ AI Stylist'),
+        h('div', { class: 'ff-error' }, advisorModuleCheckError),
+        h('div', { class: 'ff-actions' },
+          h('button', {
+            class: 'ff-btn',
+            type: 'button',
+            onclick: () => {
+              advisorModuleCheckError = '';
+              advisorModuleChecked = false;
+              advisorLockedPayload = null;
+              renderAdvisorScreen();
+            },
+          }, 'Spróbuj ponownie'),
+          h('button', { class: 'ff-btn ff-btn-ghost', type: 'button', onclick: renderModeScreen }, '← Wróć'),
+        ),
+      );
+      return;
+    }
+
+    if (!advisorModuleEnabled || advisorLockedPayload) {
+      const lockedMessage = (advisorLockedPayload && (advisorLockedPayload.message || advisorLockedPayload.error))
+        || 'Advisor module is locked for this shop';
+      setBody(
+        h('h2', { class: 'ff-h' }, '✨ AI Stylist'),
+        h('div', { class: 'ff-advisor-locked' },
+          h('b', {}, 'Moduł niedostępny'),
+          h('div', {}, lockedMessage),
+          h('div', { class: 'ff-sub' }, 'Aby odblokować ten moduł, przejdź na wyższy plan.'),
+        ),
+        h('div', { class: 'ff-actions' },
+          h('button', {
+            class: 'ff-btn',
+            type: 'button',
+            onclick: () => {
+              advisorModuleChecked = false;
+              advisorModuleEnabled = false;
+              advisorLockedPayload = null;
+              advisorModuleCheckError = '';
+              renderAdvisorScreen();
+            },
+          }, 'Sprawdź ponownie'),
+          h('button', { class: 'ff-btn ff-btn-ghost', type: 'button', onclick: renderModeScreen }, '← Wróć'),
+        ),
+      );
+      return;
+    }
+
+    async function sendAdvisorMessage(messageText, options = {}) {
+      const { retry = false } = options;
+      if (advisorPending) return;
+      const message = String(messageText || '').trim();
+      if (!message) return;
+
+      advisorPending = true;
+      advisorError = '';
+      advisorLastAttemptMessage = message;
+      if (!retry) {
+        advisorMessages = advisorMessages.concat([{ role: 'user', text: message }]);
+        advisorDraft = '';
+      }
+      renderAdvisorScreen();
+
+      try {
+        const response = await api.advisorChat(message, advisorConversationId);
+        if (response && response.conversationId) {
+          advisorConversationId = response.conversationId;
+        }
+        advisorMessages = advisorMessages.concat([{
+          role: 'assistant',
+          text: response && response.reply ? response.reply : 'Oto rekomendacje z Twojego katalogu.',
+          recommendations: Array.isArray(response && response.recommendations) ? response.recommendations.slice(0, 3) : [],
+        }]);
+      } catch (err) {
+        if (err && err.code === 'MODULE_LOCKED') {
+          advisorLockedPayload = err.payload || {
+            code: 'MODULE_LOCKED',
+            message: err.message || 'Advisor module is locked for this shop',
+          };
+          advisorModuleEnabled = false;
+        } else {
+          advisorError = err && err.message ? err.message : 'Nie udało się wysłać wiadomości.';
+        }
+      } finally {
+        advisorPending = false;
+        if (overlay) renderAdvisorScreen();
+      }
+    }
+
+    const chatRows = advisorMessages.length > 0
+      ? advisorMessages.map((msg) => h('div', { class: `ff-chat-row ff-chat-${msg.role === 'user' ? 'user' : 'assistant'}` },
+        h('div', { class: 'ff-chat-bubble' }, msg.text || ''),
+        msg.role === 'assistant' ? renderAdvisorRecommendations(msg.recommendations || []) : null,
+      ))
+      : [h('div', { class: 'ff-advisor-empty' }, 'Napisz, czego szukasz, a AI Stylist podpowie produkty z katalogu tego sklepu.')];
+
+    if (advisorPending) {
+      chatRows.push(
+        h('div', { class: 'ff-chat-row ff-chat-assistant' },
+          h('div', { class: 'ff-chat-bubble ff-chat-bubble-loading' }, 'Przygotowuję propozycje...'),
+        ),
+      );
+    }
+
+    const input = h('textarea', {
+      class: 'ff-advisor-input',
+      rows: '3',
+      maxlength: '1000',
+      placeholder: 'Np. Szukam letniej sukienki na wesele',
+      value: advisorDraft,
+      oninput: (e) => {
+        advisorDraft = e.target.value || '';
+        if (advisorError) {
+          advisorError = '';
+          renderAdvisorScreen();
+        }
+      },
+    });
+    if (advisorPending) {
+      input.setAttribute('disabled', 'true');
+    }
+
+    setBody(
+      h('h2', { class: 'ff-h' }, '✨ AI Stylist'),
+      productHeader(),
+      h('div', { class: 'ff-chat-list' }, chatRows),
+      advisorError
+        ? h('div', { class: 'ff-error ff-advisor-inline-error' },
+          advisorError,
+          advisorLastAttemptMessage
+            ? h('button', {
+              class: 'ff-btn ff-btn-ghost ff-advisor-retry',
+              type: 'button',
+              onclick: () => sendAdvisorMessage(advisorLastAttemptMessage, { retry: true }),
+              disabled: advisorPending ? 'true' : null,
+            }, 'Spróbuj ponownie')
+            : null,
+        )
+        : null,
+      h('div', { class: 'ff-advisor-input-wrap' }, input),
+      h('div', { class: 'ff-actions' },
+        h('button', {
+          class: 'ff-btn',
+          type: 'button',
+          onclick: () => sendAdvisorMessage(advisorDraft),
+          disabled: advisorPending || !advisorDraft.trim() ? 'true' : null,
+        }, advisorPending ? 'Wysyłanie...' : 'Wyślij'),
+        h('button', { class: 'ff-btn ff-btn-ghost', type: 'button', onclick: renderModeScreen }, '← Wróć'),
+      ),
     );
   }
 

@@ -14,6 +14,7 @@ const {
   trackMockAnalyticsEvent,
 } = require('../services/mockStore');
 const tryonRoutes = require('./tryon');
+const { createAdvisorRouter } = require('./advisor');
 
 const ALLOWED_CATEGORIES = ['tops', 'bottoms', 'one-pieces', 'outerwear', 'accessories'];
 const mockTryonSessions = new Map();
@@ -86,6 +87,8 @@ async function validateEventShopOwnership(events, clientId) {
 const router = express.Router();
 router.use(authenticateApiKey);
 router.use(requireScope('widget'));
+const passThroughAuth = (req, res, next) => next();
+const advisorRouter = createAdvisorRouter({ authMiddleware: passThroughAuth });
 
 // GET /api/widget/shop?domain=...  → resolve this client's shop id for a domain.
 // Used by store plugins to "connect" with only an API key.
@@ -127,6 +130,14 @@ router.get('/modules/:shopId', async (req, res) => {
 
   res.json(snapshot);
 });
+
+// POST /api/widget/advisor/chat  → storefront-safe advisor chat bridge.
+router.use('/advisor', (req, res, next) => {
+  if (req.method !== 'POST' || req.path !== '/chat') {
+    return next(new ApiError(404, `Not found: ${req.method} ${req.originalUrl}`, 'NOT_FOUND'));
+  }
+  return next();
+}, advisorRouter);
 
 // POST /api/widget/products/sync  → upsert products pushed from a store plugin.
 router.post('/products/sync', async (req, res) => {
