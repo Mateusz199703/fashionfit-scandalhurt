@@ -1,6 +1,7 @@
 const express = require('express');
 const { supabase } = require('../services/supabase');
 const { isShopOwnedByClient } = require('../services/ownership');
+const { getModuleAccessSnapshot } = require('../services/moduleAccess');
 const { markOnboardingProgressAsync } = require('../services/onboarding');
 const { authenticateApiKey, requireScope } = require('../middleware/auth');
 const { ApiError } = require('../middleware/errorHandler');
@@ -111,6 +112,20 @@ router.get('/shop', async (req, res) => {
   markOnboardingProgressAsync(req.clientId, { step_plugin_installed: true });
 
   res.json({ shopId: shop.id, name: shop.name, domain: shop.domain });
+});
+
+// GET /api/widget/modules/:shopId  → effective module access for widget consumers.
+router.get('/modules/:shopId', async (req, res) => {
+  const { shopId } = req.params;
+  if (!shopId) throw new ApiError(400, 'shopId path param is required');
+
+  const snapshot = await getModuleAccessSnapshot({
+    clientId: req.clientId,
+    plan: req.client && req.client.plan,
+    shopId,
+  });
+
+  res.json(snapshot);
 });
 
 // POST /api/widget/products/sync  → upsert products pushed from a store plugin.
