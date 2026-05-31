@@ -394,7 +394,7 @@ export function createWidget({ config, api, product, externalId }) {
 
   function renderAdvisorRecommendations(recommendations) {
     if (!Array.isArray(recommendations) || recommendations.length === 0) {
-      return h('div', { class: 'ff-advisor-empty' }, 'Brak dopasowanych produktów dla tej wiadomości.');
+      return null;
     }
 
     return h('div', { class: 'ff-advisor-cards' },
@@ -420,6 +420,35 @@ export function createWidget({ config, api, product, externalId }) {
         );
       }),
     );
+  }
+
+  function shouldShowAdvisorNoMatchNote(response, recommendations) {
+    if (Array.isArray(recommendations) && recommendations.length > 0) return false;
+    const meta = response && typeof response.meta === 'object' ? response.meta : null;
+    if (meta && typeof meta.responseType === 'string' && meta.responseType.toLowerCase() === 'no_match') {
+      return true;
+    }
+
+    const reply = String((response && response.reply) || '').toLowerCase();
+    if (!reply) return false;
+
+    return (
+      /nie widz[ęe][^.!?]*pasuj/.test(reply)
+      || /nie znalaz(?:ł|l)am[^.!?]*pasuj/.test(reply)
+      || /brak dopasowanych/.test(reply)
+      || /no matching/.test(reply)
+    );
+  }
+
+  function renderAdvisorNoMatchNote(showNoMatch) {
+    if (!showNoMatch) return null;
+    return h('div', { class: 'ff-advisor-empty' }, 'Brak dopasowanych produktów dla tej wiadomości.');
+  }
+
+  function renderAdvisorRecommendationsWithState(recommendations, showNoMatch) {
+    const cards = renderAdvisorRecommendations(recommendations);
+    if (cards) return cards;
+    return renderAdvisorNoMatchNote(showNoMatch);
   }
 
   function renderAdvisorScreen() {
@@ -509,10 +538,12 @@ export function createWidget({ config, api, product, externalId }) {
         if (response && response.conversationId) {
           advisorConversationId = response.conversationId;
         }
+        const recommendations = Array.isArray(response && response.recommendations) ? response.recommendations.slice(0, 3) : [];
         advisorMessages = advisorMessages.concat([{
           role: 'assistant',
           text: response && response.reply ? response.reply : 'Oto rekomendacje z Twojego katalogu.',
-          recommendations: Array.isArray(response && response.recommendations) ? response.recommendations.slice(0, 3) : [],
+          recommendations,
+          showNoMatch: shouldShowAdvisorNoMatchNote(response, recommendations),
         }]);
       } catch (err) {
         if (err && err.code === 'MODULE_LOCKED') {
@@ -533,7 +564,7 @@ export function createWidget({ config, api, product, externalId }) {
     const chatRows = advisorMessages.length > 0
       ? advisorMessages.map((msg) => h('div', { class: `ff-chat-row ff-chat-${msg.role === 'user' ? 'user' : 'assistant'}` },
         h('div', { class: 'ff-chat-bubble' }, msg.text || ''),
-        msg.role === 'assistant' ? renderAdvisorRecommendations(msg.recommendations || []) : null,
+        msg.role === 'assistant' ? renderAdvisorRecommendationsWithState(msg.recommendations || [], Boolean(msg.showNoMatch)) : null,
       ))
       : [
         h('div', { class: 'ff-chat-row ff-chat-assistant' },
