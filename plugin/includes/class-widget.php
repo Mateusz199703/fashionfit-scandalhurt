@@ -20,6 +20,12 @@ class FashionFit_Widget {
 	 * Inject the FashionFit config + loader script into the footer.
 	 */
 	public function inject_widget() {
+		static $injected = false;
+
+		if ( $injected ) {
+			return;
+		}
+
 		if ( ! FashionFit::is_connected() || ! $this->should_display() ) {
 			return;
 		}
@@ -40,6 +46,7 @@ class FashionFit_Widget {
 		echo "\n<!-- FashionFit Virtual Try-On -->\n";
 		echo '<script>window.FashionFitConfig = ' . wp_json_encode( $config ) . ';</script>' . "\n";
 		echo '<script async src="' . esc_url( $widget_src ) . '"></script>' . "\n";
+		$injected = true;
 	}
 
 	/**
@@ -48,27 +55,15 @@ class FashionFit_Widget {
 	 * @return bool
 	 */
 	private function should_display() {
-		$show_on = FashionFit::get_setting( 'show_on', 'products' );
-
-		if ( 'everywhere' === $show_on ) {
-			return true;
+		if ( is_admin() ) {
+			return false;
 		}
 
-		// WooCommerce conditional tags may be unavailable on some views.
-		$is_product = function_exists( 'is_product' ) && is_product();
-
-		if ( 'products' === $show_on ) {
-			return $is_product;
+		if ( function_exists( 'wp_doing_ajax' ) && wp_doing_ajax() ) {
+			return false;
 		}
 
-		if ( 'cards' === $show_on ) {
-			$is_archive = ( function_exists( 'is_shop' ) && is_shop() )
-				|| ( function_exists( 'is_product_category' ) && is_product_category() )
-				|| ( function_exists( 'is_product_tag' ) && is_product_tag() );
-			return $is_product || $is_archive;
-		}
-
-		return false;
+		return true;
 	}
 
 	/**

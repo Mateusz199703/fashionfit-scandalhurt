@@ -46,6 +46,7 @@ const CSS = `
 
 .ff-advisor-fab {
   position: fixed !important;
+  bottom: 24px !important;
   z-index: 100001 !important;
   display: inline-flex !important;
   align-items: center !important;
