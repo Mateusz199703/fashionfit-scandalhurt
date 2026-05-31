@@ -14,6 +14,9 @@ const ADVISOR_MODULE_KEY = 'ai_stylist_advisor';
 const ADVISOR_WELCOME_MAX_LENGTH = 300;
 const ADVISOR_MIN_RECOMMENDATIONS = 1;
 const ADVISOR_MAX_RECOMMENDATIONS = 3;
+const WIDGET_ADVISOR_BUBBLE_MAX_LENGTH = 120;
+const WIDGET_TRYON_BUTTON_TEXT_MAX_LENGTH = 40;
+const DEFAULT_TRYON_BUTTON_TEXT = 'Przymierz wirtualnie';
 
 type AdvisorSettingsForm = {
   tone: AdvisorTone;
@@ -244,8 +247,13 @@ function SettingsTab({ shop, onSaved }: { shop: Shop; onSaved: (s: Shop) => void
     primaryColor: shop.widget_config?.primaryColor || '#111111',
     buttonLabel: shop.widget_config?.buttonLabel || 'Przymierz wirtualnie ✨',
     position: shop.widget_config?.position || 'bottom-right',
+    launcherPosition: shop.widget_config?.launcherPosition || shop.widget_config?.position || 'bottom-right',
     showLiveAR: shop.widget_config?.showLiveAR ?? true,
     showPhotoAI: shop.widget_config?.showPhotoAI ?? true,
+    enableFloatingAdvisor: shop.widget_config?.enableFloatingAdvisor ?? true,
+    advisorWelcomeBubble: String(shop.widget_config?.advisorWelcomeBubble || '').slice(0, WIDGET_ADVISOR_BUBBLE_MAX_LENGTH),
+    enableProductTryOnButton: shop.widget_config?.enableProductTryOnButton ?? true,
+    productTryOnButtonText: String(shop.widget_config?.productTryOnButtonText || DEFAULT_TRYON_BUTTON_TEXT).slice(0, WIDGET_TRYON_BUTTON_TEXT_MAX_LENGTH),
   }));
   const [saving, setSaving] = useState(false);
 
@@ -255,15 +263,33 @@ function SettingsTab({ shop, onSaved }: { shop: Shop; onSaved: (s: Shop) => void
       primaryColor: shop.widget_config?.primaryColor || '#111111',
       buttonLabel: shop.widget_config?.buttonLabel || 'Przymierz wirtualnie ✨',
       position: shop.widget_config?.position || 'bottom-right',
+      launcherPosition: shop.widget_config?.launcherPosition || shop.widget_config?.position || 'bottom-right',
       showLiveAR: shop.widget_config?.showLiveAR ?? true,
       showPhotoAI: shop.widget_config?.showPhotoAI ?? true,
+      enableFloatingAdvisor: shop.widget_config?.enableFloatingAdvisor ?? true,
+      advisorWelcomeBubble: String(shop.widget_config?.advisorWelcomeBubble || '').slice(0, WIDGET_ADVISOR_BUBBLE_MAX_LENGTH),
+      enableProductTryOnButton: shop.widget_config?.enableProductTryOnButton ?? true,
+      productTryOnButtonText: String(shop.widget_config?.productTryOnButtonText || DEFAULT_TRYON_BUTTON_TEXT).slice(0, WIDGET_TRYON_BUTTON_TEXT_MAX_LENGTH),
     });
   }, [shop]);
 
   const save = async () => {
+    const safeLauncherPosition = cfg.launcherPosition === 'bottom-left' ? 'bottom-left' : 'bottom-right';
+    const safeTryOnButtonText = String(cfg.productTryOnButtonText || DEFAULT_TRYON_BUTTON_TEXT)
+      .trim()
+      .slice(0, WIDGET_TRYON_BUTTON_TEXT_MAX_LENGTH) || DEFAULT_TRYON_BUTTON_TEXT;
+    const safeBubbleText = String(cfg.advisorWelcomeBubble || '').slice(0, WIDGET_ADVISOR_BUBBLE_MAX_LENGTH);
+    const mergedWidgetConfig: WidgetConfig = {
+      ...(shop.widget_config || {}),
+      ...cfg,
+      launcherPosition: safeLauncherPosition,
+      advisorWelcomeBubble: safeBubbleText,
+      productTryOnButtonText: safeTryOnButtonText,
+    };
+
     setSaving(true);
     try {
-      const { data } = await api.put<{ shop: Shop }>(`/api/shops/${shop.id}`, { widget_config: cfg });
+      const { data } = await api.put<{ shop: Shop }>(`/api/shops/${shop.id}`, { widget_config: mergedWidgetConfig });
       toast.success('Zapisano ustawienia');
       onSaved(data.shop);
     } catch (err) {
@@ -317,6 +343,60 @@ function SettingsTab({ shop, onSaved }: { shop: Shop; onSaved: (s: Shop) => void
             <input type="checkbox" checked={cfg.showLiveAR} onChange={(e) => setCfg({ ...cfg, showLiveAR: e.target.checked })} />
             Live AR
           </label>
+        </div>
+        <div className="h-px bg-ink/10" />
+        <h4 className="ff-section-title text-sm">Storefront entry points (M6)</h4>
+        <div>
+          <label className="ff-label">Pozycja launchera AI Stylist</label>
+          <select
+            className="ff-input"
+            value={cfg.launcherPosition || 'bottom-right'}
+            onChange={(e) => setCfg({ ...cfg, launcherPosition: e.target.value as WidgetConfig['launcherPosition'] })}
+          >
+            <option value="bottom-right">Prawy dół</option>
+            <option value="bottom-left">Lewy dół</option>
+          </select>
+        </div>
+        <label className="flex items-center gap-2 text-sm text-ink/70">
+          <input
+            type="checkbox"
+            checked={cfg.enableFloatingAdvisor ?? true}
+            onChange={(e) => setCfg({ ...cfg, enableFloatingAdvisor: e.target.checked })}
+          />
+          Włącz pływający launcher AI Stylist
+        </label>
+        <div>
+          <label className="ff-label">Wiadomość bąbelka powitalnego (opcjonalna)</label>
+          <input
+            className="ff-input"
+            value={cfg.advisorWelcomeBubble || ''}
+            maxLength={WIDGET_ADVISOR_BUBBLE_MAX_LENGTH}
+            placeholder="Np. Hej! Pomogę dobrać stylizację ✨"
+            onChange={(e) => setCfg({ ...cfg, advisorWelcomeBubble: e.target.value.slice(0, WIDGET_ADVISOR_BUBBLE_MAX_LENGTH) })}
+          />
+          <p className="mt-1 text-xs text-ink/55">
+            {(cfg.advisorWelcomeBubble || '').length}/{WIDGET_ADVISOR_BUBBLE_MAX_LENGTH}
+          </p>
+        </div>
+        <label className="flex items-center gap-2 text-sm text-ink/70">
+          <input
+            type="checkbox"
+            checked={cfg.enableProductTryOnButton ?? true}
+            onChange={(e) => setCfg({ ...cfg, enableProductTryOnButton: e.target.checked })}
+          />
+          Włącz przycisk produktu „Przymierz wirtualnie”
+        </label>
+        <div>
+          <label className="ff-label">Tekst przycisku produktu</label>
+          <input
+            className="ff-input"
+            value={cfg.productTryOnButtonText || DEFAULT_TRYON_BUTTON_TEXT}
+            maxLength={WIDGET_TRYON_BUTTON_TEXT_MAX_LENGTH}
+            onChange={(e) => setCfg({ ...cfg, productTryOnButtonText: e.target.value.slice(0, WIDGET_TRYON_BUTTON_TEXT_MAX_LENGTH) })}
+          />
+          <p className="mt-1 text-xs text-ink/55">
+            {(cfg.productTryOnButtonText || '').length}/{WIDGET_TRYON_BUTTON_TEXT_MAX_LENGTH}
+          </p>
         </div>
         <button className="ff-btn-primary" onClick={save} disabled={saving}>
           {saving ? 'Zapisywanie...' : 'Zapisz ustawienia'}

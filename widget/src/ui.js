@@ -11,11 +11,28 @@ import { createArSession } from './ar.js';
 const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
 const POLL_INTERVAL = 3000;
 const POLL_MAX_TRIES = 20; // ~60s
+const ADVISOR_MODULE_KEY = 'ai_stylist_advisor';
+const TRYON_MODULE_KEY = 'virtual_try_on';
+const ADVISOR_WELCOME_BUBBLE_MAX = 120;
+const TRYON_CTA_TEXT_MAX = 40;
+const DEFAULT_TRYON_CTA_TEXT = 'Przymierz wirtualnie';
+const TRYON_CTA_MARKER = 'data-fashionfit-tryon-cta';
+const ADVISOR_BUBBLE_KEY_PREFIX = 'fashionfit:advisor-bubble-dismissed:';
 
 export function createWidget({ config, api, product, externalId }) {
   const page = getPageProductInfo();
   const productName = product.name || page.name;
   const productThumb = product.garment_image_url || page.image;
+  const productHasContext = Boolean(product && product.id && !product._fallback);
+
+  const launcherPosition = config.launcherPosition === 'bottom-left' || config.position === 'bottom-left'
+    ? 'bottom-left'
+    : 'bottom-right';
+  const enableFloatingAdvisor = config.enableFloatingAdvisor !== false;
+  const enableProductTryOnButton = config.enableProductTryOnButton !== false;
+  const advisorWelcomeBubble = String(config.advisorWelcomeBubble || '').slice(0, ADVISOR_WELCOME_BUBBLE_MAX).trim();
+  const productTryOnButtonText = (String(config.productTryOnButtonText || DEFAULT_TRYON_CTA_TEXT).trim().slice(0, TRYON_CTA_TEXT_MAX)
+    || DEFAULT_TRYON_CTA_TEXT);
 
   let overlay = null;
   let modalBody = null;
@@ -32,14 +49,25 @@ export function createWidget({ config, api, product, externalId }) {
   let advisorLockedPayload = null;
   let advisorModuleCheckError = '';
   let advisorChecking = false;
+  let tryOnModuleEnabled = false;
+  let moduleAccessResolved = false;
+  let moduleAccessError = '';
+  let launchersMounted = false;
+  let tryOnObserver = null;
+  let tryOnObserverRaf = null;
 
-  const fab = h('button', { class: 'ff-fab', type: 'button', 'aria-label': 'FashionFit', onclick: open }, config.buttonLabel);
+  let advisorLauncher = null;
+  let advisorBubble = null;
+  let productTryOnButton = null;
 
   function mount() {
-    document.body.appendChild(fab);
+    if (launchersMounted) return;
+    launchersMounted = true;
+    resolveModuleAccessAndMount().catch(() => {});
   }
 
-  function open() {
+  function open(entry = 'default') {
+    removeLaunchers();
     if (overlay) overlay.remove();
     advisorConversationId = null;
     advisorMessages = [];
@@ -61,8 +89,10 @@ export function createWidget({ config, api, product, externalId }) {
     );
     document.body.appendChild(overlay);
     requestAnimationFrame(() => overlay.classList.add('ff-open'));
-    renderModeScreen();
-    api.trackEvent('widget_open', { productId: product.id });
+    if (entry === 'advisor') renderAdvisorScreen();
+    else if (entry === 'tryon') renderPhotoScreen();
+    else renderModeScreen();
+    api.trackEvent('widget_open', { productId: product.id, metadata: { entryPoint: entry } });
   }
 
   function close() {
@@ -71,7 +101,14 @@ export function createWidget({ config, api, product, externalId }) {
     if (overlay) {
       const node = overlay;
       node.classList.remove('ff-open');
-      setTimeout(() => node.remove(), 200);
+      setTimeout(() => {
+        node.remove();
+        if (moduleAccessResolved && !moduleAccessError) {
+          mountAdvisorLauncher();
+          ensureProductTryOnButton();
+          startTryOnObserver();
+        }
+      }, 200);
       overlay = null;
     }
   }
@@ -86,6 +123,183 @@ export function createWidget({ config, api, product, externalId }) {
   function setBody(...nodes) {
     modalBody.innerHTML = '';
     nodes.forEach((n) => modalBody.appendChild(n));
+  }
+
+  function detectModuleEnabled(snapshot, moduleKey) {
+    const modules = Array.isArray(snapshot && snapshot.modules) ? snapshot.modules : [];
+    const found = modules.find((item) => item && item.key === moduleKey);
+    return Boolean(found && found.enabled);
+  }
+
+  function getAdvisorBubbleStorageKey() {
+    const shopId = String(config.shopId || 'unknown-shop');
+    return `${ADVISOR_BUBBLE_KEY_PREFIX}${shopId}`;
+  }
+
+  function isAdvisorBubbleDismissed() {
+    try {
+      return sessionStorage.getItem(getAdvisorBubbleStorageKey()) === '1';
+    } catch {
+      return false;
+    }
+  }
+
+  function dismissAdvisorBubble() {
+    try {
+      sessionStorage.setItem(getAdvisorBubbleStorageKey(), '1');
+    } catch {
+      // ignore storage failures in storefront context
+    }
+    if (advisorBubble) {
+      advisorBubble.remove();
+      advisorBubble = null;
+    }
+  }
+
+  function removeLaunchers() {
+    if (advisorLauncher) {
+      advisorLauncher.remove();
+      advisorLauncher = null;
+    }
+    if (advisorBubble) {
+      advisorBubble.remove();
+      advisorBubble = null;
+    }
+    if (productTryOnButton) {
+      productTryOnButton.remove();
+      productTryOnButton = null;
+    }
+    if (tryOnObserver) {
+      tryOnObserver.disconnect();
+      tryOnObserver = null;
+    }
+  }
+
+  function resolveTryOnAnchor() {
+    try {
+      const addToCartButton = document.querySelector(
+        'form.cart .single_add_to_cart_button, .summary .single_add_to_cart_button, button.single_add_to_cart_button',
+      );
+      if (addToCartButton) {
+        return addToCartButton.closest('form.cart') || addToCartButton;
+      }
+      return document.querySelector('form.cart, .summary form.cart');
+    } catch {
+      return null;
+    }
+  }
+
+  function ensureProductTryOnButton() {
+    if (!enableProductTryOnButton || !tryOnModuleEnabled || !productHasContext) {
+      if (productTryOnButton) {
+        productTryOnButton.remove();
+        productTryOnButton = null;
+      }
+      return;
+    }
+
+    const anchor = resolveTryOnAnchor();
+    if (!anchor || !anchor.parentNode) return;
+
+    if (!productTryOnButton) {
+      const existing = document.querySelector(`[${TRYON_CTA_MARKER}="1"]`);
+      if (existing instanceof HTMLButtonElement) {
+        productTryOnButton = existing;
+      }
+    }
+
+    if (!productTryOnButton) {
+      productTryOnButton = h('button', {
+        class: 'ff-product-tryon-cta',
+        type: 'button',
+        onclick: () => open('tryon'),
+      }, productTryOnButtonText);
+      productTryOnButton.setAttribute(TRYON_CTA_MARKER, '1');
+    }
+
+    productTryOnButton.className = 'ff-product-tryon-cta';
+    productTryOnButton.type = 'button';
+    productTryOnButton.onclick = () => open('tryon');
+    productTryOnButton.setAttribute(TRYON_CTA_MARKER, '1');
+    productTryOnButton.textContent = productTryOnButtonText;
+    if (!productTryOnButton.parentNode || productTryOnButton.parentNode !== anchor.parentNode) {
+      anchor.insertAdjacentElement('afterend', productTryOnButton);
+    } else {
+      const sibling = anchor.nextElementSibling;
+      if (sibling !== productTryOnButton) {
+        anchor.insertAdjacentElement('afterend', productTryOnButton);
+      }
+    }
+  }
+
+  function startTryOnObserver() {
+    if (tryOnObserver || !enableProductTryOnButton || !tryOnModuleEnabled) return;
+    tryOnObserver = new MutationObserver(() => {
+      if (tryOnObserverRaf) cancelAnimationFrame(tryOnObserverRaf);
+      tryOnObserverRaf = requestAnimationFrame(() => ensureProductTryOnButton());
+    });
+    tryOnObserver.observe(document.body, { childList: true, subtree: true });
+  }
+
+  function mountAdvisorLauncher() {
+    if (!enableFloatingAdvisor || !advisorModuleEnabled) return;
+    if (!advisorLauncher) {
+      advisorLauncher = h('button', {
+        class: `ff-advisor-fab ff-pos-${launcherPosition}`,
+        type: 'button',
+        'aria-label': 'Otwórz AI Stylist',
+        onclick: () => open('advisor'),
+      }, 'AI Stylist');
+      document.body.appendChild(advisorLauncher);
+    }
+
+    if (!advisorWelcomeBubble || isAdvisorBubbleDismissed() || advisorBubble) return;
+
+    const bubbleClose = h('button', {
+      class: 'ff-advisor-bubble-close',
+      type: 'button',
+      'aria-label': 'Zamknij wiadomość',
+      onclick: (e) => {
+        e.stopPropagation();
+        dismissAdvisorBubble();
+      },
+    }, '×');
+
+    advisorBubble = h('button', {
+      class: `ff-advisor-bubble ff-pos-${launcherPosition}`,
+      type: 'button',
+      onclick: () => {
+        dismissAdvisorBubble();
+        open('advisor');
+      },
+    },
+    h('span', { class: 'ff-advisor-bubble-text' }, advisorWelcomeBubble),
+    bubbleClose,
+    );
+    document.body.appendChild(advisorBubble);
+  }
+
+  async function resolveModuleAccessAndMount() {
+    removeLaunchers();
+    moduleAccessResolved = false;
+    moduleAccessError = '';
+    advisorModuleEnabled = false;
+    tryOnModuleEnabled = false;
+    try {
+      const snapshot = await api.getModules();
+      advisorModuleEnabled = detectModuleEnabled(snapshot, ADVISOR_MODULE_KEY);
+      tryOnModuleEnabled = detectModuleEnabled(snapshot, TRYON_MODULE_KEY);
+    } catch (err) {
+      moduleAccessError = err && err.message ? err.message : 'Nie udało się sprawdzić modułów.';
+    } finally {
+      moduleAccessResolved = true;
+    }
+
+    if (!moduleAccessResolved || moduleAccessError) return;
+
+    mountAdvisorLauncher();
+    ensureProductTryOnButton();
+    startTryOnObserver();
   }
 
   function productHeader() {
@@ -138,12 +352,6 @@ export function createWidget({ config, api, product, externalId }) {
     );
   }
 
-  function detectAdvisorEnabled(snapshot) {
-    const modules = Array.isArray(snapshot && snapshot.modules) ? snapshot.modules : [];
-    const advisor = modules.find((item) => item && item.key === 'ai_stylist_advisor');
-    return Boolean(advisor && advisor.enabled);
-  }
-
   function getSafeProductUrl(value) {
     if (!value) return null;
     try {
@@ -162,7 +370,7 @@ export function createWidget({ config, api, product, externalId }) {
     try {
       const snapshot = await api.getModules();
       advisorModuleChecked = true;
-      advisorModuleEnabled = detectAdvisorEnabled(snapshot);
+      advisorModuleEnabled = detectModuleEnabled(snapshot, ADVISOR_MODULE_KEY);
       if (!advisorModuleEnabled) {
         advisorLockedPayload = {
           code: 'MODULE_LOCKED',

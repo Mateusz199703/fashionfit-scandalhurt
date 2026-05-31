@@ -21,8 +21,13 @@ export interface WidgetConfig {
   primaryColor?: string;
   buttonLabel?: string;
   position?: 'bottom-right' | 'bottom-left';
+  launcherPosition?: 'bottom-right' | 'bottom-left';
   showLiveAR?: boolean;
   showPhotoAI?: boolean;
+  enableFloatingAdvisor?: boolean;
+  advisorWelcomeBubble?: string;
+  enableProductTryOnButton?: boolean;
+  productTryOnButtonText?: string;
   advisor?: {
     tone?: AdvisorTone;
     welcomeMessage?: string;

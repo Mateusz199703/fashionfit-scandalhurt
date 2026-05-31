@@ -44,6 +44,103 @@ const CSS = `
     inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
 }
 
+.ff-advisor-fab {
+  position: fixed !important;
+  z-index: 100001 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 124px !important;
+  padding: 13px 20px !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  background: linear-gradient(120deg, #7b61ff 0%, #4f46e5 100%) !important;
+  color: #fff !important;
+  font: 700 14px/1 "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+  letter-spacing: 0.01em !important;
+  cursor: pointer !important;
+  box-shadow:
+    0 18px 38px rgba(46, 36, 146, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.ff-advisor-fab:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 22px 44px rgba(46, 36, 146, 0.56),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+}
+
+.ff-pos-bottom-right {
+  right: 24px !important;
+}
+
+.ff-pos-bottom-left {
+  left: 24px !important;
+}
+
+.ff-advisor-bubble {
+  position: fixed !important;
+  bottom: 88px !important;
+  z-index: 100001 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  max-width: min(280px, calc(100vw - 32px)) !important;
+  padding: 12px 12px 12px 14px !important;
+  border-radius: 14px !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  background: rgba(16, 16, 24, 0.94) !important;
+  color: rgba(255, 255, 255, 0.92) !important;
+  cursor: pointer !important;
+  text-align: left !important;
+  box-shadow: 0 18px 38px rgba(0, 0, 0, 0.42) !important;
+}
+
+.ff-advisor-bubble-text {
+  font-size: 13px !important;
+  line-height: 1.35 !important;
+  font-weight: 500 !important;
+}
+
+.ff-advisor-bubble-close {
+  width: 24px !important;
+  height: 24px !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: rgba(255, 255, 255, 0.82) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  padding: 0 !important;
+  font-size: 16px !important;
+  line-height: 1 !important;
+}
+
+.ff-product-tryon-cta {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  margin-top: 10px !important;
+  padding: 12px 16px !important;
+  border-radius: 12px !important;
+  border: 1px solid rgba(123, 97, 255, 0.64) !important;
+  background: linear-gradient(120deg, #7b61ff, #4f46e5) !important;
+  color: #ffffff !important;
+  font: 700 14px/1.2 "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+  cursor: pointer !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease !important;
+}
+
+.ff-product-tryon-cta:hover {
+  transform: translateY(-1px);
+  border-color: rgba(123, 97, 255, 0.9) !important;
+  box-shadow: 0 14px 28px -20px rgba(79, 70, 229, 0.85) !important;
+}
+
 .ff-overlay {
   position: fixed;
   inset: 0;
@@ -627,6 +724,9 @@ const CSS = `
 .ff-mode:focus-visible,
 .ff-size:focus-visible,
 .ff-btn:focus-visible,
+.ff-advisor-fab:focus-visible,
+.ff-advisor-bubble:focus-visible,
+.ff-product-tryon-cta:focus-visible,
 .ff-close:focus-visible,
 .ff-advisor-input:focus-visible,
 .ff-drop:focus-visible {
@@ -682,10 +782,33 @@ const CSS = `
   .ff-chat-list {
     max-height: 36vh;
   }
+  .ff-advisor-fab {
+    bottom: max(16px, env(safe-area-inset-bottom)) !important;
+    min-width: 112px !important;
+    padding: 12px 16px !important;
+    font-size: 13px !important;
+  }
+  .ff-pos-bottom-right {
+    right: 12px !important;
+  }
+  .ff-pos-bottom-left {
+    left: 12px !important;
+  }
+  .ff-advisor-bubble {
+    bottom: calc(max(16px, env(safe-area-inset-bottom)) + 62px) !important;
+    max-width: calc(100vw - 24px) !important;
+  }
+  .ff-product-tryon-cta {
+    margin-top: 8px !important;
+    padding: 11px 14px !important;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .ff-fab,
+  .ff-advisor-fab,
+  .ff-advisor-bubble,
+  .ff-product-tryon-cta,
   .ff-mode,
   .ff-btn,
   .ff-overlay,

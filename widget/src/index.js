@@ -12,14 +12,14 @@ async function init() {
     console.warn('[FashionFit] Brak apiKey lub shopId — widget nie został uruchomiony.');
     return;
   }
-  if (!isProductPage()) return;
+  const onProductPage = isProductPage();
 
-  const externalId = getProductExternalId();
+  const externalId = onProductPage ? getProductExternalId() : null;
   injectStyles(config.primaryColor);
   const api = createApi(config);
 
   let product = null;
-  if (externalId) {
+  if (onProductPage && externalId) {
     try {
       const { products } = await api.getProducts();
       const list = products || [];
@@ -47,21 +47,34 @@ async function init() {
   }
 
   if (!product) {
-    const page = getPageProductInfo();
-    product = {
-      id: externalId || `fallback:${location.pathname}`,
-      external_id: externalId || null,
-      name: page.name || 'Produkt',
-      garment_image_url: page.image || null,
-      product_url: location.href,
-      category: 'tops',
-      variants: null,
-      _fallback: true,
-    };
-    console.warn('[FashionFit] Nie znaleziono zsynchronizowanego produktu dla id, uruchamiam fallback:', externalId);
+    if (onProductPage) {
+      const page = getPageProductInfo();
+      product = {
+        id: externalId || `fallback:${location.pathname}`,
+        external_id: externalId || null,
+        name: page.name || 'Produkt',
+        garment_image_url: page.image || null,
+        product_url: location.href,
+        category: 'tops',
+        variants: null,
+        _fallback: true,
+      };
+      console.warn('[FashionFit] Nie znaleziono zsynchronizowanego produktu dla id, uruchamiam fallback:', externalId);
+    } else {
+      product = {
+        id: `global:${location.pathname || '/'}`,
+        external_id: null,
+        name: 'AI Stylist',
+        garment_image_url: null,
+        product_url: null,
+        category: null,
+        variants: null,
+        _fallback: true,
+      };
+    }
   }
 
-  if (String(product.category || '').toLowerCase() === 'accessories') {
+  if (onProductPage && String(product.category || '').toLowerCase() === 'accessories') {
     console.info('[FashionFit] Pomijam widget try-on dla kategorii accessories.');
     return;
   }
