@@ -11,15 +11,18 @@ const {
   listMockProducts,
 } = require('../services/mockStore');
 const {
-  MAX_RECOMMENDATIONS,
   validateAdvisorChatPayload,
-  selectTopRecommendations,
   resolveConversation,
   insertMessage,
   fetchShopProducts,
+  fetchAdvisorSettings,
+  fetchConversationContext,
+  resolveAdvisorOutcome,
   buildSuccessResponse,
   buildLockedModuleResponse,
   filterCatalogProducts,
+  validateRecommendationsAreCatalogOnly,
+  normalizeAdvisorSettings,
 } = require('../services/advisor');
 
 const defaultMockState = {
@@ -38,14 +41,16 @@ function createAdvisorRouter(options = {}) {
   const getMockShopFn = options.getMockShopFn || getMockShop;
   const listMockProductsFn = options.listMockProductsFn || listMockProducts;
   const mockState = options.mockState || defaultMockState;
+  const aiClient = options.aiClient || null;
 
   router.use(authMiddleware);
 
   router.post('/chat', async (req, res) => {
     const { shopId, message, conversationId } = validateAdvisorChatPayload(req.body || {});
 
+    let mockShop = null;
     if (useMockBackend) {
-      const mockShop = getMockShopFn(shopId, req.clientId);
+      mockShop = getMockShopFn(shopId, req.clientId);
       if (!mockShop) throw new ApiError(403, 'Shop does not belong to this client', 'SHOP_FORBIDDEN');
     } else {
       const owned = await ownershipChecker(shopId, req.clientId);
@@ -63,6 +68,9 @@ function createAdvisorRouter(options = {}) {
     }
 
     let resolvedConversationId;
+    let conversationMessages = [];
+    let advisorSettings;
+
     if (useMockBackend) {
       if (conversationId) {
         const existing = mockState.conversations.get(conversationId);
@@ -80,6 +88,11 @@ function createAdvisorRouter(options = {}) {
         });
       }
 
+      conversationMessages = mockState.messages
+        .filter((item) => String(item.conversationId) === String(resolvedConversationId))
+        .slice(-6)
+        .map((item) => ({ role: item.role, content: item.content }));
+
       mockState.messages.push({
         id: randomUUID(),
         conversationId: resolvedConversationId,
@@ -87,6 +100,8 @@ function createAdvisorRouter(options = {}) {
         content: message,
         recommendationProductIds: [],
       });
+
+      advisorSettings = normalizeAdvisorSettings(mockShop && mockShop.widget_config && mockShop.widget_config.advisor);
     } else {
       const conversation = await resolveConversation({
         db,
@@ -96,11 +111,23 @@ function createAdvisorRouter(options = {}) {
       });
       resolvedConversationId = conversation.id;
 
+      conversationMessages = await fetchConversationContext({
+        db,
+        conversationId: resolvedConversationId,
+        limit: 6,
+      });
+
       await insertMessage({
         db,
         conversationId: resolvedConversationId,
         role: 'user',
         content: message,
+      });
+
+      advisorSettings = await fetchAdvisorSettings({
+        db,
+        shopId,
+        clientId: req.clientId,
       });
     }
 
@@ -115,14 +142,16 @@ function createAdvisorRouter(options = {}) {
 
     const catalogProducts = filterCatalogProducts(products, shopId);
 
-    const recommendations = selectTopRecommendations(catalogProducts, message, MAX_RECOMMENDATIONS);
+    const outcome = await resolveAdvisorOutcome({
+      message,
+      shopId,
+      catalogProducts,
+      advisorSettings,
+      conversationMessages,
+      aiClient,
+    });
 
-    for (const recommendation of recommendations) {
-      const matched = catalogProducts.find((product) => String(product.id) === String(recommendation.productId));
-      if (!matched || matched.shop_id == null || String(matched.shop_id) !== String(shopId)) {
-        throw new ApiError(500, 'Catalog validation failed for recommended product', 'CATALOG_VALIDATION_FAILED');
-      }
-    }
+    validateRecommendationsAreCatalogOnly(outcome.recommendations, catalogProducts, shopId);
 
     let assistantMessageId;
     if (useMockBackend) {
@@ -131,20 +160,16 @@ function createAdvisorRouter(options = {}) {
         id: assistantMessageId,
         conversationId: resolvedConversationId,
         role: 'assistant',
-        content: recommendations.length > 0
-          ? `Znalazłam ${recommendations.length} propozycje z Twojego katalogu sklepu.`
-          : 'Nie znalazłam pasujących produktów w katalogu tego sklepu.',
-        recommendationProductIds: recommendations.map((item) => item.productId),
+        content: outcome.reply,
+        recommendationProductIds: outcome.recommendations.map((item) => item.productId),
       });
     } else {
       const assistantMessage = await insertMessage({
         db,
         conversationId: resolvedConversationId,
         role: 'assistant',
-        content: recommendations.length > 0
-          ? `Znalazłam ${recommendations.length} propozycje z Twojego katalogu sklepu.`
-          : 'Nie znalazłam pasujących produktów w katalogu tego sklepu.',
-        recommendationProductIds: recommendations.map((item) => item.productId),
+        content: outcome.reply,
+        recommendationProductIds: outcome.recommendations.map((item) => item.productId),
       });
       assistantMessageId = assistantMessage.id;
     }
@@ -153,7 +178,9 @@ function createAdvisorRouter(options = {}) {
       conversationId: resolvedConversationId,
       assistantMessageId,
       shopId,
-      recommendations,
+      recommendations: outcome.recommendations,
+      reply: outcome.reply,
+      maxResults: outcome.maxRecommendations,
     }));
   });
 

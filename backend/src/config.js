@@ -100,6 +100,18 @@ const config = {
     },
   },
 
+  advisorAi: {
+    enabled: parseBoolean(process.env.ADVISOR_AI_ENABLED, false),
+    apiKey: process.env.OPENAI_API_KEY || '',
+    model: process.env.OPENAI_MODEL || 'gpt-4.1-mini',
+    baseUrl: process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1',
+    timeoutMs: parseIntOrDefault(process.env.OPENAI_TIMEOUT_MS, 10000),
+    maxOutputTokens: parseIntOrDefault(process.env.OPENAI_MAX_OUTPUT_TOKENS, 500),
+    temperature: Number.isFinite(Number(process.env.OPENAI_TEMPERATURE))
+      ? Number(process.env.OPENAI_TEMPERATURE)
+      : 0.4,
+  },
+
   tryon: {
     defaultProvider: process.env.TRYON_DEFAULT_PROVIDER || 'auto',
     fallbackProvider: process.env.TRYON_FALLBACK_PROVIDER || 'mock',

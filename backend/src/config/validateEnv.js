@@ -65,6 +65,32 @@ function validateEnv(config) {
     throw new Error('STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET must be set together');
   }
 
+  const advisorAiEnabled = String(process.env.ADVISOR_AI_ENABLED || '').trim().toLowerCase() === 'true';
+  if (advisorAiEnabled && !process.env.OPENAI_API_KEY) {
+    console.warn('ADVISOR_AI_ENABLED=true but OPENAI_API_KEY is missing; advisor AI will be unavailable and deterministic fallback will be used.');
+  }
+
+  if (process.env.OPENAI_TIMEOUT_MS) {
+    const timeoutMs = Number(process.env.OPENAI_TIMEOUT_MS);
+    if (!Number.isInteger(timeoutMs) || timeoutMs <= 0) {
+      throw new Error('OPENAI_TIMEOUT_MS must be a positive integer');
+    }
+  }
+
+  if (process.env.OPENAI_MAX_OUTPUT_TOKENS) {
+    const maxTokens = Number(process.env.OPENAI_MAX_OUTPUT_TOKENS);
+    if (!Number.isInteger(maxTokens) || maxTokens <= 0) {
+      throw new Error('OPENAI_MAX_OUTPUT_TOKENS must be a positive integer');
+    }
+  }
+
+  if (process.env.OPENAI_TEMPERATURE) {
+    const temperature = Number(process.env.OPENAI_TEMPERATURE);
+    if (!Number.isFinite(temperature) || temperature < 0 || temperature > 2) {
+      throw new Error('OPENAI_TEMPERATURE must be a number between 0 and 2');
+    }
+  }
+
   const encryptionKey = process.env.ENCRYPTION_KEY;
   if (encryptionKey && !/^[a-fA-F0-9]{64}$/.test(encryptionKey)) {
     throw new Error('ENCRYPTION_KEY must be a 64-character hex string');
