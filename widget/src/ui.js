@@ -205,7 +205,6 @@ export function createWidget({ config, api, product, externalId }) {
           ),
         );
       }),
-    ),
     );
   }
 

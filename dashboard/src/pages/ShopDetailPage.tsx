@@ -392,7 +392,8 @@ function AdvisorTab({ shop, onSaved }: { shop: Shop; onSaved: (s: Shop) => void 
             params: { shopId: shop.id, limit: 10 },
           });
           if (!mounted) return;
-          const rows = Array.isArray(response.data && response.data.conversations) ? response.data.conversations : [];
+          const maybeRows = response.data?.conversations;
+          const rows: unknown[] = Array.isArray(maybeRows) ? maybeRows : [];
           const parsed = rows.map(parseConversationRow).filter((item): item is AdvisorConversation => Boolean(item));
           setConversations(parsed);
         } catch (err) {
