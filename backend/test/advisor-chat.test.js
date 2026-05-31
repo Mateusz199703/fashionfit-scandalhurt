@@ -8,6 +8,7 @@ const {
   resolveConversation,
   resolveAdvisorOutcome,
   buildSuccessResponse,
+  hasShoppingIntent,
 } = require('../src/services/advisor');
 const config = require('../src/config');
 
@@ -33,6 +34,21 @@ test('returns maximum 3 recommendations', () => {
 
   const recommendations = selectTopRecommendations(products, 'sukienka letnia');
   assert.equal(recommendations.length, 3);
+});
+
+test('returns no recommendations when there is no relevant catalog match', () => {
+  const products = [
+    { id: 'a1', shop_id: SHOP_A, name: 'Sukienka wizytowa', category: 'one-pieces', variants: null, is_synced: true },
+    { id: 'a2', shop_id: SHOP_A, name: 'Marynarka granatowa', category: 'outerwear', variants: null, is_synced: true },
+  ];
+
+  const recommendations = selectTopRecommendations(products, 'dresy sportowe');
+  assert.equal(recommendations.length, 0);
+});
+
+test('shopping intent detection distinguishes broad styling from shopping query', () => {
+  assert.equal(hasShoppingIntent('co pasuje do brunetek?'), false);
+  assert.equal(hasShoppingIntent('czy znajdę tu dresy?'), true);
 });
 
 test('catalog-only filtering keeps only products from requested shop', () => {
@@ -101,6 +117,112 @@ test('AI disabled uses deterministic fallback', async () => {
   assert.equal(result.usedAi, false);
   assert.equal(result.recommendations.length, 1);
   assert.match(result.reply, /katalogu sklepu/i);
+});
+
+test('general styling question can return conversational AI reply without product recommendations', async () => {
+  const catalogProducts = [
+    { id: 'a1', shop_id: SHOP_A, external_id: '1', name: 'Sukienka letnia', category: 'one-pieces', is_synced: true },
+  ];
+
+  const result = await resolveAdvisorOutcome({
+    message: 'co pasuje do brunetek?',
+    shopId: SHOP_A,
+    catalogProducts,
+    advisorSettings: { tone: 'friendly', maxRecommendations: 3 },
+    conversationMessages: [],
+    aiClient: {
+      isEnabled: () => true,
+      getStylistResponse: async () => ({
+        reply: 'Do brunetek świetnie pasują głębokie zielenie i burgund. Wolisz bardziej elegancki czy casualowy kierunek?',
+        selectedProductIds: [],
+        selectionReasons: [],
+      }),
+    },
+  });
+
+  assert.equal(result.usedAi, true);
+  assert.equal(result.recommendations.length, 0);
+  assert.match(result.reply, /brunetek|kolor|kierunek/i);
+});
+
+test('shopping query without relevant matches returns no-match reply and no unrelated recommendations', async () => {
+  const catalogProducts = [
+    { id: 'a1', shop_id: SHOP_A, external_id: '1', name: 'Sukienka letnia', category: 'one-pieces', is_synced: true },
+    { id: 'a2', shop_id: SHOP_A, external_id: '2', name: 'Bluzka satynowa', category: 'tops', is_synced: true },
+  ];
+
+  const result = await resolveAdvisorOutcome({
+    message: 'czy znajdę tu dresy?',
+    shopId: SHOP_A,
+    catalogProducts,
+    advisorSettings: { maxRecommendations: 3 },
+    conversationMessages: [],
+    aiClient: {
+      isEnabled: () => false,
+      getStylistResponse: async () => ({ reply: '', selectedProductIds: [] }),
+    },
+  });
+
+  assert.equal(result.usedAi, false);
+  assert.equal(result.recommendations.length, 0);
+  assert.match(result.reply, /nie widzę|nie widze|nie znalaz/i);
+});
+
+test('AI enabled + no relevant matches ignores unrelated AI product ids and returns no-match response', async () => {
+  const catalogProducts = [
+    { id: 'a1', shop_id: SHOP_A, external_id: '1', name: 'Sukienka letnia', category: 'one-pieces', is_synced: true },
+    { id: 'a2', shop_id: SHOP_A, external_id: '2', name: 'Bluzka satynowa', category: 'tops', is_synced: true },
+  ];
+
+  let aiCalled = false;
+  const result = await resolveAdvisorOutcome({
+    message: 'czy są dresy?',
+    shopId: SHOP_A,
+    catalogProducts,
+    advisorSettings: { maxRecommendations: 3 },
+    conversationMessages: [],
+    aiClient: {
+      isEnabled: () => true,
+      getStylistResponse: async () => {
+        aiCalled = true;
+        return {
+          reply: 'Mam dla Ciebie świetne propozycje.',
+          selectedProductIds: ['a1'],
+          selectionReasons: [{ productId: 'a1', reason: 'Uniwersalny wybór.' }],
+        };
+      },
+    },
+  });
+
+  assert.equal(aiCalled, true);
+  assert.equal(result.recommendations.length, 0);
+  assert.match(result.reply, /nie widzę|nie widze|nie znalaz|doprecyzować|doprecyzowac/i);
+});
+
+test('AI enabled + vague shopping query without relevant matches returns guidance and no random products', async () => {
+  const catalogProducts = [
+    { id: 'a1', shop_id: SHOP_A, external_id: '1', name: 'Sukienka letnia', category: 'one-pieces', is_synced: true },
+    { id: 'a2', shop_id: SHOP_A, external_id: '2', name: 'Bluzka satynowa', category: 'tops', is_synced: true },
+  ];
+
+  const result = await resolveAdvisorOutcome({
+    message: 'potrzebuję czegoś fajnego',
+    shopId: SHOP_A,
+    catalogProducts,
+    advisorSettings: { maxRecommendations: 3 },
+    conversationMessages: [],
+    aiClient: {
+      isEnabled: () => true,
+      getStylistResponse: async () => ({
+        reply: 'Polecam to, co mam pod ręką.',
+        selectedProductIds: ['a2'],
+        selectionReasons: [{ productId: 'a2', reason: 'Wygląda dobrze.' }],
+      }),
+    },
+  });
+
+  assert.equal(result.recommendations.length, 0);
+  assert.match(result.reply, /nie widzę|nie widze|doprecyzować|doprecyzowac|okazję|okazje/i);
 });
 
 test('valid AI structured output returns natural reply and valid recommendations', async () => {

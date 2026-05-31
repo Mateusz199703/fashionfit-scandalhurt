@@ -584,9 +584,11 @@ export function createWidget({ config, api, product, externalId }) {
     if (advisorPending) input.setAttribute('disabled', 'true');
     updateSendButtonState();
 
+    const chatList = h('div', { class: 'ff-chat-list' }, chatRows);
+
     setBody(
       h('h2', { class: 'ff-h' }, '✨ AI Stylist'),
-      h('div', { class: 'ff-chat-list' }, chatRows),
+      chatList,
       advisorError
         ? h('div', { class: 'ff-error ff-advisor-inline-error' },
           advisorError,
@@ -610,6 +612,7 @@ export function createWidget({ config, api, product, externalId }) {
     );
 
     requestAnimationFrame(() => {
+      chatList.scrollTop = chatList.scrollHeight;
       if (!overlay || advisorPending) return;
       if (document.activeElement !== input) input.focus();
     });

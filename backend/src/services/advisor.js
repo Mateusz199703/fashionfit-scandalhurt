@@ -3,6 +3,41 @@ const { ApiError } = require('../middleware/errorHandler');
 const MAX_RECOMMENDATIONS = 3;
 const MAX_MESSAGE_LENGTH = 1000;
 const DEFAULT_TONE = 'friendly';
+const SHOPPING_INTENT_TERMS = [
+  'szukam',
+  'szukamy',
+  'kup',
+  'kupi',
+  'kupić',
+  'zamówi',
+  'chcę',
+  'chce',
+  'potrzebuję',
+  'potrzebuje',
+  'znajdę',
+  'znajde',
+  'macie',
+  'czy są',
+  'czy sa',
+  'pokaż',
+  'pokaz',
+  'produkt',
+  'produkty',
+];
+const STYLING_INTENT_TERMS = [
+  'co pasuje',
+  'jaki kolor',
+  'jaka stylizacja',
+  'co ubrać',
+  'co ubrac',
+  'na wesele',
+  'na komunię',
+  'na komunie',
+  'do brunetek',
+  'do blondynek',
+  'jak łączyć',
+  'jak laczyc',
+];
 
 function isValidUuid(value) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || ''));
@@ -14,6 +49,38 @@ function tokenizeMessage(input) {
     .split(/[\s,.;:!?()\[\]{}"'`]+/)
     .map((item) => item.trim())
     .filter((item) => item.length >= 2);
+}
+
+function buildTokenVariants(token) {
+  const base = String(token || '').trim().toLowerCase();
+  if (!base) return [];
+  const variants = new Set([base]);
+
+  const singularHints = [
+    [/(ki|gi)$/u, 'ka'],
+    [/ów$/u, ''],
+    [/(ami|ach|owej|owego|owym|owych|ego|emu|ie|om|mi)$/u, ''],
+    [/(a|e|ę|i|y|u)$/u, ''],
+  ];
+
+  for (const [pattern, replacement] of singularHints) {
+    const next = base.replace(pattern, replacement).trim();
+    if (next.length >= 3) variants.add(next);
+  }
+
+  return [...variants].filter((value) => value.length >= 2);
+}
+
+function hasShoppingIntent(message) {
+  const text = String(message || '').trim().toLowerCase();
+  if (!text) return false;
+  return SHOPPING_INTENT_TERMS.some((term) => text.includes(term));
+}
+
+function hasStylingIntent(message) {
+  const text = String(message || '').trim().toLowerCase();
+  if (!text) return false;
+  return STYLING_INTENT_TERMS.some((term) => text.includes(term));
 }
 
 function clampRecommendationLimit(value) {
@@ -80,17 +147,27 @@ function scoreProduct(product, rawMessage, tokens) {
 
   for (const token of tokens) {
     let tokenMatched = false;
-    if (name.includes(token)) {
-      score += 10;
-      tokenMatched = true;
+
+    for (const variantToken of buildTokenVariants(token)) {
+      if (name.includes(variantToken)) {
+        score += 10;
+        tokenMatched = true;
+        break;
+      }
     }
-    if (category.includes(token)) {
-      score += 5;
-      tokenMatched = true;
+    for (const variantToken of buildTokenVariants(token)) {
+      if (category.includes(variantToken)) {
+        score += 5;
+        tokenMatched = true;
+        break;
+      }
     }
-    if (variants.includes(token)) {
-      score += 2;
-      tokenMatched = true;
+    for (const variantToken of buildTokenVariants(token)) {
+      if (variants.includes(variantToken)) {
+        score += 2;
+        tokenMatched = true;
+        break;
+      }
     }
     if (tokenMatched) matched.add(token);
   }
@@ -149,10 +226,8 @@ function selectTopRecommendations(products, message, maxResults = MAX_RECOMMENDA
     return scored.slice(0, maxResults).map((item) => buildDeterministicRecommendation(item.product, item.matchedTokens));
   }
 
-  // Deterministic fail-safe: when no keyword score matches, keep results catalog-grounded.
-  return safeProducts
-    .slice(0, maxResults)
-    .map((product) => buildRecommendation(product, 'Wybrane z dostępnego katalogu tego sklepu.'));
+  // Fail closed: when no keyword score matches, do not return unrelated products.
+  return [];
 }
 
 function selectCandidateProducts(products, message, maxCandidates = 24) {
@@ -161,6 +236,7 @@ function selectCandidateProducts(products, message, maxCandidates = 24) {
 
   for (const product of products || []) {
     const { score } = scoreProduct(product, message, tokens);
+    if (score <= 0) continue;
     scored.push({ product, score });
   }
 
@@ -290,6 +366,17 @@ function buildFallbackReply(recommendations) {
     : 'Nie znalazłam pasujących produktów w katalogu tego sklepu.';
 }
 
+function buildFallbackStylistReply({ message, shoppingIntentLikely, hasRecommendations }) {
+  if (hasRecommendations) return null;
+  if (shoppingIntentLikely) {
+    return 'Nie widzę teraz pasujących produktów w katalogu tego sklepu dla tego zapytania. Mogę pomóc doprecyzować styl, kolor albo okazję i sprawdzę ponownie.';
+  }
+  if (hasStylingIntent(message)) {
+    return 'Jasne, chętnie pomogę stylizacyjnie ✨ Powiedz proszę na jaką okazję szukasz stylizacji i jaki klimat lubisz, a dopasuję wskazówki i potem sprawdzę produkty.';
+  }
+  return 'Chętnie pomogę ✨ Napisz proszę, czego dokładnie szukasz (okazja, styl, kolor), a dobiorę najlepsze propozycje z tego katalogu.';
+}
+
 async function resolveAdvisorOutcome({
   message,
   shopId,
@@ -301,13 +388,17 @@ async function resolveAdvisorOutcome({
   const settings = normalizeAdvisorSettings(advisorSettings);
   const recommendationLimit = clampRecommendationLimit(settings.maxRecommendations);
   const effectiveCatalog = catalogProducts || [];
+  const shoppingIntentLikely = hasShoppingIntent(message);
+  const candidateProducts = shoppingIntentLikely
+    ? selectCandidateProducts(effectiveCatalog, message, 24)
+    : [];
+  const catalogHasRelevantMatches = candidateProducts.length > 0;
+  const forceNoMatchReply = shoppingIntentLikely && !catalogHasRelevantMatches;
 
   const ai = aiClient || require('./advisorAi');
   const canUseAi = Boolean(ai && typeof ai.isEnabled === 'function' && ai.isEnabled());
 
   if (canUseAi && effectiveCatalog.length > 0) {
-    const candidateProducts = selectCandidateProducts(effectiveCatalog, message, 24);
-
     try {
       const aiResult = await ai.getStylistResponse({
         message,
@@ -315,6 +406,8 @@ async function resolveAdvisorOutcome({
         conversationMessages: conversationMessages || [],
         productCandidates: candidateProducts,
         maxRecommendations: recommendationLimit,
+        shoppingIntentLikely,
+        catalogHasRelevantMatches,
       });
 
       if (!aiResult || typeof aiResult.reply !== 'string' || !Array.isArray(aiResult.selectedProductIds)) {
@@ -351,22 +444,43 @@ async function resolveAdvisorOutcome({
         if (recommendations.length >= recommendationLimit) break;
       }
 
-      if (recommendations.length > 0) {
+      if (forceNoMatchReply) {
         return {
-          reply: aiResult.reply.trim(),
-          recommendations,
+          reply: buildFallbackStylistReply({
+            message,
+            shoppingIntentLikely,
+            hasRecommendations: false,
+          }),
+          recommendations: [],
           maxRecommendations: recommendationLimit,
-          usedAi: true,
+          usedAi: false,
         };
       }
+
+      return {
+        reply: aiResult.reply.trim(),
+        recommendations,
+        maxRecommendations: recommendationLimit,
+        usedAi: true,
+      };
     } catch (err) {
       // Fall back to deterministic resolver if AI call/output fails.
     }
   }
 
-  const recommendations = selectTopRecommendations(effectiveCatalog, message, recommendationLimit);
+  const recommendations = forceNoMatchReply
+    ? []
+    : shoppingIntentLikely
+    ? selectTopRecommendations(effectiveCatalog, message, recommendationLimit)
+    : [];
+  const fallbackStylistReply = buildFallbackStylistReply({
+    message,
+    shoppingIntentLikely,
+    hasRecommendations: recommendations.length > 0,
+  });
+
   return {
-    reply: buildFallbackReply(recommendations),
+    reply: fallbackStylistReply || buildFallbackReply(recommendations),
     recommendations,
     maxRecommendations: recommendationLimit,
     usedAi: false,
@@ -394,6 +508,8 @@ module.exports = {
   MAX_MESSAGE_LENGTH,
   isValidUuid,
   tokenizeMessage,
+  hasShoppingIntent,
+  hasStylingIntent,
   clampRecommendationLimit,
   normalizeAdvisorSettings,
   validateAdvisorChatPayload,

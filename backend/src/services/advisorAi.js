@@ -55,7 +55,11 @@ function buildSystemPrompt() {
   return [
     'You are FashionFit AI Stylist, a premium ecommerce fashion stylist assistant.',
     'Your role: provide natural, contextual styling guidance based on customer intent, occasion, tone, and outfit logic.',
+    'If the user asks a general styling question, answer conversationally first and ask one useful follow-up question when needed.',
+    'Do not force product recommendations when user intent is broad or exploratory.',
     'You MUST only select products from the provided productCandidates list.',
+    'If there are no relevant productCandidates, return an empty selectedProductIds array.',
+    'If user asks for a category not present in productCandidates, say clearly there are no matching products in this catalog now.',
     'Never invent products, prices, images, URLs, sizes, stock, or availability.',
     'Do not mention products outside productCandidates.',
     'Do not provide medical/body-sensitive judgments.',
@@ -67,9 +71,21 @@ function buildSystemPrompt() {
   ].join(' ');
 }
 
-function buildUserPrompt({ message, advisorSettings, conversationMessages, productCandidates, maxRecommendations }) {
+function buildUserPrompt({
+  message,
+  advisorSettings,
+  conversationMessages,
+  productCandidates,
+  maxRecommendations,
+  shoppingIntentLikely,
+  catalogHasRelevantMatches,
+}) {
   const payload = {
     userMessage: message,
+    contextSignals: {
+      shoppingIntentLikely: Boolean(shoppingIntentLikely),
+      catalogHasRelevantMatches: Boolean(catalogHasRelevantMatches),
+    },
     advisorSettings: {
       tone: advisorSettings.tone,
       welcomeMessage: advisorSettings.welcomeMessage,
@@ -97,7 +113,15 @@ function buildUserPrompt({ message, advisorSettings, conversationMessages, produ
   return JSON.stringify(payload);
 }
 
-async function getStylistResponse({ message, advisorSettings, conversationMessages, productCandidates, maxRecommendations }) {
+async function getStylistResponse({
+  message,
+  advisorSettings,
+  conversationMessages,
+  productCandidates,
+  maxRecommendations,
+  shoppingIntentLikely = false,
+  catalogHasRelevantMatches = false,
+}) {
   if (!isEnabled()) throw new Error('Advisor AI is disabled or missing OPENAI_API_KEY');
 
   const controller = new AbortController();
@@ -127,6 +151,8 @@ async function getStylistResponse({ message, advisorSettings, conversationMessag
               conversationMessages,
               productCandidates,
               maxRecommendations,
+              shoppingIntentLikely,
+              catalogHasRelevantMatches,
             }),
           },
         ],

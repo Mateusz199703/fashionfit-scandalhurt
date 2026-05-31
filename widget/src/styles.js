@@ -802,7 +802,10 @@ const CSS = `
     grid-template-columns: 1fr;
   }
   .ff-chat-list {
-    max-height: 36vh;
+    max-height: 34vh;
+  }
+  .ff-advisor-card-image {
+    height: 120px;
   }
   .ff-advisor-composer {
     gap: 6px;
