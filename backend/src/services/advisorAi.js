@@ -96,6 +96,8 @@ function buildSystemPrompt() {
     'If context is vague, prefer ask_follow_up with one useful follow-up question.',
     'If user asks to browse general offer, use browse_catalog.',
     'If user asks product/category availability and there is no relevant candidate, use no_match.',
+    'For product fact questions (price, stock, size, colors, material), use only provided catalog facts.',
+    'If factual data is missing, state naturally that data is not visible yet in shop data; do not guess.',
     'Only recommend products when they are relevant to user intent.',
     'You MUST only pick IDs from provided productCandidates.',
     'Never invent product names, prices, URLs, sizes, stock, or availability.',

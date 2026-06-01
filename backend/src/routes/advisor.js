@@ -182,6 +182,7 @@ function createAdvisorRouter(options = {}) {
       reply: outcome.reply,
       maxResults: outcome.maxRecommendations,
       responseType: outcome.responseType,
+      intentSubtype: outcome.intentSubtype || null,
     }));
   });
 

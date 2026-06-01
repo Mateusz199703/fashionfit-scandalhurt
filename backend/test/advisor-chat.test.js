@@ -1,5 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const express = require('express');
+const { createAdvisorRouter } = require('../src/routes/advisor');
 
 const {
   RESPONSE_TYPES,
@@ -16,6 +18,7 @@ const config = require('../src/config');
 const CLIENT_ID = '11111111-1111-1111-1111-111111111111';
 const SHOP_A = '22222222-2222-2222-2222-222222222222';
 const SHOP_B = '33333333-3333-3333-3333-333333333333';
+const SHOP_ROUTE_VALID = '22222222-2222-4222-8222-222222222222';
 
 function buildCatalog(items) {
   return items.map((item, idx) => ({
@@ -30,6 +33,26 @@ function buildCatalog(items) {
     garment_image_url: item.garment_image_url || null,
     variants: item.variants || null,
   }));
+}
+
+async function requestAdvisorChat(router, body) {
+  const app = express();
+  app.use(express.json());
+  app.use('/api/advisor', router);
+
+  const server = await new Promise((resolve) => {
+    const instance = app.listen(0, '127.0.0.1', () => resolve(instance));
+  });
+
+  const port = server.address().port;
+  const response = await fetch(`http://127.0.0.1:${port}/api/advisor/chat`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  const payload = await response.json().catch(() => ({}));
+  await new Promise((resolve) => server.close(resolve));
+  return { status: response.status, payload };
 }
 
 test('locked module response matches contract', () => {
@@ -124,6 +147,87 @@ test('general styling advice returns advice-oriented responseType and no recomme
   assert.equal(result.recommendations.length, 0);
 });
 
+test('price question with missing price returns safe missing-data reply and no recommendations', async () => {
+  const result = await resolveAdvisorOutcome({
+    message: 'ile kosztuje ta sukienka?',
+    shopId: SHOP_A,
+    catalogProducts: buildCatalog([{ id: 'a1', name: 'Sukienka letnia' }]),
+    advisorSettings: { maxRecommendations: 3 },
+    conversationMessages: [],
+    aiClient: {
+      isEnabled: () => true,
+      getStylistResponse: async () => ({
+        responseType: 'product_explanation',
+        reply: 'Kosztuje 199 PLN.',
+        recommendedProductIds: [],
+        selectionReasons: [],
+      }),
+    },
+  });
+
+  assert.equal(result.responseType, 'product_explanation');
+  assert.equal(result.intentSubtype, 'product_price');
+  assert.equal(result.recommendations.length, 0);
+  assert.match(result.reply, /nie widzę jeszcze ceny|nie widze jeszcze ceny/i);
+});
+
+test('size question without reliable availability returns safe missing-data reply', async () => {
+  const result = await resolveAdvisorOutcome({
+    message: 'czy jest rozmiar M?',
+    shopId: SHOP_A,
+    catalogProducts: buildCatalog([{ id: 'a1', name: 'Sukienka letnia', variants: null }]),
+    advisorSettings: { maxRecommendations: 3 },
+    conversationMessages: [],
+    aiClient: {
+      isEnabled: () => false,
+      getStylistResponse: async () => ({}),
+    },
+  });
+
+  assert.equal(result.responseType, 'product_explanation');
+  assert.equal(result.intentSubtype, 'product_variant_question');
+  assert.equal(result.recommendations.length, 0);
+  assert.match(result.reply, /nie widzę jeszcze dokładnej dostępności rozmiaru m|nie widze jeszcze dokladnej dostepnosci rozmiaru m/i);
+});
+
+test('color question with missing color facts returns safe missing-data reply', async () => {
+  const result = await resolveAdvisorOutcome({
+    message: 'jakie kolory są dostępne?',
+    shopId: SHOP_A,
+    catalogProducts: buildCatalog([{ id: 'a1', name: 'Sukienka letnia', variants: { sizes: ['S', 'M'] } }]),
+    advisorSettings: { maxRecommendations: 3 },
+    conversationMessages: [],
+    aiClient: {
+      isEnabled: () => false,
+      getStylistResponse: async () => ({}),
+    },
+  });
+
+  assert.equal(result.responseType, 'product_explanation');
+  assert.equal(result.intentSubtype, 'product_attribute_question');
+  assert.equal(result.recommendations.length, 0);
+  assert.match(result.reply, /nie widzę jeszcze informacji o dostępnych kolorach|nie widze jeszcze informacji o dostepnych kolorach/i);
+});
+
+test('product explanation for summer remains stylistic without inventing material or stock', async () => {
+  const result = await resolveAdvisorOutcome({
+    message: 'czy ten produkt nada się na lato?',
+    shopId: SHOP_A,
+    catalogProducts: buildCatalog([{ id: 'a1', name: 'Sukienka midi', category: 'one-pieces' }]),
+    advisorSettings: { maxRecommendations: 3 },
+    conversationMessages: [],
+    aiClient: {
+      isEnabled: () => false,
+      getStylistResponse: async () => ({}),
+    },
+  });
+
+  assert.equal(result.responseType, 'product_explanation');
+  assert.equal(result.intentSubtype, 'product_details');
+  assert.equal(result.recommendations.length, 0);
+  assert.doesNotMatch(result.reply.toLowerCase(), /bawełna|wiskoza|100%|na stanie|dostępny magazynowo/);
+});
+
 test('color advice returns advice-only response with zero recommendations', async () => {
   const result = await resolveAdvisorOutcome({
     message: 'jakie kolory pasują do brunetek?',
@@ -203,6 +307,31 @@ test('no dresy in catalog returns no_match and no unrelated products', async () 
         reply: 'Sprawdź te propozycje.',
         recommendedProductIds: ['a1'],
         selectionReasons: [{ productId: 'a1', reason: 'Uniwersalny wybór.' }],
+      }),
+    },
+  });
+
+  assert.equal(result.responseType, 'no_match');
+  assert.equal(result.recommendations.length, 0);
+});
+
+test('black dresses query returns no_match when no reliable black match exists', async () => {
+  const result = await resolveAdvisorOutcome({
+    message: 'czy macie czarne sukienki?',
+    shopId: SHOP_A,
+    catalogProducts: buildCatalog([
+      { id: 'a1', name: 'Sukienka letnia kremowa', category: 'one-pieces' },
+      { id: 'a2', name: 'Sukienka midi beżowa', category: 'one-pieces' },
+    ]),
+    advisorSettings: { maxRecommendations: 3 },
+    conversationMessages: [],
+    aiClient: {
+      isEnabled: () => true,
+      getStylistResponse: async () => ({
+        responseType: 'recommend_products',
+        reply: 'Sprawdź te dwie propozycje.',
+        recommendedProductIds: ['a1', 'a2'],
+        selectionReasons: [],
       }),
     },
   });
@@ -375,6 +504,34 @@ test('AI unknown product IDs are rejected from recommendations', async () => {
   assert.deepEqual(result.recommendations.map((item) => item.productId), ['a1']);
 });
 
+test('fact question does not expose invented AI price/size/color/stock claims', async () => {
+  let aiCalled = false;
+  const result = await resolveAdvisorOutcome({
+    message: 'ile kosztuje ta sukienka?',
+    shopId: SHOP_A,
+    catalogProducts: buildCatalog([{ id: 'a1', name: 'Sukienka letnia' }]),
+    advisorSettings: { maxRecommendations: 3 },
+    conversationMessages: [],
+    aiClient: {
+      isEnabled: () => true,
+      getStylistResponse: async () => {
+        aiCalled = true;
+        return {
+          responseType: 'product_explanation',
+          reply: 'Cena to 129 PLN, dostępny rozmiar M i kolor czarny.',
+          recommendedProductIds: [],
+          selectionReasons: [],
+        };
+      },
+    },
+  });
+
+  assert.equal(aiCalled, false);
+  assert.equal(result.responseType, 'product_explanation');
+  assert.equal(result.recommendations.length, 0);
+  assert.match(result.reply, /nie widzę jeszcze ceny|nie widze jeszcze ceny/i);
+});
+
 test('OpenAI unavailable fallback remains fail-closed with safe response types', async () => {
   const originalAdvisorAiConfig = { ...config.advisorAi };
   config.advisorAi.enabled = true;
@@ -432,4 +589,86 @@ test('buildSuccessResponse includes stable responseType in meta', () => {
   assert.equal(response.meta.module, 'ai_stylist_advisor');
   assert.equal(response.meta.responseType, 'answer_only');
   assert.ok(RESPONSE_TYPES.includes(response.meta.responseType));
+});
+
+test('advisor route response includes meta.intentSubtype=product_price for missing price question', async () => {
+  const catalog = buildCatalog([{ id: 'a1', name: 'Sukienka letnia' }]);
+  const router = createAdvisorRouter({
+    authMiddleware: (req, res, next) => {
+      req.clientId = CLIENT_ID;
+      req.client = { id: CLIENT_ID, plan: 'GROWTH' };
+      next();
+    },
+    useMockBackend: true,
+    getMockShopFn: (shopId, clientId) => (String(shopId) === String(SHOP_ROUTE_VALID) && String(clientId) === String(CLIENT_ID)
+      ? { id: SHOP_ROUTE_VALID, client_id: CLIENT_ID, widget_config: {} }
+      : null),
+    listMockProductsFn: (shopId, clientId) => (String(shopId) === String(SHOP_ROUTE_VALID) && String(clientId) === String(CLIENT_ID)
+      ? catalog
+      : null),
+    getModuleAccessSnapshotFn: async () => ({ modules: [{ key: 'ai_stylist_advisor', enabled: true }] }),
+    isModuleEnabledFn: () => true,
+    mockState: { conversations: new Map(), messages: [] },
+    aiClient: {
+      isEnabled: () => true,
+      getStylistResponse: async () => ({
+        responseType: 'product_explanation',
+        reply: 'Cena to 199 PLN.',
+        recommendedProductIds: [],
+        selectionReasons: [],
+      }),
+    },
+  });
+
+  const result = await requestAdvisorChat(router, {
+    shopId: SHOP_ROUTE_VALID,
+    message: 'ile kosztuje ta sukienka?',
+  });
+
+  assert.equal(result.status, 200);
+  assert.equal(result.payload.meta.responseType, 'product_explanation');
+  assert.equal(result.payload.meta.intentSubtype, 'product_price');
+  assert.equal(Array.isArray(result.payload.recommendations), true);
+  assert.equal(result.payload.recommendations.length, 0);
+});
+
+test('advisor route response includes meta.intentSubtype=product_variant_question for size question', async () => {
+  const catalog = buildCatalog([{ id: 'a1', name: 'Sukienka letnia', variants: null }]);
+  const router = createAdvisorRouter({
+    authMiddleware: (req, res, next) => {
+      req.clientId = CLIENT_ID;
+      req.client = { id: CLIENT_ID, plan: 'GROWTH' };
+      next();
+    },
+    useMockBackend: true,
+    getMockShopFn: (shopId, clientId) => (String(shopId) === String(SHOP_ROUTE_VALID) && String(clientId) === String(CLIENT_ID)
+      ? { id: SHOP_ROUTE_VALID, client_id: CLIENT_ID, widget_config: {} }
+      : null),
+    listMockProductsFn: (shopId, clientId) => (String(shopId) === String(SHOP_ROUTE_VALID) && String(clientId) === String(CLIENT_ID)
+      ? catalog
+      : null),
+    getModuleAccessSnapshotFn: async () => ({ modules: [{ key: 'ai_stylist_advisor', enabled: true }] }),
+    isModuleEnabledFn: () => true,
+    mockState: { conversations: new Map(), messages: [] },
+    aiClient: {
+      isEnabled: () => true,
+      getStylistResponse: async () => ({
+        responseType: 'product_explanation',
+        reply: 'Rozmiar M jest dostępny.',
+        recommendedProductIds: [],
+        selectionReasons: [],
+      }),
+    },
+  });
+
+  const result = await requestAdvisorChat(router, {
+    shopId: SHOP_ROUTE_VALID,
+    message: 'czy jest rozmiar M?',
+  });
+
+  assert.equal(result.status, 200);
+  assert.equal(result.payload.meta.responseType, 'product_explanation');
+  assert.equal(result.payload.meta.intentSubtype, 'product_variant_question');
+  assert.equal(Array.isArray(result.payload.recommendations), true);
+  assert.equal(result.payload.recommendations.length, 0);
 });
