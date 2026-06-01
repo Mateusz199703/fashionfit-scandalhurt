@@ -6,20 +6,63 @@
 
 @layer base {
   :root {
-    --ff-bg-a: #08080f;
-    --ff-bg-b: #050507;
-    --ff-text: #ffffff;
-    --ff-muted: rgba(255, 255, 255, 0.62);
+    --accent: #7b61ff;
+    --accent2: #4f46e5;
+    --violet: #8b5cff;
+    --orange: #ffb15c;
+    --green: #3ecf8e;
+    --rose: #fb7185;
+    --bg: #0b0b0f;
+    --bg-deep: #070709;
+    --panel: #111118;
+    --panel-2: #16161f;
+    --surface: rgba(255, 255, 255, 0.04);
+    --surface-2: rgba(255, 255, 255, 0.07);
+    --glass: rgba(20, 20, 28, 0.6);
+    --text: #ffffff;
+    --text-dim: rgba(255, 255, 255, 0.62);
+    --text-faint: rgba(255, 255, 255, 0.42);
+    --border: rgba(255, 255, 255, 0.11);
+    --border-strong: rgba(255, 255, 255, 0.2);
+    --glow: rgba(123, 97, 255, 0.45);
+    --grid: rgba(255, 255, 255, 0.04);
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
+
+    /* Backward compatibility for existing ff-* classes/components. */
+    --ff-bg-a: var(--bg);
+    --ff-bg-b: var(--bg-deep);
+    --ff-text: var(--text);
+    --ff-muted: var(--text-dim);
     --ff-card: rgba(255, 255, 255, 0.9);
     --ff-card-strong: rgba(255, 255, 255, 0.95);
-    --ff-border: rgba(255, 255, 255, 0.2);
-    --ff-border-strong: rgba(255, 255, 255, 0.32);
-    --ff-accent: #7b61ff;
-    --ff-accent-2: #4f46e5;
+    --ff-border: var(--border);
+    --ff-border-strong: var(--border-strong);
+    --ff-accent: var(--accent);
+    --ff-accent-2: var(--accent2);
     --ff-accent-soft: rgba(123, 97, 255, 0.3);
-    --ff-danger: #f87171;
-    --ff-success: #4ade80;
-    --ff-warning: #ffb15c;
+    --ff-danger: var(--rose);
+    --ff-success: var(--green);
+    --ff-warning: var(--orange);
+  }
+
+  [data-theme='light'] {
+    --bg: #f4f4f8;
+    --bg-deep: #ffffff;
+    --panel: #ffffff;
+    --panel-2: #fafafd;
+    --surface: rgba(11, 11, 20, 0.025);
+    --surface-2: rgba(11, 11, 20, 0.05);
+    --glass: rgba(255, 255, 255, 0.75);
+    --text: #14141c;
+    --text-dim: rgba(20, 20, 28, 0.62);
+    --text-faint: rgba(20, 20, 28, 0.46);
+    --border: rgba(20, 20, 28, 0.1);
+    --border-strong: rgba(20, 20, 28, 0.18);
+    --glow: rgba(123, 97, 255, 0.28);
+    --grid: rgba(20, 20, 28, 0.04);
+
+    --ff-card: rgba(255, 255, 255, 0.9);
+    --ff-card-strong: rgba(255, 255, 255, 0.95);
   }
 
   html,
@@ -30,7 +73,7 @@
       radial-gradient(46rem 29rem at 110% 0%, rgba(79, 70, 229, 0.2) 5%, transparent 68%),
       radial-gradient(48rem 34rem at 52% 120%, rgba(255, 177, 92, 0.09) 0%, transparent 70%),
       linear-gradient(165deg, var(--ff-bg-a), var(--ff-bg-b));
-    color: var(--ff-text);
+    color: var(--text);
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     min-height: 100%;
   }
@@ -45,12 +88,88 @@
     font-family: 'Space Grotesk', 'Inter', system-ui, -apple-system, sans-serif;
     letter-spacing: -0.02em;
   }
+
+  .ff-num,
+  .font-num,
+  .num {
+    font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+    font-variant-numeric: tabular-nums;
+  }
 }
 
 @layer components {
   .font-display {
     font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
     letter-spacing: -0.02em;
+  }
+
+  .ff-glass-panel {
+    border: 1px solid var(--border);
+    background: var(--glass);
+    backdrop-filter: blur(20px);
+    box-shadow: 0 30px 80px -40px var(--glow);
+    border-radius: 18px;
+  }
+
+  .ff-premium-card {
+    border: 1px solid var(--border);
+    background:
+      radial-gradient(34rem 18rem at 100% 0%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 72%),
+      var(--panel);
+    border-radius: 18px;
+    box-shadow:
+      0 24px 54px -34px rgba(0, 0, 0, 0.52),
+      0 14px 34px -28px var(--glow);
+  }
+
+  .ff-brand-gradient {
+    background: linear-gradient(120deg, var(--accent), var(--accent2));
+    color: #fff;
+  }
+
+  .ff-status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    border-radius: 999px;
+    border: 1px solid var(--border-strong);
+    background: var(--surface);
+    color: var(--text-dim);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    padding: 0.2rem 0.55rem;
+    text-transform: uppercase;
+  }
+
+  .ff-status-pill-success {
+    border-color: color-mix(in srgb, var(--green) 55%, transparent);
+    background: color-mix(in srgb, var(--green) 18%, transparent);
+    color: var(--green);
+  }
+
+  .ff-status-pill-warning {
+    border-color: color-mix(in srgb, var(--orange) 55%, transparent);
+    background: color-mix(in srgb, var(--orange) 18%, transparent);
+    color: var(--orange);
+  }
+
+  .ff-status-pill-danger {
+    border-color: color-mix(in srgb, var(--rose) 55%, transparent);
+    background: color-mix(in srgb, var(--rose) 18%, transparent);
+    color: var(--rose);
+  }
+
+  .ff-focus-ring:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent);
+  }
+
+  .ff-ai-core {
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border));
+    background: radial-gradient(circle at 36% 28%, #7c8bff 0%, #5b6cff 45%, #8b5cff 72%, #ffb15c 100%);
+    box-shadow: 0 10px 30px -16px var(--glow);
   }
 
   .ff-card,
