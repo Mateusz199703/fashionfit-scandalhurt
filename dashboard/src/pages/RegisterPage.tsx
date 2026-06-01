@@ -70,53 +70,59 @@ export function RegisterPage() {
           <div className="ff-auth-glow ff-auth-glow-a" />
           <div className="ff-auth-glow ff-auth-glow-b" />
 
-          <div className="ff-auth-brand">
-            <span className="ff-auth-mark">
-              <Shirt size={15} />
-            </span>
-            <span>
-              FashionFit <b>AI</b>
-            </span>
-          </div>
-
-          <div className="ff-auth-core-wrap" aria-hidden="true">
-            <div className="ff-auth-core-ring" />
-            <span className="ff-ai-core ff-auth-core" />
-          </div>
-
-          <p className="ff-auth-kicker">Studio Commerce Intelligence</p>
-          <h1 className="ff-auth-title">
-            Twój sklep dostaje
-            <br />
-            <span className="ff-auth-title-grad">osobistego stylistę AI.</span>
-          </h1>
-          <p className="ff-auth-copy">
-            Dołącz do platformy i uruchom AI Stylist oraz Virtual Try-On w kilka minut.
-          </p>
-
-          <div className="ff-auth-metrics" aria-hidden="true">
-            <div>
-              <b>+34%</b>
-              <span>wyższa konwersja</span>
-            </div>
-            <div>
-              <b>-28%</b>
-              <span>mniej zwrotów</span>
-            </div>
-            <div>
-              <b>120+</b>
-              <span>sklepów w PL</span>
-            </div>
-          </div>
-
-          <div className="ff-auth-quote">
-            <p>"Po wdrożeniu AI Stylist klientki częściej kończą zakupy całym lookiem, a nie jednym produktem."</p>
-            <div className="ff-auth-quote-byline">
-              <span className="ff-auth-quote-avatar">MK</span>
-              <span>
-                <b>Maison K</b>
-                fashion ecommerce · Kraków
+          <div className="ff-auth-hero-top">
+            <div className="ff-auth-brand">
+              <span className="ff-auth-mark">
+                <Shirt size={15} />
               </span>
+              <span>
+                FashionFit <b>AI</b>
+              </span>
+            </div>
+          </div>
+
+          <div className="ff-auth-hero-mid">
+            <div className="ff-auth-core-wrap" aria-hidden="true">
+              <div className="ff-auth-core-ring" />
+              <span className="ff-ai-core ff-auth-core" />
+            </div>
+
+            <p className="ff-auth-kicker">Studio Commerce Intelligence</p>
+            <h1 className="ff-auth-title">
+              Twój sklep dostaje
+              <br />
+              <span className="ff-auth-title-grad">osobistego stylistę AI.</span>
+            </h1>
+            <p className="ff-auth-copy">
+              Dołącz do platformy i uruchom AI Stylist oraz Virtual Try-On w kilka minut.
+            </p>
+
+            <div className="ff-auth-metrics" aria-hidden="true">
+              <div>
+                <b>+34%</b>
+                <span>wyższa konwersja</span>
+              </div>
+              <div>
+                <b>-28%</b>
+                <span>mniej zwrotów</span>
+              </div>
+              <div>
+                <b>120+</b>
+                <span>sklepów w PL</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="ff-auth-hero-bot">
+            <div className="ff-auth-quote">
+              <p>"Po wdrożeniu AI Stylist klientki częściej kończą zakupy całym lookiem, a nie jednym produktem."</p>
+              <div className="ff-auth-quote-byline">
+                <span className="ff-auth-quote-avatar">MK</span>
+                <span>
+                  <b>Maison K</b>
+                  fashion ecommerce · Kraków
+                </span>
+              </div>
             </div>
           </div>
         </aside>

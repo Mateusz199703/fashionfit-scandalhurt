@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { ArrowLeft, ArrowRight, Shirt, Eye, EyeOff, Mail, Lock, Sparkles, Sun, Moon } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Shirt, Eye, EyeOff, Mail, Lock, Sun, Moon } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 import { apiErrorMessage } from '../api/client';
 
@@ -46,53 +46,59 @@ export function LoginPage() {
           <div className="ff-auth-glow ff-auth-glow-a" />
           <div className="ff-auth-glow ff-auth-glow-b" />
 
-          <div className="ff-auth-brand">
-            <span className="ff-auth-mark">
-              <Shirt size={15} />
-            </span>
-            <span>
-              FashionFit <b>AI</b>
-            </span>
-          </div>
-
-          <div className="ff-auth-core-wrap" aria-hidden="true">
-            <div className="ff-auth-core-ring" />
-            <span className="ff-ai-core ff-auth-core" />
-          </div>
-
-          <p className="ff-auth-kicker">Studio Commerce Intelligence</p>
-          <h1 className="ff-auth-title">
-            Twój sklep dostaje
-            <br />
-            <span className="ff-auth-title-grad">osobistego stylistę AI.</span>
-          </h1>
-          <p className="ff-auth-copy">
-            Zaloguj się do Studio i zobacz, jak FashionFit AI podnosi konwersję, dobiera rozmiary i prowadzi klienta do zakupu.
-          </p>
-
-          <div className="ff-auth-metrics" aria-hidden="true">
-            <div>
-              <b>+34%</b>
-              <span>wyższa konwersja</span>
-            </div>
-            <div>
-              <b>-28%</b>
-              <span>mniej zwrotów</span>
-            </div>
-            <div>
-              <b>120+</b>
-              <span>sklepów w PL</span>
-            </div>
-          </div>
-
-          <div className="ff-auth-quote">
-            <p>"Wdrożenie zajęło 5 minut. Po miesiącu konwersja w kategorii sukienek wzrosła o jedną trzecią."</p>
-            <div className="ff-auth-quote-byline">
-              <span className="ff-auth-quote-avatar">AN</span>
-              <span>
-                <b>Atelier Nord</b>
-                butik premium · Warszawa
+          <div className="ff-auth-hero-top">
+            <div className="ff-auth-brand">
+              <span className="ff-auth-mark">
+                <Shirt size={15} />
               </span>
+              <span>
+                FashionFit <b>AI</b>
+              </span>
+            </div>
+          </div>
+
+          <div className="ff-auth-hero-mid">
+            <div className="ff-auth-core-wrap" aria-hidden="true">
+              <div className="ff-auth-core-ring" />
+              <span className="ff-ai-core ff-auth-core" />
+            </div>
+
+            <p className="ff-auth-kicker">Studio Commerce Intelligence</p>
+            <h1 className="ff-auth-title">
+              Twój sklep dostaje
+              <br />
+              <span className="ff-auth-title-grad">osobistego stylistę AI.</span>
+            </h1>
+            <p className="ff-auth-copy">
+              Zaloguj się do Studio i zobacz, jak FashionFit AI podnosi konwersję, dobiera rozmiary i prowadzi klienta do zakupu.
+            </p>
+
+            <div className="ff-auth-metrics" aria-hidden="true">
+              <div>
+                <b>+34%</b>
+                <span>wyższa konwersja</span>
+              </div>
+              <div>
+                <b>-28%</b>
+                <span>mniej zwrotów</span>
+              </div>
+              <div>
+                <b>120+</b>
+                <span>sklepów w PL</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="ff-auth-hero-bot">
+            <div className="ff-auth-quote">
+              <p>"Wdrożenie zajęło 5 minut. Po miesiącu konwersja w kategorii sukienek wzrosła o jedną trzecią."</p>
+              <div className="ff-auth-quote-byline">
+                <span className="ff-auth-quote-avatar">AN</span>
+                <span>
+                  <b>Atelier Nord</b>
+                  butik premium · Warszawa
+                </span>
+              </div>
             </div>
           </div>
         </aside>
@@ -195,10 +201,7 @@ export function LoginPage() {
               Nie masz konta? <Link to="/register">Zarejestruj się</Link>
             </p>
 
-            <p className="ff-auth-legal-note">
-              <Sparkles size={12} />
-              Logowanie zabezpieczone. Dane przetwarzamy zgodnie z RODO.
-            </p>
+            <p className="ff-auth-legal-note">Logowanie zabezpieczone. Dane przetwarzamy zgodnie z RODO.</p>
           </div>
         </section>
       </div>
