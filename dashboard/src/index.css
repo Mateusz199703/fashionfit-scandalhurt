@@ -257,19 +257,6 @@
       linear-gradient(180deg, var(--studio-bg) 0%, var(--studio-bg-deep) 65%, #ffffff 100%);
   }
 
-  .ff-studio-shell[data-dashboard-theme='dark'] {
-    --studio-bg: #0b0b0f;
-    --studio-bg-deep: #070709;
-    --studio-panel: #111118;
-    --studio-surface: rgba(255, 255, 255, 0.05);
-    --studio-surface-2: rgba(255, 255, 255, 0.08);
-    --studio-border: rgba(255, 255, 255, 0.1);
-    --studio-border-strong: rgba(255, 255, 255, 0.2);
-    --studio-text: #ffffff;
-    --studio-text-dim: rgba(255, 255, 255, 0.65);
-    --studio-text-faint: rgba(255, 255, 255, 0.45);
-  }
-
   .ff-studio-appbar {
     position: sticky;
     top: 0;
@@ -384,24 +371,6 @@
     text-overflow: ellipsis;
     font-size: 0.7rem;
     color: var(--studio-text-faint);
-  }
-
-  .ff-studio-theme-toggle {
-    width: 2rem;
-    height: 2rem;
-    border-radius: 999px;
-    border: 1px solid var(--studio-border-strong);
-    background: var(--studio-surface);
-    color: var(--studio-text-dim);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.22s var(--ease);
-  }
-
-  .ff-studio-theme-toggle:hover {
-    color: var(--accent);
-    border-color: color-mix(in srgb, var(--accent) 55%, transparent);
   }
 
   .ff-studio-logout {
@@ -532,6 +501,18 @@
     box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 52%, transparent);
   }
 
+  .ff-studio-side .ff-nav-link .badge {
+    margin-left: auto;
+    border-radius: 999px;
+    background: linear-gradient(120deg, var(--accent), var(--accent2));
+    color: #fff;
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    padding: 0.15rem 0.42rem;
+    text-transform: uppercase;
+  }
+
   .ff-studio-planbox {
     margin-top: auto;
     border: 1px solid var(--studio-border);
@@ -542,6 +523,15 @@
 
   .ff-studio-planmeta {
     margin-bottom: 0.55rem;
+  }
+
+  .ff-studio-planmeta b {
+    display: block;
+    font-family: 'Space Grotesk', 'Inter', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--studio-text);
+    line-height: 1.15;
   }
 
   .ff-studio-planname {
@@ -613,16 +603,6 @@
     box-shadow: 0 10px 22px -14px var(--glow);
   }
 
-  .ff-main-wrap {
-    border-radius: 26px;
-    border: 1px solid color-mix(in srgb, var(--studio-border) 88%, transparent);
-    background:
-      radial-gradient(34rem 22rem at 100% 0%, rgba(123, 97, 255, 0.08) 0%, transparent 68%),
-      rgba(255, 255, 255, 0.96);
-    box-shadow: 0 26px 54px -42px rgba(40, 35, 62, 0.28);
-    backdrop-filter: blur(16px);
-    padding: clamp(0.95rem, 2vw, 1.5rem);
-  }
 
   .ff-nav-link {
     @apply flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all;
@@ -1846,10 +1826,6 @@
     margin-bottom: 0.8rem;
   }
 
-  .ff-main-wrap {
-    border-radius: 18px;
-    padding: 0.85rem;
-  }
 }
 
 @media (min-width: 1025px) {

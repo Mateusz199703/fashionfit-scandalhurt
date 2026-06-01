@@ -5,10 +5,10 @@ import { useAuth } from '../auth/AuthContext';
 import { PlanBadge } from './ui';
 
 const NAV = [
-  { to: '/dashboard', label: 'Pulpit', icon: LayoutDashboard, group: 'Studio' },
-  { to: '/shops', label: 'Agent mody', icon: Store, group: 'Studio' },
-  { to: '/billing', label: 'Przymierzalnia', icon: CreditCard, group: 'Studio' },
-  { to: '/settings', label: 'System wizualny', icon: Settings, group: 'Ustawienia' },
+  { to: '/dashboard', label: 'Pulpit', icon: LayoutDashboard, group: 'Wzrost' },
+  { to: '/shops', label: 'Sklepy', icon: Store, group: 'Wzrost' },
+  { to: '/billing', label: 'Billing', icon: CreditCard, group: 'Wzrost' },
+  { to: '/settings', label: 'Ustawienia', icon: Settings, group: 'Studio' },
 ];
 
 export function Layout() {
@@ -25,21 +25,21 @@ export function Layout() {
     .slice(0, 2)
     .map((chunk) => chunk[0]?.toUpperCase() || '')
     .join('') || 'FF';
-  const navGroups = ['Studio', 'Ustawienia'] as const;
+  const navGroups = ['Wzrost', 'Studio'] as const;
 
   return (
-    <div className="ff-app-shell ff-studio-shell min-h-screen pb-24 md:pb-0">
+    <div className="ff-studio-shell min-h-screen pb-20 md:pb-0">
       <header className="ff-studio-appbar">
         <div className="ff-studio-brand">
           <span className="ff-studio-brand-core" aria-hidden="true">
-            <Shirt size={16} />
+            <Shirt size={15} />
           </span>
-          <div>
+          <span>
             <strong>
               FashionFit <span>AI</span>
             </strong>
             <small>Studio</small>
-          </div>
+          </span>
         </div>
 
         <nav className="ff-studio-tabs" aria-label="Nawigacja Studio">
@@ -63,8 +63,8 @@ export function Layout() {
               <span>{client.email}</span>
             </div>
           )}
-          <button onClick={handleLogout} className="ff-btn-secondary ff-studio-logout" type="button">
-            <LogOut size={15} />
+          <button onClick={handleLogout} className="ff-btn ff-studio-logout" type="button" aria-label="Wyloguj">
+            <LogOut size={16} />
             <span>Wyloguj</span>
           </button>
         </div>
@@ -74,9 +74,11 @@ export function Layout() {
         <aside className="ff-studio-side">
           <button type="button" className="ff-studio-store">
             <span className="ff-studio-store-avatar">{storeInitials}</span>
-            <span className="ff-studio-store-meta">
-              <b>{client?.name || 'FashionFit Store'}</b>
-              <span>{client?.email || 'Sklep aktywny'}</span>
+            <span>
+              <span className="ff-studio-store-meta">
+                <b>{client?.name || 'FashionFit Store'}</b>
+                <span>{client?.email || 'Sklep aktywny'}</span>
+              </span>
             </span>
           </button>
 
@@ -94,6 +96,7 @@ export function Layout() {
                   >
                     <Icon size={17} />
                     <span>{label}</span>
+                    {label === 'Sklepy' ? <span className="badge">AI</span> : null}
                   </NavLink>
                 ))}
               </div>
@@ -102,22 +105,24 @@ export function Layout() {
 
           <div className="ff-studio-planbox">
             {client && (
-              <div className="ff-studio-planmeta">
-                <div className="ff-studio-planname">Plan i limity</div>
+              <>
+                <div className="ff-studio-planmeta">
+                  <b>Plan aktywny</b>
+                  <p className="ff-studio-planname">Twoje centrum FashionFit Studio</p>
+                </div>
                 <div className="ff-studio-planbadge">
                   <PlanBadge plan={client.plan} />
                 </div>
-              </div>
+              </>
             )}
-            <button onClick={handleLogout} className="ff-btn-secondary ff-studio-planlogout" type="button">
-              <LogOut size={16} />
+            <button onClick={handleLogout} className="ff-btn ff-studio-planlogout" type="button">
               Wyloguj
             </button>
           </div>
         </aside>
 
         <main className="ff-studio-main">
-          <div className="ff-main-wrap ff-studio-main-wrap">
+          <div className="ff-studio-main-wrap">
             <Outlet />
           </div>
         </main>

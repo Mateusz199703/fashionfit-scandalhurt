@@ -259,7 +259,7 @@ export function DashboardPage() {
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.55fr_1fr]">
         <Card className="ff-dash-card p-5">
           <div className="ff-dash-card-head">
-            <h2 className="ff-section-title">Konwersja vs aktywność zakupowa</h2>
+            <h2 className="ff-section-title">Konwersja vs zwroty</h2>
             <span>Ostatnie 14 dni</span>
           </div>
           {loading || !polylineA || !polylineB ? (
@@ -322,7 +322,7 @@ export function DashboardPage() {
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.7fr_1fr]">
         <Card className="ff-dash-card p-4">
           <div className="ff-dash-card-head px-1 pb-2">
-            <h2 className="ff-section-title">Ostatnia aktywność</h2>
+            <h2 className="ff-section-title">Przegląd sklepów</h2>
             <span>{loading ? 'Ładowanie...' : `${stats.length} sklepów`}</span>
           </div>
           {loading ? (
