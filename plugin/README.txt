@@ -5,7 +5,7 @@ Requires at least: 5.8
 Tested up to: 6.5
 Requires PHP: 7.4
 WC requires at least: 6.0
-Stable tag: 1.1.0
+Stable tag: 1.2.0
 License: Proprietary
 
 Wirtualna przymierzalnia dla Twojego sklepu WooCommerce.
@@ -49,6 +49,9 @@ W ustawieniach wtyczki (menu FashionFit) wpisz adres w polu `API URL`.
 Alternatywnie możesz zdefiniować stałą `FASHIONFIT_API_URL` w pliku `wp-config.php`.
 
 == Changelog ==
+
+= 1.2.0 =
+* Rich product facts sync for AI Stylist: prices, stock, attributes, variants and product details.
 
 = 1.1.0 =
 * M6: Widget script loading expanded to all storefront frontend pages (excluding wp-admin/AJAX).
