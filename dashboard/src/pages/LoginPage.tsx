@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { ArrowRight, Shirt, Eye, EyeOff, Mail, Lock, Sparkles } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Shirt, Eye, EyeOff, Mail, Lock, Sparkles, Sun, Moon } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 import { apiErrorMessage } from '../api/client';
 
@@ -13,6 +13,7 @@ export function LoginPage() {
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const [submitting, setSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
   const validate = () => {
     const next: typeof errors = {};
@@ -38,8 +39,8 @@ export function LoginPage() {
   };
 
   return (
-    <div className="ff-auth-shell">
-      <div className="ff-auth-grid">
+    <div className="ff-auth-shell" data-auth-theme={theme}>
+      <div className="ff-auth-layout">
         <aside className="ff-auth-hero">
           <div className="ff-auth-grid-layer" />
           <div className="ff-auth-glow ff-auth-glow-a" />
@@ -47,9 +48,11 @@ export function LoginPage() {
 
           <div className="ff-auth-brand">
             <span className="ff-auth-mark">
-              <Shirt size={16} />
+              <Shirt size={15} />
             </span>
-            <span>FashionFit AI Studio</span>
+            <span>
+              FashionFit <b>AI</b>
+            </span>
           </div>
 
           <div className="ff-auth-core-wrap" aria-hidden="true">
@@ -57,19 +60,17 @@ export function LoginPage() {
             <span className="ff-ai-core ff-auth-core" />
           </div>
 
-          <p className="ff-auth-kicker">Luxury Commerce Intelligence</p>
+          <p className="ff-auth-kicker">Studio Commerce Intelligence</p>
           <h1 className="ff-auth-title">
             Twój sklep dostaje
             <br />
-            osobistego
-            <br />
-            stylistę AI.
+            <span className="ff-auth-title-grad">osobistego stylistę AI.</span>
           </h1>
           <p className="ff-auth-copy">
-            Zaloguj się do Studio i zarządzaj rozmowami, rekomendacjami oraz konwersją w czasie rzeczywistym.
+            Zaloguj się do Studio i zobacz, jak FashionFit AI podnosi konwersję, dobiera rozmiary i prowadzi klienta do zakupu.
           </p>
 
-          <div className="ff-auth-metrics">
+          <div className="ff-auth-metrics" aria-hidden="true">
             <div>
               <b>+34%</b>
               <span>wyższa konwersja</span>
@@ -85,9 +86,7 @@ export function LoginPage() {
           </div>
 
           <div className="ff-auth-quote">
-            <p>
-              "Wdrożenie zajęło 5 minut. Po miesiącu konwersja w kategorii sukienek wzrosła o jedną trzecią."
-            </p>
+            <p>"Wdrożenie zajęło 5 minut. Po miesiącu konwersja w kategorii sukienek wzrosła o jedną trzecią."</p>
             <div className="ff-auth-quote-byline">
               <span className="ff-auth-quote-avatar">AN</span>
               <span>
@@ -99,89 +98,108 @@ export function LoginPage() {
         </aside>
 
         <section className="ff-auth-panel">
+          <div className="ff-auth-topbar">
+            <Link to="/" className="ff-auth-back-link">
+              <ArrowLeft size={14} />
+              <span>Wróć</span>
+            </Link>
+            <button
+              type="button"
+              className="ff-auth-theme-toggle ff-focus-ring"
+              onClick={() => setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))}
+              aria-label={theme === 'light' ? 'Przełącz na tryb ciemny' : 'Przełącz na tryb jasny'}
+            >
+              {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
+            </button>
+          </div>
+
           <div className="ff-auth-mobile-brand">
             <span className="ff-auth-mark">
-              <Shirt size={16} />
+              <Shirt size={15} />
             </span>
-            <span>FashionFit AI</span>
-          </div>
-
-          <div className="ff-auth-switch" role="tablist" aria-label="Tryb logowania">
-            <span className="ff-auth-switch-item ff-auth-switch-item-active" role="tab" aria-selected="true">
-              Logowanie
+            <span>
+              FashionFit <b>AI</b>
             </span>
-            <Link to="/register" className="ff-auth-switch-item" role="tab" aria-selected="false">
-              Rejestracja
-            </Link>
           </div>
 
-          <div className="mb-7">
-            <p className="ff-auth-panel-kicker">Panel Klienta</p>
-            <h2 className="ff-auth-panel-title">Witaj ponownie</h2>
-            <p className="ff-auth-panel-copy">Zaloguj się i wróć do zarządzania sprzedażą.</p>
-          </div>
+          <div className="ff-auth-form-wrap">
+            <nav className="ff-auth-switch" aria-label="Nawigacja logowanie/rejestracja">
+              <span className="ff-auth-switch-item ff-auth-switch-item-active">Logowanie</span>
+              <Link to="/register" className="ff-auth-switch-item">Rejestracja</Link>
+            </nav>
 
-          <form onSubmit={handleSubmit} className="space-y-4 ff-auth-form" noValidate>
-            <div className={errors.email ? 'ff-auth-field ff-auth-field-error' : 'ff-auth-field'}>
-              <label className="ff-label" htmlFor="email">E-mail</label>
-              <div className="ff-auth-input-wrap">
-                <span className="ff-auth-input-lead" aria-hidden="true">
-                  <Mail size={16} />
-                </span>
-                <input
-                  id="email"
-                  type="email"
-                  className="ff-input"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="twoj@sklep.pl"
-                />
-              </div>
-              {errors.email && <p className="ff-auth-error-text">{errors.email}</p>}
+            <div className="ff-auth-heading">
+              <h2 className="ff-auth-panel-title">Witaj ponownie</h2>
+              <p className="ff-auth-panel-copy">Zaloguj się do FashionFit Studio.</p>
             </div>
 
-            <div className={errors.password ? 'ff-auth-field ff-auth-field-error' : 'ff-auth-field'}>
-              <label className="ff-label" htmlFor="password">Hasło</label>
-              <div className="relative ff-auth-input-wrap">
-                <span className="ff-auth-input-lead" aria-hidden="true">
-                  <Lock size={16} />
-                </span>
-                <input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  className="ff-input pr-11"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Wpisz hasło"
-                />
-                <button
-                  type="button"
-                  className="ff-auth-password-toggle"
-                  onClick={() => setShowPassword((s) => !s)}
-                  aria-label={showPassword ? 'Ukryj hasło' : 'Pokaż hasło'}
-                >
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-              </div>
-              {errors.password && <p className="ff-auth-error-text">{errors.password}</p>}
-            </div>
-
-            <p className="ff-auth-hint">Dla bezpieczeństwa używaj hasła minimum 8 znaków.</p>
-            <button type="submit" className="ff-btn-primary ff-auth-submit" disabled={submitting}>
-              {submitting ? 'Logowanie...' : 'Zaloguj się'}
-              {!submitting && <ArrowRight size={16} />}
+            <button type="button" className="ff-auth-sso-button ff-focus-ring" disabled aria-disabled="true">
+              <span className="ff-auth-google-dot" aria-hidden="true" />
+              Logowanie Google wkrótce
             </button>
-          </form>
 
-          <div className="ff-auth-trust">
-            <Sparkles size={13} />
-            <span>Twoje dane są bezpieczne. Logowanie zgodne z RODO.</span>
+            <div className="ff-auth-divider">lub e-mail</div>
+
+            <form onSubmit={handleSubmit} className="ff-auth-form" noValidate>
+              <div className={errors.email ? 'ff-auth-field ff-auth-field-error' : 'ff-auth-field'}>
+                <label className="ff-label" htmlFor="email">E-mail</label>
+                <div className="ff-auth-input-wrap">
+                  <span className="ff-auth-input-lead" aria-hidden="true">
+                    <Mail size={16} />
+                  </span>
+                  <input
+                    id="email"
+                    type="email"
+                    className="ff-input"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="twoj@sklep.pl"
+                  />
+                </div>
+                {errors.email && <p className="ff-auth-error-text">{errors.email}</p>}
+              </div>
+
+              <div className={errors.password ? 'ff-auth-field ff-auth-field-error' : 'ff-auth-field'}>
+                <label className="ff-label" htmlFor="password">Hasło</label>
+                <div className="ff-auth-input-wrap">
+                  <span className="ff-auth-input-lead" aria-hidden="true">
+                    <Lock size={16} />
+                  </span>
+                  <input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    className="ff-input"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Wpisz hasło"
+                  />
+                  <button
+                    type="button"
+                    className="ff-auth-password-toggle ff-focus-ring"
+                    onClick={() => setShowPassword((s) => !s)}
+                    aria-label={showPassword ? 'Ukryj hasło' : 'Pokaż hasło'}
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+                {errors.password && <p className="ff-auth-error-text">{errors.password}</p>}
+              </div>
+
+              <button type="submit" className="ff-btn-primary ff-auth-submit" disabled={submitting}>
+                {submitting ? 'Logowanie...' : 'Zaloguj się'}
+                {!submitting && <ArrowRight size={16} />}
+              </button>
+            </form>
+
+            <p className="ff-auth-alt-link">
+              Nie masz konta? <Link to="/register">Zarejestruj się</Link>
+            </p>
+
+            <p className="ff-auth-legal-note">
+              <Sparkles size={12} />
+              Logowanie zabezpieczone. Dane przetwarzamy zgodnie z RODO.
+            </p>
           </div>
-
-          <p className="ff-auth-alt-link">
-            Nie masz konta?{' '}
-            <Link to="/register">Zarejestruj się</Link>
-          </p>
         </section>
       </div>
     </div>
