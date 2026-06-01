@@ -78,6 +78,7 @@ const SIDE_ITEMS: SideItem[] = [
   { type: 'route', label: 'Rekomendacje', to: '/recommendations', icon: sideIcon.star },
   { type: 'route', label: 'Dopasowanie rozmiaru', to: '/size-fit', icon: sideIcon.size },
   { type: 'route', label: 'Katalog', to: '/catalog', icon: sideIcon.catalog, badge: '1 240', badgeSoft: true },
+  { type: 'route', label: 'Sklepy', to: '/shops', icon: sideIcon.catalog },
   { type: 'route', label: 'Przymierzalnia', to: '/try-on', icon: sideIcon.tryon },
   { type: 'group', label: 'Wzrost' },
   { type: 'route', label: 'Klienci', to: '/customers', icon: sideIcon.customers },

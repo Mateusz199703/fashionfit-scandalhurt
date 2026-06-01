@@ -320,41 +320,43 @@ export function DashboardPage() {
             <h3>Ostatnie rozmowy z AI stylistą</h3>
             <span className="tag">demo</span>
           </div>
-          <table className="tbl">
-            <thead>
-              <tr>
-                <th>Klient</th>
-                <th>Zapytanie</th>
-                <th>Rozmiar</th>
-                <th>Status</th>
-                <th style={{ textAlign: 'right' }}>Wartość</th>
-              </tr>
-            </thead>
-            <tbody>
-              {demoConversations.map((row) => (
-                <tr key={`${row.initials}-${row.name}`}>
-                  <td>
-                    <div className="cust">
-                      <span className="ca">{row.initials}</span>
-                      <div>
-                        <b>{row.name}</b>
-                        <span>{row.ago}</span>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="q-txt">{row.query}</td>
-                  <td><span className="szbadge">{row.size}</span></td>
-                  <td>
-                    <span className={`pill ${row.statusClass}`}>
-                      {row.statusClass === 'buy' ? <span className="dot-live" /> : null}
-                      {row.status}
-                    </span>
-                  </td>
-                  <td style={{ textAlign: 'right' }}><span className="val">{row.value}</span></td>
+          <div className="table-scroll">
+            <table className="tbl">
+              <thead>
+                <tr>
+                  <th>Klient</th>
+                  <th>Zapytanie</th>
+                  <th>Rozmiar</th>
+                  <th>Status</th>
+                  <th style={{ textAlign: 'right' }}>Wartość</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {demoConversations.map((row) => (
+                  <tr key={`${row.initials}-${row.name}`}>
+                    <td>
+                      <div className="cust">
+                        <span className="ca">{row.initials}</span>
+                        <div>
+                          <b>{row.name}</b>
+                          <span>{row.ago}</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="q-txt">{row.query}</td>
+                    <td><span className="szbadge">{row.size}</span></td>
+                    <td>
+                      <span className={`pill ${row.statusClass}`}>
+                        {row.statusClass === 'buy' ? <span className="dot-live" /> : null}
+                        {row.status}
+                      </span>
+                    </td>
+                    <td style={{ textAlign: 'right' }}><span className="val">{row.value}</span></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
           <div className="table-note">Dane demonstracyjne układu tabeli (nie jest to feed live).</div>
         </div>
 

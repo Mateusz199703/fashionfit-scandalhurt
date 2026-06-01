@@ -2016,6 +2016,8 @@
 .ff-dashboard-ref .tbl th{text-align:left;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-faint);font-weight:600;padding:0 12px 12px}
 .ff-dashboard-ref .tbl td{padding:13px 12px;border-top:1px solid var(--border);font-size:13px;vertical-align:middle}
 .ff-dashboard-ref .tbl tr:hover td{background:var(--surface)}
+.ff-dashboard-ref .table-scroll{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch}
+.ff-dashboard-ref .table-scroll .tbl{min-width:680px}
 .ff-dashboard-ref .cust{display:flex;align-items:center;gap:10px}
 .ff-dashboard-ref .cust .ca{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;color:#fff;background:linear-gradient(120deg,var(--accent),var(--accent2));font-family:'Space Grotesk'}
 .ff-dashboard-ref .cust b{font-size:13px;font-family:'Space Grotesk';font-weight:500;display:block;color: var(--text)}
@@ -2065,10 +2067,12 @@
 }
 
 @media (max-width: 720px) {
-  .ff-dashboard-ref .appbar { padding: 10px 12px; gap: 10px; }
+  .ff-dashboard-ref .appbar { padding: 10px 12px; gap: 10px; flex-wrap: wrap; }
   .ff-dashboard-ref .brand { font-size: 15px; }
   .ff-dashboard-ref .brand small,
   .ff-dashboard-ref .bar-user { display: none; }
+  .ff-dashboard-ref .tabs { order: 3; width: 100%; margin: 2px 0 0; justify-content: flex-start; overflow-x: auto; }
+  .ff-dashboard-ref .tab { flex: 0 0 auto; }
   .ff-dashboard-ref .pagehead h1 { font-size: 22px; }
   .ff-dashboard-ref .pagehead .right { width: 100%; margin-left: 0; }
   .ff-dashboard-ref .search { flex: 1; min-width: 0; }
