@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="pl" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FashionFit AI — Logowanie / Rejestracja</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --accent:#7B61FF;--accent2:#4F46E5;--violet:#8B5CFF;--orange:#FFB15C;
+  --green:#3ECF8E;--ease:cubic-bezier(.16,1,.3,1);
+}
+[data-theme="dark"]{
+  --bg:#0B0B0F;--bg-deep:#070709;--panel:#111118;--panel-2:#16161F;
+  --surface:rgba(255,255,255,.04);--surface-2:rgba(255,255,255,.07);
+  --glass:rgba(20,20,28,.6);--text:#FFF;--text-dim:rgba(255,255,255,.6);
+  --text-faint:rgba(255,255,255,.42);--border:rgba(255,255,255,.09);
+  --border-strong:rgba(255,255,255,.16);--glow:rgba(123,97,255,.45);--grid:rgba(255,255,255,.04);
+}
+[data-theme="light"]{
+  --bg:#F4F4F8;--bg-deep:#FFF;--panel:#FFF;--panel-2:#FAFAFD;
+  --surface:rgba(11,11,20,.025);--surface-2:rgba(11,11,20,.05);
+  --glass:rgba(255,255,255,.75);--text:#14141C;--text-dim:rgba(20,20,28,.62);
+  --text-faint:rgba(20,20,28,.46);--border:rgba(20,20,28,.1);
+  --border-strong:rgba(20,20,28,.18);--glow:rgba(123,97,255,.28);--grid:rgba(20,20,28,.04);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{-webkit-font-smoothing:antialiased}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;
+  transition:background .5s var(--ease),color .5s var(--ease);min-height:100vh;overflow-x:hidden}
+h1,h2,h3,h4{font-family:'Space Grotesk',sans-serif;letter-spacing:-.02em;font-weight:600}
+a{color:inherit;text-decoration:none}
+::selection{background:var(--accent);color:#fff}
+svg{display:block}
+input{font-family:inherit}
+
+.auth{display:grid;grid-template-columns:1.05fr .95fr;min-height:100vh}
+
+/* ============ LEWY PANEL — BRAND ============ */
+.brandside{position:relative;overflow:hidden;background:var(--bg-deep);
+  display:flex;flex-direction:column;justify-content:space-between;padding:46px 54px}
+.bg-grid{position:absolute;inset:0;z-index:0;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:54px 54px;mask-image:radial-gradient(ellipse 70% 60% at 40% 30%,#000,transparent 75%)}
+.glow{position:absolute;border-radius:50%;filter:blur(120px);z-index:0;pointer-events:none}
+.glow.a{top:-12%;left:-10%;width:46%;height:46%;background:radial-gradient(circle,var(--accent),transparent 70%);opacity:.55;animation:drift 24s ease-in-out infinite}
+.glow.b{bottom:-14%;right:-8%;width:42%;height:42%;background:radial-gradient(circle,var(--orange),transparent 70%);opacity:.3;animation:drift2 30s ease-in-out infinite}
+[data-theme="light"] .glow{opacity:.22}
+@keyframes drift{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(6%,7%) scale(1.12)}}
+@keyframes drift2{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-6%,-5%) scale(1.16)}}
+
+.bs-top{position:relative;z-index:2;display:flex;align-items:center;gap:11px}
+.logo{display:flex;align-items:center;gap:11px;font-family:'Space Grotesk';font-weight:600;font-size:19px}
+.logo .sp{color:var(--accent)}
+.core{position:relative;display:inline-grid;place-items:center}
+.core svg{overflow:visible}
+.core .sph{transform-origin:center;animation:spin 24s linear infinite}
+.core .frm{animation:scan 5s var(--ease) infinite;transform-origin:center}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes scan{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+
+.bs-mid{position:relative;z-index:2;max-width:440px}
+.bs-mid .hero-core{position:relative;width:96px;height:96px;margin-bottom:30px}
+.bs-mid .hero-core .ring{position:absolute;inset:-22px;border:1px solid var(--border);border-radius:50%;animation:spin 40s linear infinite}
+.bs-mid .hero-core .ring.r2{inset:-40px;border-style:dashed;animation:spin 60s linear infinite reverse}
+.bs-mid h2{font-size:clamp(28px,3.4vw,42px);line-height:1.1;margin-bottom:18px}
+.bs-mid h2 .grad{background:linear-gradient(108deg,var(--violet),var(--accent) 45%,var(--orange));
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.bs-mid p{font-size:16px;color:var(--text-dim);max-width:400px}
+
+.bs-stats{display:flex;gap:30px;margin-top:34px}
+.bs-stats .st b{font-family:'Space Grotesk';font-weight:700;font-size:30px;display:block;
+  background:linear-gradient(120deg,var(--text),var(--accent));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.bs-stats .st span{font-size:12.5px;color:var(--text-faint)}
+
+.bs-bot{position:relative;z-index:2}
+.quote{border-left:2px solid var(--accent);padding-left:18px;max-width:420px}
+.quote p{font-family:'Space Grotesk';font-size:16px;font-weight:500;line-height:1.45}
+.quote .by{margin-top:12px;display:flex;align-items:center;gap:11px}
+.quote .by .av{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--orange));
+  display:grid;place-items:center;font-family:'Space Grotesk';font-weight:700;color:#fff;font-size:14px}
+.quote .by b{font-size:13.5px;font-family:'Space Grotesk';display:block}
+.quote .by span{font-size:12px;color:var(--text-faint)}
+
+/* ============ PRAWY PANEL — FORMULARZ ============ */
+.formside{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 28px;position:relative}
+.topbar{position:absolute;top:22px;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:0 30px}
+.topbar .back{font-size:13px;color:var(--text-dim);display:flex;align-items:center;gap:7px;transition:.25s}
+.topbar .back:hover{color:var(--text)}
+.topbar .back svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2}
+.theme-tgl{width:38px;height:38px;border-radius:50%;border:1px solid var(--border-strong);background:var(--surface);
+  color:var(--text);cursor:pointer;display:grid;place-items:center;transition:.3s var(--ease)}
+.theme-tgl:hover{border-color:var(--accent);color:var(--accent)}
+.theme-tgl svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:2}
+[data-theme="dark"] .theme-tgl .sun{display:none}[data-theme="light"] .theme-tgl .moon{display:none}
+
+.formwrap{width:100%;max-width:400px}
+.mobilelogo{display:none;justify-content:center;margin-bottom:26px}
+
+/* segment przełącznik logowanie/rejestracja */
+.switch{display:flex;background:var(--surface);border:1px solid var(--border);border-radius:100px;padding:4px;margin-bottom:30px}
+.switch button{flex:1;border:none;background:none;color:var(--text-dim);font-family:'Inter';font-weight:500;font-size:14px;
+  padding:11px;border-radius:100px;cursor:pointer;transition:.3s var(--ease)}
+.switch button.on{background:linear-gradient(120deg,var(--accent),var(--accent2));color:#fff;box-shadow:0 6px 20px -8px var(--glow)}
+
+.fhead{margin-bottom:26px}
+.fhead h1{font-size:28px;margin-bottom:8px}
+.fhead p{font-size:14.5px;color:var(--text-dim)}
+
+/* SSO */
+.sso{display:flex;flex-direction:column;gap:10px;margin-bottom:22px}
+.sso button{display:flex;align-items:center;justify-content:center;gap:11px;width:100%;padding:13px;
+  border:1px solid var(--border-strong);border-radius:12px;background:var(--surface);color:var(--text);
+  font-family:'Inter';font-weight:500;font-size:14px;cursor:pointer;transition:.3s var(--ease)}
+.sso button:hover{border-color:var(--accent);background:var(--surface-2)}
+.sso button svg,.sso button img{width:19px;height:19px}
+.divider{display:flex;align-items:center;gap:14px;margin:22px 0;color:var(--text-faint);font-size:12px}
+.divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--border)}
+
+/* pola */
+.field{margin-bottom:16px}
+.field label{display:block;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--text-faint);font-weight:600;margin-bottom:7px}
+.inwrap{position:relative;display:flex;align-items:center}
+.inwrap .lead{position:absolute;left:14px;color:var(--text-faint);pointer-events:none}
+.inwrap .lead svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:2}
+.field input{width:100%;padding:13px 15px 13px 42px;border-radius:12px;border:1px solid var(--border-strong);
+  background:var(--surface);color:var(--text);font-size:14.5px;transition:.25s var(--ease)}
+.field input::placeholder{color:var(--text-faint)}
+.field input:focus{outline:none;border-color:var(--accent);background:var(--surface-2);box-shadow:0 0 0 4px var(--glow)}
+.field .toggle-pw{position:absolute;right:13px;color:var(--text-faint);cursor:pointer;background:none;border:none;padding:0}
+.field .toggle-pw svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2}
+.field .hint{font-size:11.5px;color:var(--text-faint);margin-top:6px}
+.field.err input{border-color:#FB7185;box-shadow:0 0 0 4px rgba(251,113,133,.18)}
+.field .errmsg{display:none;font-size:11.5px;color:#FB7185;margin-top:6px;align-items:center;gap:5px}
+.field.err .errmsg{display:flex}
+
+/* siła hasła */
+.pwmeter{display:flex;gap:5px;margin-top:8px}
+.pwmeter i{flex:1;height:3px;border-radius:3px;background:var(--surface-2);transition:.35s var(--ease)}
+.pwmeter.s1 i:nth-child(1){background:#FB7185}
+.pwmeter.s2 i:nth-child(-n+2){background:var(--orange)}
+.pwmeter.s3 i:nth-child(-n+3){background:#FACC15}
+.pwmeter.s4 i{background:var(--green)}
+
+.rowbetween{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}
+.check{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--text-dim);cursor:pointer;user-select:none}
+.check input{display:none}
+.check .box{width:18px;height:18px;border-radius:6px;border:1.5px solid var(--border-strong);display:grid;place-items:center;transition:.25s}
+.check input:checked+.box{background:var(--accent);border-color:var(--accent)}
+.check .box svg{width:11px;height:11px;stroke:#fff;fill:none;stroke-width:3;opacity:0;transition:.2s}
+.check input:checked+.box svg{opacity:1}
+.link{font-size:13px;color:var(--accent);font-weight:500}
+.link:hover{text-decoration:underline}
+
+.submit{width:100%;padding:15px;border:none;border-radius:100px;background:linear-gradient(120deg,var(--accent),var(--accent2));
+  color:#fff;font-family:'Inter';font-weight:600;font-size:15px;cursor:pointer;transition:.3s var(--ease);
+  display:flex;align-items:center;justify-content:center;gap:9px}
+.submit:hover{box-shadow:0 14px 34px -8px var(--glow);transform:translateY(-1px)}
+.submit svg{width:17px;height:17px;stroke:#fff;fill:none;stroke-width:2.2}
+
+.altlink{text-align:center;font-size:13.5px;color:var(--text-dim);margin-top:22px}
+.altlink a{color:var(--accent);font-weight:600}
+.legal{text-align:center;font-size:11.5px;color:var(--text-faint);margin-top:24px;line-height:1.6}
+.legal a{color:var(--text-dim);text-decoration:underline}
+
+/* stan: magic link wysłany */
+.sent{display:none;text-align:center;animation:fade .5s var(--ease)}
+.sent.show{display:block}
+.sent .env{width:84px;height:84px;margin:0 auto 24px;border-radius:24px;display:grid;place-items:center;
+  background:linear-gradient(135deg,var(--surface-2),var(--surface));border:1px solid var(--border-strong);position:relative}
+.sent .env::after{content:"";position:absolute;inset:-1px;border-radius:24px;border:1px solid var(--accent);opacity:.4;animation:ping 2.4s var(--ease) infinite}
+@keyframes ping{0%{transform:scale(1);opacity:.5}100%{transform:scale(1.18);opacity:0}}
+.sent .env svg{width:38px;height:38px;stroke:var(--accent);fill:none;stroke-width:1.8}
+.sent h1{font-size:26px;margin-bottom:12px}
+.sent p{font-size:14.5px;color:var(--text-dim);max-width:330px;margin:0 auto 8px}
+.sent p b{color:var(--text)}
+.sent .resend{margin-top:24px;font-size:13px;color:var(--text-faint)}
+.sent .resend a{color:var(--accent);font-weight:600}
+@keyframes fade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+.formstate{animation:fade .4s var(--ease)}
+
+@media(max-width:920px){
+  .auth{grid-template-columns:1fr}
+  .brandside{display:none}
+  .mobilelogo{display:flex}
+  .topbar .back{display:none}
+}
+@media(max-width:480px){
+  .formside{padding:30px 20px}
+  .topbar{padding:0 20px}
+}
+</style>
+</head>
+<body>
+<div class="auth">
+
+  <!-- ===== LEWY: BRAND ===== -->
+  <aside class="brandside">
+    <div class="bg-grid"></div>
+    <div class="glow a"></div>
+    <div class="glow b"></div>
+
+    <div class="bs-top">
+      <div class="logo">
+        <span class="core" style="width:30px;height:30px">
+          <svg viewBox="0 0 200 200" width="30" height="30">
+            <defs><radialGradient id="sph" cx="38%" cy="32%" r="80%">
+              <stop offset="0%" stop-color="#7C8BFF"/><stop offset="45%" stop-color="#5B6CFF"/>
+              <stop offset="70%" stop-color="#8B5CFF"/><stop offset="100%" stop-color="#FFB15C"/>
+            </radialGradient></defs>
+            <circle class="sph" cx="100" cy="100" r="42" fill="url(#sph)"/>
+            <g class="frm" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round">
+              <path d="M48 64 L48 48 L64 48"/><path d="M136 48 L152 48 L152 64"/>
+              <path d="M152 136 L152 152 L136 152"/><path d="M64 152 L48 152 L48 136"/>
+            </g>
+          </svg>
+        </span>
+        FashionFit <span class="sp">AI</span>
+      </div>
+    </div>
+
+    <div class="bs-mid">
+      <div class="hero-core">
+        <div class="ring"></div><div class="ring r2"></div>
+        <span class="core" style="display:block;width:96px;height:96px">
+          <svg viewBox="0 0 200 200" width="96" height="96">
+            <circle class="sph" cx="100" cy="100" r="42" fill="url(#sph)"/>
+            <g class="frm" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round">
+              <path d="M48 64 L48 48 L64 48"/><path d="M136 48 L152 48 L152 64"/>
+              <path d="M152 136 L152 152 L136 152"/><path d="M64 152 L48 152 L48 136"/>
+            </g>
+          </svg>
+        </span>
+      </div>
+      <h2>Twój sklep dostaje<br><span class="grad">osobistego stylistę AI.</span></h2>
+      <p>Zaloguj się do Studio i zobacz, jak FashionFit AI podnosi konwersję, dobiera rozmiary i buduje kompletne looki — w czasie rzeczywistym.</p>
+      <div class="bs-stats">
+        <div class="st"><b>+34%</b><span>wyższa konwersja</span></div>
+        <div class="st"><b>−28%</b><span>mniej zwrotów</span></div>
+        <div class="st"><b>120+</b><span>sklepów w PL</span></div>
+      </div>
+    </div>
+
+    <div class="bs-bot">
+      <div class="quote">
+        <p>„Wdrożenie zajęło 5 minut. Po miesiącu konwersja w kategorii sukienek wzrosła o jedną trzecią.”</p>
+        <div class="by">
+          <div class="av">AN</div>
+          <div><b>Atelier Nord</b><span>butik premium · Warszawa</span></div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ===== PRAWY: FORMULARZ ===== -->
+  <main class="formside">
+    <div class="topbar">
+      <a href="#" class="back"><svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Wróć na stronę</a>
+      <button class="theme-tgl" id="theme" aria-label="Motyw">
+        <svg class="moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+        <svg class="sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"/></svg>
+      </button>
+    </div>
+
+    <div class="formwrap">
+      <div class="mobilelogo">
+        <div class="logo">
+          <span class="core" style="width:28px;height:28px"><svg viewBox="0 0 200 200" width="28" height="28"><circle class="sph" cx="100" cy="100" r="44" fill="url(#sph)"/><g class="frm" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round"><path d="M48 64 L48 48 L64 48"/><path d="M136 48 L152 48 L152 64"/><path d="M152 136 L152 152 L136 152"/><path d="M64 152 L48 152 L48 136"/></g></svg></span>
+          FashionFit <span class="sp">AI</span>
+        </div>
+      </div>
+
+      <!-- przełącznik -->
+      <div class="switch" id="switch">
+        <button class="on" data-mode="login">Logowanie</button>
+        <button data-mode="register">Rejestracja</button>
+      </div>
+
+      <!-- ====== FORMULARZE ====== -->
+      <div id="formArea">
+
+        <!-- LOGOWANIE -->
+        <div class="formstate" id="login-form">
+          <div class="fhead">
+            <h1>Witaj ponownie 👋</h1>
+            <p>Zaloguj się do panelu FashionFit AI Studio.</p>
+          </div>
+
+          <div class="sso">
+            <button type="button">
+              <svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.4 29.3 35 24 35c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.3-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.1 29.6 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35 26.7 36 24 36c-5.3 0-9.7-3.6-11.3-8.4l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4.1 5.6l6.2 5.2C39.9 36.1 44 30.6 44 24c0-1.3-.1-2.3-.4-3.5z"/></svg>
+              Kontynuuj z Google
+            </button>
+          </div>
+
+          <div class="divider">lub e-mailem</div>
+
+          <form id="loginEmail" novalidate>
+            <div class="field">
+              <label for="l-email">Email firmowy</label>
+              <div class="inwrap">
+                <span class="lead"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></span>
+                <input id="l-email" type="email" placeholder="ty@twojsklep.pl" autocomplete="email">
+              </div>
+            </div>
+            <div class="field" id="l-pwfield">
+              <label for="l-pw">Hasło</label>
+              <div class="inwrap">
+                <span class="lead"><svg viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span>
+                <input id="l-pw" type="password" placeholder="••••••••" autocomplete="current-password">
+                <button type="button" class="toggle-pw" data-target="l-pw" aria-label="Pokaż hasło"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+              </div>
+            </div>
+            <div class="rowbetween">
+              <label class="check"><input type="checkbox" checked><span class="box"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></span>Zapamiętaj mnie</label>
+              <a href="#" class="link">Nie pamiętasz hasła?</a>
+            </div>
+            <button type="submit" class="submit">Zaloguj się <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+          </form>
+
+          <div class="altlink">Wolisz bez hasła? <a href="#" id="toMagic">Wyślij magiczny link →</a></div>
+          <div class="altlink" style="margin-top:10px">Nie masz konta? <a href="#" data-go="register">Załóż je za darmo</a></div>
+        </div>
+
+        <!-- REJESTRACJA -->
+        <div class="formstate" id="register-form" style="display:none">
+          <div class="fhead">
+            <h1>Załóż konto za darmo</h1>
+            <p>14 dni Growth bez karty. Wdrożenie w 5 minut.</p>
+          </div>
+
+          <div class="sso">
+            <button type="button">
+              <svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.4 29.3 35 24 35c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.3-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.1 29.6 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35 26.7 36 24 36c-5.3 0-9.7-3.6-11.3-8.4l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4.1 5.6l6.2 5.2C39.9 36.1 44 30.6 44 24c0-1.3-.1-2.3-.4-3.5z"/></svg>
+              Zarejestruj się z Google
+            </button>
+          </div>
+
+          <div class="divider">lub e-mailem</div>
+
+          <form id="registerEmail" novalidate>
+            <div class="field">
+              <label for="r-store">Nazwa sklepu</label>
+              <div class="inwrap">
+                <span class="lead"><svg viewBox="0 0 24 24"><path d="M3 9l1-5h16l1 5M4 9v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9M3 9h18"/></svg></span>
+                <input id="r-store" type="text" placeholder="np. Atelier Nord" autocomplete="organization">
+              </div>
+            </div>
+            <div class="field">
+              <label for="r-email">Email firmowy</label>
+              <div class="inwrap">
+                <span class="lead"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></span>
+                <input id="r-email" type="email" placeholder="ty@twojsklep.pl" autocomplete="email">
+              </div>
+            </div>
+            <div class="field" id="r-pwfield">
+              <label for="r-pw">Hasło</label>
+              <div class="inwrap">
+                <span class="lead"><svg viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span>
+                <input id="r-pw" type="password" placeholder="Min. 8 znaków" autocomplete="new-password">
+                <button type="button" class="toggle-pw" data-target="r-pw" aria-label="Pokaż hasło"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+              </div>
+              <div class="pwmeter" id="pwmeter"><i></i><i></i><i></i><i></i></div>
+              <div class="hint" id="pwhint">Użyj min. 8 znaków, cyfry i wielkiej litery.</div>
+            </div>
+            <label class="check" style="margin-bottom:20px;align-items:flex-start">
+              <input type="checkbox" id="r-terms"><span class="box" style="margin-top:1px"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></span>
+              <span style="font-size:12.5px;line-height:1.5">Akceptuję <a href="#" class="link">Regulamin</a> i <a href="#" class="link">Politykę prywatności</a> (RODO).</span>
+            </label>
+            <button type="submit" class="submit">Utwórz konto <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+          </form>
+
+          <div class="altlink">Masz już konto? <a href="#" data-go="login">Zaloguj się</a></div>
+          <div class="legal">Zakładając konto otrzymujesz 14 dni planu Growth. Bez karty. Anuluj kiedy chcesz.</div>
+        </div>
+
+        <!-- STAN: MAGIC LINK WYSŁANY -->
+        <div class="sent" id="sent">
+          <div class="env"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></div>
+          <h1>Sprawdź skrzynkę</h1>
+          <p>Wysłaliśmy magiczny link logowania na <b id="sentEmail">ty@twojsklep.pl</b>.</p>
+          <p>Kliknij go w ciągu 15 minut, aby wejść do Studio — bez hasła.</p>
+          <div class="resend">Nie dotarł? <a href="#" id="resend">Wyślij ponownie</a> · <a href="#" data-go="login">zmień e-mail</a></div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+const html=document.documentElement;
+document.getElementById('theme').addEventListener('click',()=>{
+  html.setAttribute('data-theme',html.getAttribute('data-theme')==='dark'?'light':'dark');
+});
+
+const loginF=document.getElementById('login-form'),
+      regF=document.getElementById('register-form'),
+      sent=document.getElementById('sent'),
+      sw=document.getElementById('switch');
+
+function show(mode){
+  sent.classList.remove('show');
+  loginF.style.display = mode==='login'?'block':'none';
+  regF.style.display   = mode==='register'?'block':'none';
+  sw.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.mode===mode));
+  sw.style.display='flex';
+}
+sw.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>show(b.dataset.mode)));
+document.querySelectorAll('[data-go]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();show(a.dataset.go);}));
+
+/* pokaż/ukryj hasło */
+document.querySelectorAll('.toggle-pw').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const inp=document.getElementById(btn.dataset.target);
+    inp.type = inp.type==='password'?'text':'password';
+  });
+});
+
+/* siła hasła */
+const pw=document.getElementById('r-pw'),meter=document.getElementById('pwmeter'),hint=document.getElementById('pwhint');
+pw && pw.addEventListener('input',()=>{
+  const v=pw.value;let s=0;
+  if(v.length>=8)s++;
+  if(/[A-Z]/.test(v))s++;
+  if(/[0-9]/.test(v))s++;
+  if(/[^A-Za-z0-9]/.test(v))s++;
+  meter.className='pwmeter'+(s? ' s'+s:'');
+  hint.textContent=['Użyj min. 8 znaków, cyfry i wielkiej litery.','Słabe hasło','Może być lepiej','Dobre hasło','Świetne hasło 💪'][s];
+});
+
+/* magic link → stan sent */
+function goSent(email){
+  document.getElementById('sentEmail').textContent=email||'ty@twojsklep.pl';
+  loginF.style.display='none';regF.style.display='none';sw.style.display='none';
+  sent.classList.add('show');
+}
+document.getElementById('toMagic').addEventListener('click',e=>{
+  e.preventDefault();
+  goSent(document.getElementById('l-email').value.trim());
+});
+
+/* submit demo (bez backendu) */
+document.getElementById('loginEmail').addEventListener('submit',e=>{e.preventDefault();
+  const em=document.getElementById('l-email');const fld=em.closest('.field');
+  if(!em.value.trim()){fld.classList.add('err');return;}
+  goSent(em.value.trim()); // demo: pokaż potwierdzenie
+});
+document.getElementById('registerEmail').addEventListener('submit',e=>{e.preventDefault();
+  const em=document.getElementById('r-email');
+  if(!document.getElementById('r-terms').checked){alert('Zaakceptuj regulamin i politykę prywatności.');return;}
+  goSent(em.value.trim());
+});
+document.getElementById('resend').addEventListener('click',e=>{e.preventDefault();e.target.textContent='Wysłano ✓';});
+</script>
+</body>
+</html>

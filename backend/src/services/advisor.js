@@ -81,6 +81,44 @@ const COLOR_TERMS = [
   'czarn', 'biał', 'bial', 'beż', 'bez', 'granat', 'bordo', 'ziel', 'niebiesk', 'błękit', 'blekit',
   'szar', 'czerw', 'róż', 'roz', 'fiolet', 'żół', 'zol', 'pomarańcz', 'pomarancz', 'karmel', 'brąz', 'braz',
 ];
+const CATEGORY_ENTITY_MAP = [
+  {
+    key: 'dresses',
+    display: 'sukienki',
+    terms: ['sukienk', 'dress'],
+    productCategories: ['one-pieces'],
+  },
+  {
+    key: 'jumpsuits',
+    display: 'kombinezony',
+    terms: ['kombinezon', 'jumpsuit', 'overall', 'romper'],
+    productCategories: ['one-pieces'],
+  },
+  {
+    key: 'tops',
+    display: 'bluzki',
+    terms: ['bluzk', 'bluza', 'top', 'koszul', 'shirt'],
+    productCategories: ['tops'],
+  },
+  {
+    key: 'pants',
+    display: 'spodnie',
+    terms: ['spodni', 'jeans', 'trouser', 'pants', 'leggins'],
+    productCategories: ['bottoms'],
+  },
+  {
+    key: 'sets',
+    display: 'komplety',
+    terms: ['komplet', 'set', 'zestaw'],
+    productCategories: ['tops', 'bottoms'],
+  },
+  {
+    key: 'tracksuits',
+    display: 'dresy',
+    terms: ['dres', 'tracksuit', 'jogger', 'sweatsuit'],
+    productCategories: ['tops', 'bottoms', 'one-pieces'],
+  },
+];
 
 function isValidUuid(value) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || ''));
@@ -150,10 +188,10 @@ function detectProductFactIntentSubtype(message) {
   if (/(ile\s+koszt|jaka\s+cena|jaki\s+koszt|kosztuje|cena|price|sale)/u.test(text)) {
     return 'product_price';
   }
-  if (/(rozmiar|size|czy\s+jest\s+rozmiar|jaki\s+rozmiar)/u.test(text)) {
+  if (/(rozmiar|rozmiary|size|czy\s+jest\s+rozmiar|jaki\s+rozmiar|jakie\s+rozmiary)/u.test(text)) {
     return 'product_variant_question';
   }
-  if (/(dostępne\s+kolory|dostepne\s+kolory|kolory\s+są\s+dostępne|kolory\s+sa\s+dostepne|jakie\s+kolory\s+(są|sa)\s+dostępne|jakie\s+kolory\s+ma|jakie\s+kolory\s+mają|jakie\s+kolory\s+maja|kolor(y)?\s+w\s+ofercie)/u.test(text)) {
+  if (/(dostępne\s+kolory|dostepne\s+kolory|kolory\s+są\s+dostępne|kolory\s+sa\s+dostepne|jakie\s+kolory\s+(są|sa)\s+dostępne|jakie\s+kolory\s+ma|jakie\s+kolory\s+mają|jakie\s+kolory\s+maja|jakie\s+macie\s+kolory|kolor(y)?\s+w\s+ofercie)/u.test(text)) {
     return 'product_attribute_question';
   }
   if (/(na\s+stanie|dostępno|dostepno|czy\s+jest\s+dostępn|czy\s+jest\s+dostepn|availability|stock)/u.test(text)) {
@@ -169,6 +207,63 @@ function detectProductFactIntentSubtype(message) {
 function hasAnyToken(text, tokens) {
   const normalized = String(text || '').toLowerCase();
   return tokens.some((token) => normalized.includes(token));
+}
+
+function normalizeForMatch(value) {
+  return String(value || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
+function detectCategoryEntity(message) {
+  const raw = String(message || '');
+  const text = normalizeForMatch(raw);
+  if (!text) return null;
+
+  const explicitMatchers = [
+    { regex: /\bsukien/, key: 'dresses' },
+    { regex: /\bkombinezon|\bjumpsuit|\boverall|\bromper/, key: 'jumpsuits' },
+    { regex: /\bbluzk|\bbluza|\btop|\bkoszul|\bshirt/, key: 'tops' },
+    { regex: /\bspodni|\bjeans|\btrouser|\bpants|\bleggins/, key: 'pants' },
+    { regex: /\bkomplet|\bset|\bzestaw/, key: 'sets' },
+    { regex: /\bdres|\btracksuit|\bjogger|\bsweatsuit/, key: 'tracksuits' },
+  ];
+  for (const matcher of explicitMatchers) {
+    if (!matcher.regex.test(text)) continue;
+    const direct = CATEGORY_ENTITY_MAP.find((item) => item.key === matcher.key);
+    if (direct) {
+      return {
+        key: direct.key,
+        display: direct.display,
+        terms: direct.terms,
+        productCategories: direct.productCategories,
+      };
+    }
+  }
+
+  const tokenVariants = tokenizeMessage(raw).flatMap((token) => buildTokenVariants(normalizeForMatch(token)));
+
+  let best = null;
+  for (const candidate of CATEGORY_ENTITY_MAP) {
+    let score = 0;
+    for (const rawTerm of candidate.terms) {
+      const term = normalizeForMatch(rawTerm);
+      if (text.includes(term)) score += term.length;
+      if (tokenVariants.some((variant) => variant.startsWith(term) || term.startsWith(variant))) score += term.length;
+    }
+    if (score <= 0) continue;
+    if (!best || score > best.score) {
+      best = { ...candidate, score };
+    }
+  }
+
+  return best ? {
+    key: best.key,
+    display: best.display,
+    terms: best.terms,
+    productCategories: best.productCategories,
+  } : null;
 }
 
 function buildStylingAdviceFallback(message) {
@@ -310,6 +405,26 @@ function getProductText(product) {
   ].join(' ');
 }
 
+function matchesCategoryEntity(product, categoryEntity) {
+  if (!categoryEntity) return true;
+  const name = normalizeForMatch(product && product.name || '');
+  const category = normalizeForMatch(product && product.category || '');
+
+  if (Array.isArray(categoryEntity.productCategories)
+    && categoryEntity.productCategories.length > 0
+    && categoryEntity.productCategories.includes(category)) {
+    return true;
+  }
+
+  const hay = `${name} ${category}`;
+  return (categoryEntity.terms || []).some((term) => hay.includes(normalizeForMatch(term)));
+}
+
+function filterProductsByCategoryEntity(products, categoryEntity) {
+  if (!categoryEntity) return products || [];
+  return (products || []).filter((product) => matchesCategoryEntity(product, categoryEntity));
+}
+
 function extractColorTerms(message) {
   const text = String(message || '').toLowerCase();
   return COLOR_TERMS.filter((term) => text.includes(term));
@@ -323,9 +438,13 @@ function matchesAnyColorTerm(product, colorTerms) {
 
 function extractRequestedSize(message) {
   const text = String(message || '').toLowerCase();
-  const explicit = text.match(/\b(xxs|xs|s|m|l|xl|xxl|xxxl)\b/u);
-  if (explicit && explicit[1]) return explicit[1].toUpperCase();
+  const contextual = text.match(/(?:rozmiar(?:ze|u)?|size)\s*(?:to|=|:)?\s*(xxs|xs|s|m|l|xl|xxl|xxxl)\b/u);
+  if (contextual && contextual[1]) return contextual[1].toUpperCase();
   return null;
+}
+
+function hasSizeQuestion(message) {
+  return /(rozmiar|size|xs|xxs|s|m|l|xl|xxl|xxxl)/u.test(String(message || '').toLowerCase());
 }
 
 function normalizeVariantStrings(variants) {
@@ -445,6 +564,39 @@ function dedupeLower(values) {
   return out;
 }
 
+function aggregateCategoryColors(products) {
+  const all = [];
+  for (const product of products || []) {
+    all.push(...normalizeValuesList(product && product.colors));
+    all.push(...extractAttributeValuesByKeys(product && product.attributes, /(kolor|color|barwa)/u));
+    all.push(...extractVariantAttributeValues(product && product.variants, /(kolor|color|barwa)/u));
+  }
+  return dedupeLower(all);
+}
+
+function aggregateCategorySizes(products) {
+  const all = [];
+  for (const product of products || []) {
+    all.push(...normalizeValuesList(product && product.sizes));
+    all.push(...extractAttributeValuesByKeys(product && product.attributes, /(rozmiar|size)/u));
+    all.push(...extractVariantAttributeValues(product && product.variants, /(rozmiar|size)/u));
+  }
+  return dedupeLower(all);
+}
+
+function findProductsWithSize(products, requestedSize) {
+  if (!requestedSize) return [];
+  const needle = String(requestedSize).toLowerCase();
+  return (products || []).filter((product) => {
+    const allSizes = dedupeLower([
+      ...normalizeValuesList(product && product.sizes),
+      ...extractAttributeValuesByKeys(product && product.attributes, /(rozmiar|size)/u),
+      ...extractVariantAttributeValues(product && product.variants, /(rozmiar|size)/u),
+    ]).map((item) => item.toLowerCase());
+    return allSizes.includes(needle);
+  });
+}
+
 function extractKnownMaterialFromDescription(description) {
   const hay = String(description || '').toLowerCase();
   if (!hay) return null;
@@ -533,13 +685,20 @@ function selectTopRecommendations(products, message, maxResults = MAX_RECOMMENDA
   return [];
 }
 
-function selectCandidateProducts(products, message, maxCandidates = 24) {
+function selectCandidateProducts(products, message, maxCandidates = 24, options = {}) {
+  const categoryEntity = options.categoryEntity || null;
+  const requestedSize = options.requestedSize || null;
   const tokens = tokenizeMessage(message);
   const colorTerms = extractColorTerms(message);
   const scored = [];
 
   for (const product of products || []) {
+    if (!matchesCategoryEntity(product, categoryEntity)) continue;
     if (!matchesAnyColorTerm(product, colorTerms)) continue;
+    if (requestedSize) {
+      const matchingBySize = findProductsWithSize([product], requestedSize);
+      if (matchingBySize.length === 0) continue;
+    }
     const { score } = scoreProduct(product, message, tokens);
     if (score <= 0) continue;
     scored.push({ product, score });
@@ -969,6 +1128,154 @@ function resolveProductFactOutcome({
   return null;
 }
 
+function resolveCategoryFactOutcome({
+  message,
+  subtype,
+  categoryEntity,
+  categoryProducts,
+  recommendationLimit,
+}) {
+  if (!categoryEntity) return null;
+  const matchingProducts = categoryProducts || [];
+
+  if (subtype === 'product_attribute_question') {
+    if (matchingProducts.length === 0) {
+      return {
+        responseType: 'no_match',
+        intentSubtype: subtype || null,
+        reply: `Nie widzę teraz produktów z grupy „${categoryEntity.display}” w katalogu tego sklepu.`,
+        recommendations: [],
+        maxRecommendations: recommendationLimit,
+        usedAi: false,
+      };
+    }
+    const colors = aggregateCategoryColors(matchingProducts);
+    if (colors.length === 0) {
+      return {
+        responseType: 'product_explanation',
+        intentSubtype: 'product_attribute_question',
+        reply: `Widzę ${categoryEntity.display} w katalogu, ale nie widzę jeszcze uzupełnionych danych o kolorach.`,
+        recommendations: [],
+        maxRecommendations: recommendationLimit,
+        usedAi: false,
+      };
+    }
+    return {
+      responseType: 'product_explanation',
+      intentSubtype: 'product_attribute_question',
+      reply: `W kategorii ${categoryEntity.display} widzę kolory: ${colors.slice(0, 10).join(', ')}.`,
+      recommendations: [],
+      maxRecommendations: recommendationLimit,
+      usedAi: false,
+    };
+  }
+
+  if (subtype === 'product_variant_question') {
+    if (matchingProducts.length === 0) {
+      return {
+        responseType: 'no_match',
+        intentSubtype: subtype || null,
+        reply: `Nie widzę teraz produktów z grupy „${categoryEntity.display}” w katalogu tego sklepu.`,
+        recommendations: [],
+        maxRecommendations: recommendationLimit,
+        usedAi: false,
+      };
+    }
+    const requestedSize = extractRequestedSize(message);
+    const sizes = aggregateCategorySizes(matchingProducts);
+    if (requestedSize) {
+      const productsWithSize = findProductsWithSize(matchingProducts, requestedSize);
+      if (productsWithSize.length > 0) {
+        const recommendations = selectTopRecommendations(productsWithSize, message, recommendationLimit);
+        return {
+          responseType: recommendations.length > 0 ? 'recommend_products' : 'product_explanation',
+          intentSubtype: 'product_variant_question',
+          reply: recommendations.length > 0
+            ? `Widzę ${categoryEntity.display} w rozmiarze ${requestedSize}.`
+            : `Widzę ${categoryEntity.display} w rozmiarze ${requestedSize}.`,
+          recommendations,
+          maxRecommendations: recommendationLimit,
+          usedAi: false,
+        };
+      }
+      if (sizes.length > 0) {
+        return {
+          responseType: 'no_match',
+          intentSubtype: 'product_variant_question',
+          reply: `Widzę ${categoryEntity.display}, ale nie widzę rozmiaru ${requestedSize} w aktualnych danych katalogu.`,
+          recommendations: [],
+          maxRecommendations: recommendationLimit,
+          usedAi: false,
+        };
+      }
+      return {
+        responseType: 'product_explanation',
+        intentSubtype: 'product_variant_question',
+        reply: `Widzę ${categoryEntity.display} w katalogu, ale nie widzę jeszcze uzupełnionych danych o rozmiarach.`,
+        recommendations: [],
+        maxRecommendations: recommendationLimit,
+        usedAi: false,
+      };
+    }
+
+    if (sizes.length === 0) {
+      return {
+        responseType: 'product_explanation',
+        intentSubtype: 'product_variant_question',
+        reply: `Widzę ${categoryEntity.display} w katalogu, ale nie widzę jeszcze uzupełnionych danych o rozmiarach.`,
+        recommendations: [],
+        maxRecommendations: recommendationLimit,
+        usedAi: false,
+      };
+    }
+    return {
+      responseType: 'product_explanation',
+      intentSubtype: 'product_variant_question',
+      reply: `W ${categoryEntity.display} widzę dostępne rozmiary: ${sizes.slice(0, 10).join(', ')}.`,
+      recommendations: [],
+      maxRecommendations: recommendationLimit,
+      usedAi: false,
+    };
+  }
+
+  if (subtype === 'product_availability') {
+    if (matchingProducts.length === 0) {
+      return {
+        responseType: 'no_match',
+        intentSubtype: subtype || null,
+        reply: `Nie widzę teraz produktów z grupy „${categoryEntity.display}” w katalogu tego sklepu.`,
+        recommendations: [],
+        maxRecommendations: recommendationLimit,
+        usedAi: false,
+      };
+    }
+    const inStock = matchingProducts.filter((product) => {
+      const status = String(product.stock_status || '').toLowerCase();
+      return product.is_in_stock === true || status === 'instock' || status === 'in_stock';
+    });
+    if (inStock.length > 0) {
+      return {
+        responseType: 'product_explanation',
+        intentSubtype: 'product_availability',
+        reply: `W kategorii ${categoryEntity.display} widzę obecnie dostępne produkty.`,
+        recommendations: [],
+        maxRecommendations: recommendationLimit,
+        usedAi: false,
+      };
+    }
+    return {
+      responseType: 'product_explanation',
+      intentSubtype: 'product_availability',
+      reply: `Widzę ${categoryEntity.display} w katalogu, ale nie mam jeszcze pełnych danych o dostępności magazynowej dla całej kategorii.`,
+      recommendations: [],
+      maxRecommendations: recommendationLimit,
+      usedAi: false,
+    };
+  }
+
+  return null;
+}
+
 function buildDeterministicBrowseRecommendations(candidates, recommendationLimit) {
   return (candidates || [])
     .slice(0, recommendationLimit)
@@ -1142,12 +1449,27 @@ async function resolveAdvisorOutcome({
   const settings = normalizeAdvisorSettings(advisorSettings);
   const recommendationLimit = clampRecommendationLimit(settings.maxRecommendations);
   const effectiveCatalog = catalogProducts || [];
+  const categoryEntity = detectCategoryEntity(message);
+  const requestedSize = extractRequestedSize(message);
   const factualSubtype = detectProductFactIntentSubtype(message);
   const requestedType = factualSubtype ? 'product_explanation' : inferRequestedResponseType(message);
-  const relevantCandidates = selectCandidateProducts(effectiveCatalog, message, 24);
+  const relevantCandidates = selectCandidateProducts(effectiveCatalog, message, 24, {
+    categoryEntity,
+    requestedSize: factualSubtype === 'product_variant_question' ? requestedSize : null,
+  });
+  const categoryCandidates = filterProductsByCategoryEntity(effectiveCatalog, categoryEntity);
   const browseCandidates = selectBrowseCatalogProducts(effectiveCatalog, 24);
 
   if (factualSubtype) {
+    const categoryFactOutcome = resolveCategoryFactOutcome({
+      message,
+      subtype: factualSubtype,
+      categoryEntity,
+      categoryProducts: categoryCandidates,
+      recommendationLimit,
+    });
+    if (categoryFactOutcome) return categoryFactOutcome;
+
     const factOutcome = resolveProductFactOutcome({
       message,
       subtype: factualSubtype,

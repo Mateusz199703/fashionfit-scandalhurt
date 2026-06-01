@@ -293,6 +293,77 @@ test('color question uses colors data when available', async () => {
   assert.match(result.reply.toLowerCase(), /granat/);
 });
 
+test('category color question aggregates colors for dresses', async () => {
+  const result = await resolveAdvisorOutcome({
+    message: 'jakie macie kolory sukienek?',
+    shopId: SHOP_A,
+    catalogProducts: buildCatalog([
+      { id: 'd1', name: 'Sukienka midi', category: 'one-pieces', colors: ['Czarny', 'Granat'] },
+      { id: 'd2', name: 'Sukienka satynowa', category: 'one-pieces', attributes: [{ name: 'Kolor', options: ['Bordo'] }] },
+      { id: 't1', name: 'Bluzka lniana', category: 'tops', colors: ['Biały'] },
+    ]),
+    advisorSettings: { maxRecommendations: 3 },
+    conversationMessages: [],
+    aiClient: {
+      isEnabled: () => false,
+      getStylistResponse: async () => ({}),
+    },
+  });
+
+  assert.equal(result.responseType, 'product_explanation');
+  assert.equal(result.intentSubtype, 'product_attribute_question');
+  assert.equal(result.recommendations.length, 0);
+  assert.match(result.reply.toLowerCase(), /czarny/);
+  assert.match(result.reply.toLowerCase(), /granat/);
+  assert.match(result.reply.toLowerCase(), /bordo/);
+});
+
+test('category color question with dresses but missing color data returns safe missing-data reply', async () => {
+  const result = await resolveAdvisorOutcome({
+    message: 'jakie macie kolory sukienek?',
+    shopId: SHOP_A,
+    catalogProducts: buildCatalog([
+      { id: 'd1', name: 'Sukienka midi', category: 'one-pieces', colors: null, attributes: null, variants: null },
+      { id: 'd2', name: 'Sukienka satynowa', category: 'one-pieces', colors: null, attributes: null, variants: null },
+    ]),
+    advisorSettings: { maxRecommendations: 3 },
+    conversationMessages: [],
+    aiClient: {
+      isEnabled: () => false,
+      getStylistResponse: async () => ({}),
+    },
+  });
+
+  assert.equal(result.responseType, 'product_explanation');
+  assert.equal(result.intentSubtype, 'product_attribute_question');
+  assert.equal(result.recommendations.length, 0);
+  assert.match(result.reply.toLowerCase(), /widzę sukienki.*nie widzę.*kolorach|widze sukienki.*nie widze.*kolorach/u);
+});
+
+test('category size question aggregates sizes for dresses', async () => {
+  const result = await resolveAdvisorOutcome({
+    message: 'jakie rozmiary są w sukienkach?',
+    shopId: SHOP_A,
+    catalogProducts: buildCatalog([
+      { id: 'd1', name: 'Sukienka midi', category: 'one-pieces', sizes: ['S', 'M'] },
+      { id: 'd2', name: 'Sukienka satynowa', category: 'one-pieces', attributes: [{ name: 'Rozmiar', options: ['L'] }] },
+    ]),
+    advisorSettings: { maxRecommendations: 3 },
+    conversationMessages: [],
+    aiClient: {
+      isEnabled: () => false,
+      getStylistResponse: async () => ({}),
+    },
+  });
+
+  assert.equal(result.responseType, 'product_explanation');
+  assert.equal(result.intentSubtype, 'product_variant_question');
+  assert.equal(result.recommendations.length, 0);
+  assert.match(result.reply.toLowerCase(), /\bs\b/);
+  assert.match(result.reply.toLowerCase(), /\bm\b/);
+  assert.match(result.reply.toLowerCase(), /\bl\b/);
+});
+
 test('stock question uses stock fields when available', async () => {
   const result = await resolveAdvisorOutcome({
     message: 'czy ten produkt jest dostępny na stanie?',
@@ -465,6 +536,72 @@ test('black dresses query returns no_match when no reliable black match exists',
 
   assert.equal(result.responseType, 'no_match');
   assert.equal(result.recommendations.length, 0);
+});
+
+test('black dresses query returns only black dress recommendations when matches exist', async () => {
+  const result = await resolveAdvisorOutcome({
+    message: 'czy macie czarne sukienki?',
+    shopId: SHOP_A,
+    catalogProducts: buildCatalog([
+      { id: 'd1', name: 'Sukienka czarna midi', category: 'one-pieces', colors: ['Czarny'] },
+      { id: 'd2', name: 'Sukienka beżowa', category: 'one-pieces', colors: ['Beżowy'] },
+      { id: 't1', name: 'Czarna bluzka', category: 'tops', colors: ['Czarny'] },
+    ]),
+    advisorSettings: { maxRecommendations: 3 },
+    conversationMessages: [],
+    aiClient: {
+      isEnabled: () => false,
+      getStylistResponse: async () => ({}),
+    },
+  });
+
+  assert.equal(result.responseType, 'recommend_products');
+  assert.equal(result.recommendations.length, 1);
+  assert.deepEqual(result.recommendations.map((item) => item.productId), ['d1']);
+});
+
+test('category + unavailable color returns no_match without unrelated recommendations', async () => {
+  const result = await resolveAdvisorOutcome({
+    message: 'czy macie zielone sukienki?',
+    shopId: SHOP_A,
+    catalogProducts: buildCatalog([
+      { id: 'd1', name: 'Sukienka czarna midi', category: 'one-pieces', colors: ['Czarny'] },
+      { id: 'd2', name: 'Sukienka beżowa', category: 'one-pieces', colors: ['Beżowy'] },
+    ]),
+    advisorSettings: { maxRecommendations: 3 },
+    conversationMessages: [],
+    aiClient: {
+      isEnabled: () => false,
+      getStylistResponse: async () => ({}),
+    },
+  });
+
+  assert.equal(result.responseType, 'no_match');
+  assert.equal(result.recommendations.length, 0);
+});
+
+test('category + size search returns matching size M dresses only', async () => {
+  const result = await resolveAdvisorOutcome({
+    message: 'czy są sukienki w rozmiarze M?',
+    shopId: SHOP_A,
+    catalogProducts: buildCatalog([
+      { id: 'd1', name: 'Sukienka midi', category: 'one-pieces', sizes: ['M', 'L'] },
+      { id: 'd2', name: 'Sukienka mini', category: 'one-pieces', sizes: ['S'] },
+      { id: 't1', name: 'Bluzka M', category: 'tops', sizes: ['M'] },
+    ]),
+    advisorSettings: { maxRecommendations: 3 },
+    conversationMessages: [],
+    aiClient: {
+      isEnabled: () => false,
+      getStylistResponse: async () => ({}),
+    },
+  });
+
+  assert.equal(result.intentSubtype, 'product_variant_question');
+  assert.ok(['recommend_products', 'product_explanation'].includes(result.responseType));
+  if (result.recommendations.length > 0) {
+    assert.deepEqual(result.recommendations.map((item) => item.productId), ['d1']);
+  }
 });
 
 test('AI no_match response keeps natural AI reply with empty recommendations', async () => {
