@@ -216,8 +216,8 @@ const CSS = `
   animation: ff-fade-in 0.25s ease both;
 }
 .ff-modal.ff-modal-advisor{
-  width: min(450px, calc(100vw - 24px));
-  height: min(720px, calc(100vh - 48px));
+  width: min(400px, calc(100vw - 24px));
+  height: min(660px, calc(100vh - 48px));
   max-height: calc(100vh - 48px);
   border-radius: 30px;
   padding: 0;
@@ -815,6 +815,10 @@ const CSS = `
   border-radius: 999px;
   padding: 9px 12px;
 }
+.ff-advisor-input-wrap:focus-within {
+  border-color: rgba(123, 97, 255, 0.42);
+  box-shadow: 0 0 0 3px rgba(123, 97, 255, 0.18);
+}
 .ff-advisor-input {
   width: 100%;
   resize: none;
@@ -829,6 +833,11 @@ const CSS = `
   color: #171720;
   background: transparent;
   overflow-y: auto;
+}
+.ff-advisor-input:focus,
+.ff-advisor-input:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
 }
 .ff-advisor-input::placeholder {
   color: #8d93a5;
@@ -968,7 +977,7 @@ const CSS = `
 }
 .ff-advisor-foot{
   margin-top: 0;
-  padding: 0 14px 10px;
+  padding: 7px 12px 8px;
   border-top: none;
   color: #7a8094;
   font-size: 10px;
@@ -984,7 +993,6 @@ const CSS = `
 .ff-advisor-bubble:focus-visible,
 .ff-product-tryon-cta:focus-visible,
 .ff-close:focus-visible,
-.ff-advisor-input:focus-visible,
 .ff-drop:focus-visible {
   outline: none;
   box-shadow: 0 0 0 3px rgba(123, 97, 255, 0.35);
@@ -1018,8 +1026,8 @@ const CSS = `
   }
   .ff-modal.ff-modal-advisor{
     width: calc(100vw - 24px);
-    max-width: 430px;
-    height: calc(100dvh - 24px);
+    max-width: 400px;
+    height: min(660px, calc(100dvh - 24px));
     max-height: calc(100dvh - 24px);
     border-radius: 24px;
     padding: 0;
