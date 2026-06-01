@@ -3,11 +3,11 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { ChevronDown, LogOut } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 
-const TOP_TABS: Array<{ label: string; to?: string }> = [
+const TOP_TABS: Array<{ label: string; to: string }> = [
   { label: 'Pulpit', to: '/dashboard' },
-  { label: 'Agent mody' },
-  { label: 'Przymierzalnia' },
-  { label: 'System wizualny' },
+  { label: 'Agent mody', to: '/fashion-agent' },
+  { label: 'Przymierzalnia', to: '/try-on' },
+  { label: 'System wizualny', to: '/visual-system' },
 ];
 
 const sideIcon = {
@@ -68,21 +68,20 @@ const sideIcon = {
   ),
 };
 
-type RouteItem = { type: 'route'; label: string; to: string; icon: React.ReactNode; active?: boolean };
-type DisabledItem = { type: 'disabled'; label: string; icon: React.ReactNode; badge?: string; badgeSoft?: boolean };
+type RouteItem = { type: 'route'; label: string; to: string; icon: React.ReactNode; badge?: string; badgeSoft?: boolean };
 type GroupItem = { type: 'group'; label: string };
-type SideItem = RouteItem | DisabledItem | GroupItem;
+type SideItem = RouteItem | GroupItem;
 
 const SIDE_ITEMS: SideItem[] = [
-  { type: 'route', label: 'Pulpit', to: '/dashboard', icon: sideIcon.dashboard, active: true },
-  { type: 'disabled', label: 'Rozmowy AI', icon: sideIcon.chat, badge: '128' },
-  { type: 'disabled', label: 'Rekomendacje', icon: sideIcon.star },
-  { type: 'disabled', label: 'Dopasowanie rozmiaru', icon: sideIcon.size },
-  { type: 'disabled', label: 'Katalog', icon: sideIcon.catalog, badge: '1 240', badgeSoft: true },
-  { type: 'disabled', label: 'Przymierzalnia', icon: sideIcon.tryon },
+  { type: 'route', label: 'Pulpit', to: '/dashboard', icon: sideIcon.dashboard },
+  { type: 'route', label: 'Rozmowy AI', to: '/ai-conversations', icon: sideIcon.chat, badge: '128' },
+  { type: 'route', label: 'Rekomendacje', to: '/recommendations', icon: sideIcon.star },
+  { type: 'route', label: 'Dopasowanie rozmiaru', to: '/size-fit', icon: sideIcon.size },
+  { type: 'route', label: 'Katalog', to: '/catalog', icon: sideIcon.catalog, badge: '1 240', badgeSoft: true },
+  { type: 'route', label: 'Przymierzalnia', to: '/try-on', icon: sideIcon.tryon },
   { type: 'group', label: 'Wzrost' },
-  { type: 'disabled', label: 'Klienci', icon: sideIcon.customers },
-  { type: 'disabled', label: 'Analityka', icon: sideIcon.analytics },
+  { type: 'route', label: 'Klienci', to: '/customers', icon: sideIcon.customers },
+  { type: 'route', label: 'Analityka', to: '/analytics', icon: sideIcon.analytics },
   { type: 'route', label: 'Ustawienia', to: '/settings', icon: sideIcon.settings },
 ];
 
@@ -129,19 +128,13 @@ export function Layout() {
 
         <nav className="tabs" aria-label="Nawigacja Studio">
           {TOP_TABS.map((tab) => (
-            tab.to ? (
-              <NavLink
-                key={tab.label}
-                to={tab.to}
-                className={({ isActive }) => `tab ${isActive ? 'on' : ''}`}
-              >
-                {tab.label}
-              </NavLink>
-            ) : (
-              <button key={tab.label} type="button" className="tab is-disabled" aria-disabled="true">
-                {tab.label}
-              </button>
-            )
+            <NavLink
+              key={tab.label}
+              to={tab.to}
+              className={({ isActive }) => `tab ${isActive ? 'on' : ''}`}
+            >
+              {tab.label}
+            </NavLink>
           ))}
         </nav>
 
@@ -184,17 +177,12 @@ export function Layout() {
                   >
                     {item.icon}
                     {item.label}
+                    {item.badge ? <span className={`badge ${item.badgeSoft ? 'soft' : ''}`}>{item.badge}</span> : null}
                   </NavLink>
                 );
               }
 
-              return (
-                <div key={item.label} className="nav-i is-disabled" aria-disabled="true">
-                  {item.icon}
-                  {item.label}
-                  {item.badge ? <span className={`badge ${item.badgeSoft ? 'soft' : ''}`}>{item.badge}</span> : null}
-                </div>
-              );
+              return null;
             })}
           </nav>
 
