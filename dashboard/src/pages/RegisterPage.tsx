@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { ArrowRight, Shirt, Eye, EyeOff, CheckCircle2, Circle } from 'lucide-react';
+import { ArrowRight, Shirt, Eye, EyeOff, CheckCircle2, Circle, Mail, Lock, User, Building2, Sparkles } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 import { apiErrorMessage } from '../api/client';
 import { Plan } from '../types';
@@ -73,11 +73,20 @@ export function RegisterPage() {
     <div className="ff-auth-shell">
       <div className="ff-auth-grid">
         <aside className="ff-auth-hero">
+          <div className="ff-auth-grid-layer" />
+          <div className="ff-auth-glow ff-auth-glow-a" />
+          <div className="ff-auth-glow ff-auth-glow-b" />
+
           <div className="ff-auth-brand">
             <span className="ff-auth-mark">
               <Shirt size={16} />
             </span>
-            <span>FashionFit Studio</span>
+            <span>FashionFit AI Studio</span>
+          </div>
+
+          <div className="ff-auth-core-wrap" aria-hidden="true">
+            <div className="ff-auth-core-ring" />
+            <span className="ff-ai-core ff-auth-core" />
           </div>
 
           <p className="ff-auth-kicker">Luxury Commerce Intelligence</p>
@@ -94,81 +103,138 @@ export function RegisterPage() {
 
           <div className="ff-auth-metrics">
             <div>
+              <b>+34%</b>
+              <span>wyższa konwersja</span>
+            </div>
+            <div>
+              <b>-28%</b>
+              <span>mniej zwrotów</span>
+            </div>
+            <div>
               <b>14 dni</b>
               <span>trial bez karty</span>
             </div>
-            <div>
-              <b>5 min</b>
-              <span>średni czas wdrożenia</span>
-            </div>
-            <div>
-              <b>∞</b>
-              <span>skalowalność dla wielu sklepów</span>
+          </div>
+
+          <div className="ff-auth-quote">
+            <p>
+              "Po wdrożeniu AI Stylist klienci częściej kończą zakupy całym lookiem, a nie pojedynczym produktem."
+            </p>
+            <div className="ff-auth-quote-byline">
+              <span className="ff-auth-quote-avatar">MK</span>
+              <span>
+                <b>Maison K</b>
+                fashion ecommerce · Kraków
+              </span>
             </div>
           </div>
         </aside>
 
         <section className="ff-auth-panel">
+          <div className="ff-auth-mobile-brand">
+            <span className="ff-auth-mark">
+              <Shirt size={16} />
+            </span>
+            <span>FashionFit AI</span>
+          </div>
+
+          <div className="ff-auth-switch" role="tablist" aria-label="Tryb rejestracji">
+            <Link to="/login" className="ff-auth-switch-item" role="tab" aria-selected="false">
+              Logowanie
+            </Link>
+            <span className="ff-auth-switch-item ff-auth-switch-item-active" role="tab" aria-selected="true">
+              Rejestracja
+            </span>
+          </div>
+
           <div className="mb-7">
             <p className="ff-auth-panel-kicker">Nowe Konto</p>
             <h2 className="ff-auth-panel-title">Załóż konto</h2>
-            <p className="mt-2 text-sm text-ink/60">Uruchom panel i dodaj pierwszy sklep w kilka minut.</p>
+            <p className="ff-auth-panel-copy">Uruchom panel i dodaj pierwszy sklep w kilka minut.</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-            <div>
+          <form onSubmit={handleSubmit} className="space-y-4 ff-auth-form" noValidate>
+            <div className={errors.name ? 'ff-auth-field ff-auth-field-error' : 'ff-auth-field'}>
               <label className="ff-label" htmlFor="name">Imię i nazwisko</label>
-              <input id="name" className="ff-input" value={form.name} onChange={set('name')} />
-              {errors.name && <p className="mt-1 text-xs text-red-600">{errors.name}</p>}
+              <div className="ff-auth-input-wrap">
+                <span className="ff-auth-input-lead" aria-hidden="true">
+                  <User size={16} />
+                </span>
+                <input id="name" className="ff-input" value={form.name} onChange={set('name')} placeholder="Anna Nowak" />
+              </div>
+              {errors.name && <p className="ff-auth-error-text">{errors.name}</p>}
             </div>
-            <div>
+
+            <div className="ff-auth-field">
               <label className="ff-label" htmlFor="company">Nazwa firmy (opcjonalnie)</label>
-              <input id="company" className="ff-input" value={form.company_name} onChange={set('company_name')} />
+              <div className="ff-auth-input-wrap">
+                <span className="ff-auth-input-lead" aria-hidden="true">
+                  <Building2 size={16} />
+                </span>
+                <input id="company" className="ff-input" value={form.company_name} onChange={set('company_name')} placeholder="Atelier Nord" />
+              </div>
             </div>
-            <div>
+
+            <div className={errors.company_nip ? 'ff-auth-field ff-auth-field-error' : 'ff-auth-field'}>
               <label className="ff-label" htmlFor="nip">NIP firmy (opcjonalnie)</label>
-              <input id="nip" className="ff-input" value={form.company_nip} onChange={set('company_nip')} />
-              {errors.company_nip && <p className="mt-1 text-xs text-red-600">{errors.company_nip}</p>}
+              <div className="ff-auth-input-wrap">
+                <span className="ff-auth-input-lead" aria-hidden="true">
+                  <Building2 size={16} />
+                </span>
+                <input id="nip" className="ff-input" value={form.company_nip} onChange={set('company_nip')} placeholder="1234567890" />
+              </div>
+              {errors.company_nip && <p className="ff-auth-error-text">{errors.company_nip}</p>}
             </div>
-            <div>
+
+            <div className={errors.email ? 'ff-auth-field ff-auth-field-error' : 'ff-auth-field'}>
               <label className="ff-label" htmlFor="email">E-mail</label>
-              <input id="email" type="email" className="ff-input" value={form.email} onChange={set('email')} />
-              {errors.email && <p className="mt-1 text-xs text-red-600">{errors.email}</p>}
+              <div className="ff-auth-input-wrap">
+                <span className="ff-auth-input-lead" aria-hidden="true">
+                  <Mail size={16} />
+                </span>
+                <input id="email" type="email" className="ff-input" value={form.email} onChange={set('email')} placeholder="twoj@sklep.pl" />
+              </div>
+              {errors.email && <p className="ff-auth-error-text">{errors.email}</p>}
             </div>
-            <div>
+
+            <div className={errors.password ? 'ff-auth-field ff-auth-field-error' : 'ff-auth-field'}>
               <label className="ff-label" htmlFor="password">Hasło</label>
-              <div className="relative">
+              <div className="relative ff-auth-input-wrap">
+                <span className="ff-auth-input-lead" aria-hidden="true">
+                  <Lock size={16} />
+                </span>
                 <input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   className="ff-input pr-11"
                   value={form.password}
                   onChange={set('password')}
+                  placeholder="Ustaw hasło"
                 />
                 <button
                   type="button"
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md p-1 text-ink/55 hover:bg-black/5 hover:text-ink"
+                  className="ff-auth-password-toggle"
                   onClick={() => setShowPassword((s) => !s)}
                   aria-label={showPassword ? 'Ukryj hasło' : 'Pokaż hasło'}
                 >
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
-              {errors.password && <p className="mt-1 text-xs text-red-600">{errors.password}</p>}
+              {errors.password && <p className="ff-auth-error-text">{errors.password}</p>}
               <div className="mt-2">
-                <div className="mb-1 flex items-center justify-between text-xs text-ink/60">
+                <div className="mb-1 flex items-center justify-between text-xs text-white/65">
                   <span>Siła hasła</span>
-                  <span className="font-semibold text-ink/75">{scoreLabel}</span>
+                  <span className="font-semibold text-white/90">{scoreLabel}</span>
                 </div>
-                <div className="h-2 w-full rounded-full bg-black/10">
-                  <div className="h-full rounded-full bg-black transition-all" style={{ width: `${scorePct}%` }} />
+                <div className="h-2 w-full rounded-full bg-ink/10">
+                  <div className="h-full rounded-full bg-gradient-to-r from-[var(--accent)] to-[var(--accent2)] transition-all" style={{ width: `${scorePct}%` }} />
                 </div>
               </div>
               <div className="mt-2 grid grid-cols-1 gap-1 sm:grid-cols-2">
                 {passwordChecks.map((check) => (
                   <div key={check.label} className="flex items-center gap-1.5 text-xs">
-                    {check.ok ? <CheckCircle2 size={13} className="text-emerald-700" /> : <Circle size={13} className="text-ink/35" />}
-                    <span className={check.ok ? 'text-emerald-800' : 'text-ink/55'}>{check.label}</span>
+                    {check.ok ? <CheckCircle2 size={13} className="text-emerald-400" /> : <Circle size={13} className="text-white/35" />}
+                    <span className={check.ok ? 'text-emerald-300' : 'text-white/55'}>{check.label}</span>
                   </div>
                 ))}
               </div>
@@ -182,17 +248,17 @@ export function RegisterPage() {
                     key={plan}
                     type="button"
                     onClick={() => setSelectedPlan((prev) => (prev === plan ? '' : plan))}
-                    className={`rounded-xl border px-3 py-2 text-sm font-semibold transition ${
+                    className={`rounded-xl border px-3 py-2 text-sm font-semibold transition ff-focus-ring ${
                       selectedPlan === plan
-                        ? 'border-ink bg-ink text-white'
-                        : 'border-ink/15 bg-white text-ink/70 hover:border-ink/30'
+                        ? 'border-[var(--accent)] bg-gradient-to-r from-[var(--accent)] to-[var(--accent2)] text-white shadow-[0_14px_30px_-20px_var(--glow)]'
+                        : 'border-white/20 bg-white/5 text-white/70 hover:border-[var(--accent)] hover:text-white'
                     }`}
                   >
                     {plan}
                   </button>
                 ))}
               </div>
-              <p className="mt-2 text-xs text-ink/55">
+              <p className="mt-2 text-xs text-white/55 leading-relaxed">
                 Gdy wybierzesz plan, po rejestracji przejdziesz bezpośrednio do Stripe Checkout. Bez wyboru planu uruchamiamy trial.
               </p>
             </div>
@@ -203,9 +269,14 @@ export function RegisterPage() {
             </button>
           </form>
 
-          <p className="mt-6 text-center text-sm text-ink/60">
+          <div className="ff-auth-trust">
+            <Sparkles size={13} />
+            <span>14 dni trial bez karty. Możesz anulować w dowolnym momencie.</span>
+          </div>
+
+          <p className="ff-auth-alt-link">
             Masz już konto?{' '}
-            <Link to="/login" className="font-semibold text-ink hover:opacity-70">Zaloguj się</Link>
+            <Link to="/login">Zaloguj się</Link>
           </p>
         </section>
       </div>
