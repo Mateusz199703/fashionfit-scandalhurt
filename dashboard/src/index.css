@@ -240,7 +240,34 @@
   }
 
   .ff-studio-shell {
-    color: var(--text);
+    --studio-bg: #f4f4f8;
+    --studio-bg-deep: #fbfbfe;
+    --studio-panel: #ffffff;
+    --studio-surface: rgba(17, 17, 28, 0.03);
+    --studio-surface-2: rgba(17, 17, 28, 0.06);
+    --studio-border: rgba(20, 20, 28, 0.1);
+    --studio-border-strong: rgba(20, 20, 28, 0.18);
+    --studio-text: #14141c;
+    --studio-text-dim: rgba(20, 20, 28, 0.65);
+    --studio-text-faint: rgba(20, 20, 28, 0.48);
+    color: var(--studio-text);
+    background:
+      radial-gradient(42rem 21rem at 100% 0%, rgba(79, 70, 229, 0.09) 0%, transparent 70%),
+      radial-gradient(36rem 19rem at 0% 0%, rgba(123, 97, 255, 0.1) 0%, transparent 72%),
+      linear-gradient(180deg, var(--studio-bg) 0%, var(--studio-bg-deep) 65%, #ffffff 100%);
+  }
+
+  .ff-studio-shell[data-dashboard-theme='dark'] {
+    --studio-bg: #0b0b0f;
+    --studio-bg-deep: #070709;
+    --studio-panel: #111118;
+    --studio-surface: rgba(255, 255, 255, 0.05);
+    --studio-surface-2: rgba(255, 255, 255, 0.08);
+    --studio-border: rgba(255, 255, 255, 0.1);
+    --studio-border-strong: rgba(255, 255, 255, 0.2);
+    --studio-text: #ffffff;
+    --studio-text-dim: rgba(255, 255, 255, 0.65);
+    --studio-text-faint: rgba(255, 255, 255, 0.45);
   }
 
   .ff-studio-appbar {
@@ -251,8 +278,8 @@
     align-items: center;
     gap: 1rem;
     padding: 0.72rem 1.25rem;
-    border-bottom: 1px solid var(--border);
-    background: var(--glass);
+    border-bottom: 1px solid var(--studio-border);
+    background: color-mix(in srgb, var(--studio-panel) 88%, transparent);
     backdrop-filter: blur(20px);
   }
 
@@ -270,7 +297,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border: 1px solid var(--border-strong);
+    border: 1px solid var(--studio-border-strong);
     background: linear-gradient(135deg, var(--accent), var(--accent2));
     color: #fff;
     box-shadow: 0 12px 26px -16px var(--glow);
@@ -295,7 +322,7 @@
     font-size: 0.58rem;
     letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: var(--text-faint);
+    color: var(--studio-text-faint);
     font-weight: 600;
   }
 
@@ -305,14 +332,14 @@
     margin: 0 auto;
     padding: 0.22rem;
     border-radius: 999px;
-    border: 1px solid var(--border);
-    background: var(--surface);
+    border: 1px solid var(--studio-border);
+    background: var(--studio-surface);
   }
 
   .ff-studio-tab {
     border-radius: 999px;
     padding: 0.48rem 0.88rem;
-    color: var(--text-dim);
+    color: var(--studio-text-dim);
     font-size: 0.79rem;
     font-weight: 500;
     transition: all 0.25s var(--ease);
@@ -320,7 +347,7 @@
   }
 
   .ff-studio-tab:hover {
-    color: var(--text);
+    color: var(--studio-text);
   }
 
   .ff-studio-tab-active {
@@ -346,7 +373,7 @@
     display: block;
     font-size: 0.8rem;
     font-weight: 600;
-    color: var(--text);
+    color: var(--studio-text);
   }
 
   .ff-studio-user span {
@@ -356,13 +383,31 @@
     overflow: hidden;
     text-overflow: ellipsis;
     font-size: 0.7rem;
-    color: var(--text-faint);
+    color: var(--studio-text-faint);
+  }
+
+  .ff-studio-theme-toggle {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 999px;
+    border: 1px solid var(--studio-border-strong);
+    background: var(--studio-surface);
+    color: var(--studio-text-dim);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.22s var(--ease);
+  }
+
+  .ff-studio-theme-toggle:hover {
+    color: var(--accent);
+    border-color: color-mix(in srgb, var(--accent) 55%, transparent);
   }
 
   .ff-studio-logout {
-    border-color: var(--border-strong);
-    background: var(--surface);
-    color: var(--text);
+    border-color: var(--studio-border-strong);
+    background: var(--studio-surface);
+    color: var(--studio-text);
     padding: 0.5rem 0.8rem;
     border-radius: 999px;
     font-size: 0.73rem;
@@ -378,8 +423,8 @@
     position: sticky;
     top: 63px;
     height: calc(100vh - 63px);
-    border-right: 1px solid var(--border);
-    background: var(--panel);
+    border-right: 1px solid var(--studio-border);
+    background: color-mix(in srgb, var(--studio-panel) 92%, transparent);
     padding: 1.25rem 0.86rem;
     display: flex;
     flex-direction: column;
@@ -391,9 +436,9 @@
     align-items: center;
     gap: 0.66rem;
     width: 100%;
-    border: 1px solid var(--border);
+    border: 1px solid var(--studio-border);
     border-radius: 0.85rem;
-    background: var(--surface);
+    background: var(--studio-surface);
     padding: 0.66rem 0.72rem;
     text-align: left;
     cursor: default;
@@ -424,7 +469,7 @@
     font-family: 'Space Grotesk', 'Inter', sans-serif;
     font-size: 0.82rem;
     font-weight: 600;
-    color: var(--text);
+    color: var(--studio-text);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -434,7 +479,7 @@
     display: block;
     margin-top: 0.08rem;
     font-size: 0.66rem;
-    color: var(--text-faint);
+    color: var(--studio-text-faint);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -451,26 +496,26 @@
     font-size: 0.58rem;
     letter-spacing: 0.16em;
     text-transform: uppercase;
-    color: var(--text-faint);
+    color: var(--studio-text-faint);
     font-weight: 600;
   }
 
   .ff-studio-side .ff-nav-link {
     position: relative;
-    color: var(--text-dim);
+    color: var(--studio-text-dim);
     border-radius: 0.72rem;
     padding: 0.62rem 0.74rem;
     font-size: 0.82rem;
   }
 
   .ff-studio-side .ff-nav-link-idle:hover {
-    color: var(--text);
-    background: var(--surface);
+    color: var(--studio-text);
+    background: var(--studio-surface);
   }
 
   .ff-studio-side .ff-nav-link-active {
-    color: var(--text);
-    background: var(--surface-2);
+    color: var(--studio-text);
+    background: var(--studio-surface-2);
     box-shadow: none;
   }
 
@@ -489,9 +534,9 @@
 
   .ff-studio-planbox {
     margin-top: auto;
-    border: 1px solid var(--border);
+    border: 1px solid var(--studio-border);
     border-radius: 0.9rem;
-    background: linear-gradient(160deg, var(--surface-2), transparent);
+    background: linear-gradient(160deg, var(--studio-surface-2), transparent);
     padding: 0.78rem;
   }
 
@@ -502,22 +547,22 @@
   .ff-studio-planname {
     font-family: 'Space Grotesk', 'Inter', sans-serif;
     font-size: 0.76rem;
-    color: var(--text-dim);
+    color: var(--studio-text-dim);
     margin-bottom: 0.3rem;
   }
 
   .ff-studio-planbadge span {
-    background: var(--surface);
-    color: var(--text);
-    border-color: var(--border-strong);
+    background: var(--studio-surface);
+    color: var(--studio-text);
+    border-color: var(--studio-border-strong);
   }
 
   .ff-studio-planlogout {
     width: 100%;
     justify-content: flex-start;
-    border-color: var(--border-strong);
-    background: var(--surface);
-    color: var(--text);
+    border-color: var(--studio-border-strong);
+    background: var(--studio-surface);
+    color: var(--studio-text);
     font-size: 0.78rem;
   }
 
@@ -529,10 +574,10 @@
   .ff-studio-main-wrap {
     margin: 0 auto;
     max-width: 1200px;
-    border-color: var(--border);
+    border-color: var(--studio-border);
     background:
       radial-gradient(34rem 22rem at 100% 0%, color-mix(in srgb, var(--accent) 14%, transparent) 0%, transparent 68%),
-      color-mix(in srgb, var(--panel) 84%, transparent);
+      color-mix(in srgb, var(--studio-panel) 96%, transparent);
   }
 
   .ff-studio-bottomnav {
@@ -541,8 +586,8 @@
     bottom: 0.72rem;
     z-index: 40;
     border-radius: 1rem;
-    border: 1px solid var(--border-strong);
-    background: color-mix(in srgb, var(--panel) 90%, transparent);
+    border: 1px solid var(--studio-border-strong);
+    background: color-mix(in srgb, var(--studio-panel) 95%, transparent);
     padding: 0.5rem;
     backdrop-filter: blur(18px);
     box-shadow: 0 20px 40px -28px rgba(0, 0, 0, 0.72);
@@ -558,7 +603,7 @@
     padding: 0.48rem 0.4rem;
     font-size: 0.66rem;
     font-weight: 500;
-    color: var(--text-dim);
+    color: var(--studio-text-dim);
     transition: all 0.22s var(--ease);
   }
 
@@ -569,12 +614,12 @@
   }
 
   .ff-main-wrap {
-    border-radius: 30px;
-    border: 1px solid var(--ff-border);
+    border-radius: 26px;
+    border: 1px solid color-mix(in srgb, var(--studio-border) 88%, transparent);
     background:
-      radial-gradient(34rem 22rem at 100% 0%, rgba(123, 97, 255, 0.14) 0%, transparent 68%),
-      rgba(255, 255, 255, 0.7);
-    box-shadow: 0 35px 75px -55px rgba(0, 0, 0, 0.88);
+      radial-gradient(34rem 22rem at 100% 0%, rgba(123, 97, 255, 0.08) 0%, transparent 68%),
+      rgba(255, 255, 255, 0.96);
+    box-shadow: 0 26px 54px -42px rgba(40, 35, 62, 0.28);
     backdrop-filter: blur(16px);
     padding: clamp(0.95rem, 2vw, 1.5rem);
   }
@@ -629,6 +674,342 @@
     font-size: 1.02rem;
     font-weight: 700;
     color: #111;
+  }
+
+  .ff-dash-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    padding: 0.5rem 0.2rem 0.1rem;
+  }
+
+  .ff-dash-title {
+    margin: 0;
+    font-family: 'Space Grotesk', 'Inter', sans-serif;
+    font-size: clamp(1.45rem, 2.2vw, 1.85rem);
+    color: #13131b;
+  }
+
+  .ff-dash-sub {
+    margin-top: 0.28rem;
+    font-size: 0.82rem;
+    color: rgba(20, 20, 28, 0.62);
+  }
+
+  .ff-dash-controls {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .ff-dash-search {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.52rem 0.7rem;
+    border-radius: 0.62rem;
+    border: 1px solid rgba(20, 20, 28, 0.14);
+    background: rgba(255, 255, 255, 0.94);
+    color: rgba(20, 20, 28, 0.5);
+    font-size: 0.74rem;
+  }
+
+  .ff-dash-range {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    border: 1px solid rgba(20, 20, 28, 0.14);
+    border-radius: 0.6rem;
+    background: rgba(255, 255, 255, 0.94);
+    padding: 0.18rem;
+  }
+
+  .ff-dash-range span {
+    padding: 0.38rem 0.62rem;
+    border-radius: 0.48rem;
+    color: rgba(20, 20, 28, 0.62);
+    font-size: 0.72rem;
+    font-weight: 500;
+  }
+
+  .ff-dash-range .is-active {
+    background: linear-gradient(120deg, var(--accent), var(--accent2));
+    color: #fff;
+    box-shadow: 0 8px 18px -12px rgba(123, 97, 255, 0.9);
+  }
+
+  .ff-dash-bell {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 999px;
+    border: 1px solid rgba(20, 20, 28, 0.16);
+    background: rgba(255, 255, 255, 0.94);
+    color: rgba(20, 20, 28, 0.58);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .ff-dash-trial {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.7rem;
+    padding: 0.95rem 1rem;
+    border: 1px solid rgba(20, 20, 28, 0.13);
+    background: rgba(255, 255, 255, 0.96);
+  }
+
+  .ff-dash-trial span {
+    color: rgba(20, 20, 28, 0.72);
+    font-size: 0.86rem;
+  }
+
+  .ff-dash-onboarding {
+    padding: 1rem;
+    border: 1px solid rgba(20, 20, 28, 0.12);
+    background: rgba(255, 255, 255, 0.96);
+  }
+
+  .ff-dash-onboarding-head {
+    margin-bottom: 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.7rem;
+    flex-wrap: wrap;
+  }
+
+  .ff-dash-onboarding-head p {
+    margin-top: 0.2rem;
+    color: rgba(20, 20, 28, 0.6);
+    font-size: 0.82rem;
+  }
+
+  .ff-dash-progress {
+    width: 11rem;
+    height: 0.52rem;
+    border-radius: 999px;
+    background: rgba(20, 20, 28, 0.1);
+    overflow: hidden;
+  }
+
+  .ff-dash-progress i {
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(120deg, var(--accent), var(--accent2));
+  }
+
+  .ff-dash-onboarding-item {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    border-radius: 0.75rem;
+    border: 1px solid rgba(20, 20, 28, 0.1);
+    background: #fff;
+    padding: 0.5rem 0.7rem;
+    font-size: 0.82rem;
+    color: rgba(20, 20, 28, 0.76);
+  }
+
+  .ff-dash-card {
+    border: 1px solid rgba(20, 20, 28, 0.12);
+    background: rgba(255, 255, 255, 0.96);
+  }
+
+  .ff-dash-card-head {
+    margin-bottom: 0.6rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.8rem;
+    flex-wrap: wrap;
+  }
+
+  .ff-dash-card-head span {
+    font-size: 0.74rem;
+    color: rgba(20, 20, 28, 0.55);
+  }
+
+  .ff-dash-donut-wrap {
+    display: grid;
+    place-items: center;
+    gap: 1rem;
+  }
+
+  .ff-dash-donut {
+    width: 140px;
+    height: 140px;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    position: relative;
+  }
+
+  .ff-dash-donut::after {
+    content: '';
+    position: absolute;
+    inset: 13px;
+    border-radius: 999px;
+    background: #fff;
+  }
+
+  .ff-dash-donut-inner {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+  }
+
+  .ff-dash-donut-inner b {
+    display: block;
+    font-family: 'Space Grotesk', 'Inter', sans-serif;
+    font-size: 1.5rem;
+    line-height: 1;
+    color: #15151f;
+  }
+
+  .ff-dash-donut-inner span {
+    font-size: 0.67rem;
+    color: rgba(20, 20, 28, 0.55);
+  }
+
+  .ff-dash-legend-row {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+  }
+
+  .ff-dash-legend-row i {
+    width: 9px;
+    height: 9px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+
+  .ff-dash-legend-row b {
+    margin-left: auto;
+    font-family: 'Space Grotesk', 'Inter', sans-serif;
+    color: #1a1a22;
+    font-weight: 600;
+  }
+
+  .ff-dash-insight {
+    border: 1px solid rgba(123, 97, 255, 0.45);
+    background: linear-gradient(110deg, rgba(123, 97, 255, 0.09), rgba(255, 255, 255, 0.98));
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    flex-wrap: wrap;
+    padding: 1rem 1.1rem;
+  }
+
+  .ff-dash-insight-icon {
+    width: 2.6rem;
+    height: 2.6rem;
+    border-radius: 0.75rem;
+    display: grid;
+    place-items: center;
+    color: #fff;
+    background: linear-gradient(120deg, var(--accent), var(--accent2));
+  }
+
+  .ff-dash-insight-tag {
+    font-size: 0.62rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  .ff-dash-insight-copy {
+    margin-top: 0.2rem;
+    color: rgba(20, 20, 28, 0.85);
+    font-family: 'Space Grotesk', 'Inter', sans-serif;
+    font-size: 0.94rem;
+    line-height: 1.4;
+  }
+
+  .ff-dash-avatar {
+    width: 1.8rem;
+    height: 1.8rem;
+    border-radius: 999px;
+    background: linear-gradient(120deg, #7b61ff, #8b5cff);
+    color: #fff;
+    font-size: 0.66rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-family: 'Space Grotesk', 'Inter', sans-serif;
+  }
+
+  .ff-dash-row-link {
+    width: 1.9rem;
+    height: 1.9rem;
+    border-radius: 999px;
+    border: 1px solid rgba(20, 20, 28, 0.15);
+    color: rgba(20, 20, 28, 0.5);
+    background: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s var(--ease);
+  }
+
+  .ff-dash-row-link:hover {
+    color: var(--accent);
+    border-color: rgba(123, 97, 255, 0.46);
+  }
+
+  .ff-dash-integration-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.7rem;
+    border-radius: 0.8rem;
+    border: 1px solid rgba(20, 20, 28, 0.1);
+    background: #fff;
+    padding: 0.6rem 0.68rem;
+  }
+
+  .ff-dash-integration-row b {
+    display: block;
+    font-size: 0.82rem;
+    font-family: 'Space Grotesk', 'Inter', sans-serif;
+    color: #1a1a24;
+  }
+
+  .ff-dash-integration-row span {
+    display: block;
+    margin-top: 0.09rem;
+    font-size: 0.68rem;
+    color: rgba(20, 20, 28, 0.55);
+  }
+
+  .ff-dash-pill {
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    font-size: 0.66rem;
+    font-weight: 600;
+    color: rgba(20, 20, 28, 0.58);
+    background: rgba(20, 20, 28, 0.08);
+    white-space: nowrap;
+  }
+
+  .ff-dash-pill-ok {
+    color: #128d57;
+    background: rgba(62, 207, 142, 0.2);
+  }
+
+  .ff-dash-alerts {
+    border: 1px solid rgba(251, 113, 133, 0.34);
+    background: #fff;
   }
 
   .ff-tabbar {

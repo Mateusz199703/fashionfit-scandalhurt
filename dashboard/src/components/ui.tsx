@@ -7,8 +7,8 @@ export function Card({ children, className = '' }: { children: React.ReactNode; 
 
 const PLAN_STYLES: Record<Plan, string> = {
   STARTER: 'bg-white text-ink border border-ink/20',
-  GROWTH: 'bg-ink text-white border border-ink',
-  SCALE: 'bg-gradient-to-r from-ink to-black text-white border border-black',
+  GROWTH: 'bg-violet-50 text-violet-700 border border-violet-200',
+  SCALE: 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white border border-indigo-600',
 };
 
 export function PlanBadge({ plan }: { plan: Plan }) {
@@ -20,14 +20,14 @@ export function PlanBadge({ plan }: { plan: Plan }) {
 }
 
 const STATUS_STYLES: Record<ClientStatus | string, string> = {
-  trial: 'bg-white text-ink border border-ink/20',
-  active: 'bg-ink text-white border border-ink',
-  inactive: 'bg-secondary-100 text-ink/70 border border-ink/10',
+  trial: 'bg-violet-50 text-violet-700 border border-violet-200',
+  active: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+  inactive: 'bg-zinc-100 text-zinc-600 border border-zinc-200',
 };
 
 export function StatusBadge({ status }: { status: string }) {
   return (
-    <span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold tracking-[0.07em] uppercase ${STATUS_STYLES[status] || 'bg-secondary-100 text-ink/70 border border-ink/10'}`}>
+    <span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold tracking-[0.07em] uppercase ${STATUS_STYLES[status] || 'bg-zinc-100 text-zinc-600 border border-zinc-200'}`}>
       {status}
     </span>
   );

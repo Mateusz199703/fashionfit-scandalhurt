@@ -5,10 +5,10 @@ import { useAuth } from '../auth/AuthContext';
 import { PlanBadge } from './ui';
 
 const NAV = [
-  { to: '/dashboard', label: 'Pulpit', icon: LayoutDashboard, group: 'Wzrost' },
-  { to: '/shops', label: 'Sklepy', icon: Store, group: 'Wzrost' },
-  { to: '/billing', label: 'Płatności', icon: CreditCard, group: 'Konto' },
-  { to: '/settings', label: 'Ustawienia', icon: Settings, group: 'Konto' },
+  { to: '/dashboard', label: 'Pulpit', icon: LayoutDashboard, group: 'Studio' },
+  { to: '/shops', label: 'Agent mody', icon: Store, group: 'Studio' },
+  { to: '/billing', label: 'Przymierzalnia', icon: CreditCard, group: 'Studio' },
+  { to: '/settings', label: 'System wizualny', icon: Settings, group: 'Ustawienia' },
 ];
 
 export function Layout() {
@@ -25,7 +25,7 @@ export function Layout() {
     .slice(0, 2)
     .map((chunk) => chunk[0]?.toUpperCase() || '')
     .join('') || 'FF';
-  const navGroups = ['Wzrost', 'Konto'] as const;
+  const navGroups = ['Studio', 'Ustawienia'] as const;
 
   return (
     <div className="ff-app-shell ff-studio-shell min-h-screen pb-24 md:pb-0">
@@ -76,7 +76,7 @@ export function Layout() {
             <span className="ff-studio-store-avatar">{storeInitials}</span>
             <span className="ff-studio-store-meta">
               <b>{client?.name || 'FashionFit Store'}</b>
-              <span>{client?.email || 'studio@fashionfit.ai'}</span>
+              <span>{client?.email || 'Sklep aktywny'}</span>
             </span>
           </button>
 
@@ -103,7 +103,7 @@ export function Layout() {
           <div className="ff-studio-planbox">
             {client && (
               <div className="ff-studio-planmeta">
-                <div className="ff-studio-planname">Plan aktywny</div>
+                <div className="ff-studio-planname">Plan i limity</div>
                 <div className="ff-studio-planbadge">
                   <PlanBadge plan={client.plan} />
                 </div>
