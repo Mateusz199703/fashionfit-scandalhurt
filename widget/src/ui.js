@@ -489,15 +489,6 @@ export function createWidget({ config, api, product, externalId }) {
           ),
         ),
       ),
-      h('div', { class: 'ff-advisor-header-actions' },
-        h('button', {
-          class: 'ff-advisor-menu',
-          type: 'button',
-          disabled: 'true',
-          'aria-disabled': 'true',
-          'aria-label': 'Opcje rozmowy (wkrótce)',
-        }, '⋯'),
-      ),
     );
 
     if (!advisorModuleChecked && !advisorModuleCheckError && !advisorLockedPayload) {

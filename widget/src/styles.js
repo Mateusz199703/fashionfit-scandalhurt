@@ -178,9 +178,9 @@ const CSS = `
 }
 .ff-overlay.ff-overlay-advisor {
   background:
-    radial-gradient(circle at 14% 0%, rgba(123, 97, 255, 0.14), transparent 40%),
-    radial-gradient(circle at 92% 100%, rgba(79, 70, 229, 0.1), transparent 44%),
-    rgba(236, 239, 249, 0.72);
+    radial-gradient(circle at 14% 0%, rgba(123, 97, 255, 0.16), transparent 42%),
+    radial-gradient(circle at 92% 100%, rgba(79, 70, 229, 0.12), transparent 46%),
+    rgba(15, 18, 31, 0.34);
 }
 
 .ff-modal {
@@ -216,42 +216,51 @@ const CSS = `
   animation: ff-fade-in 0.25s ease both;
 }
 .ff-modal.ff-modal-advisor{
-  width: min(450px, calc(100vw - 18px));
-  max-height: calc(100dvh - 18px);
-  border-radius: 26px;
+  width: min(500px, calc(100vw - 24px));
+  max-height: calc(100dvh - 24px);
+  border-radius: 30px;
   padding: 16px 14px 14px;
-  background: linear-gradient(180deg, #ffffff 0%, #f8f9ff 100%);
+  background: #ffffff;
   color: #16182d;
-  border: 1px solid rgba(123, 97, 255, 0.24);
+  border: 1px solid rgba(17, 17, 24, 0.12);
   box-shadow:
-    0 24px 62px rgba(33, 26, 98, 0.2),
-    0 0 0 1px rgba(255, 255, 255, 0.85) inset;
+    0 28px 70px rgba(15, 21, 41, 0.26),
+    0 1px 0 rgba(255, 255, 255, 0.85) inset;
 }
 .ff-modal.ff-modal-advisor::before{
-  border-radius: 26px;
-  background:
-    radial-gradient(30rem 14rem at 0% 0%, rgba(123, 97, 255, 0.1), transparent 68%),
-    linear-gradient(180deg, rgba(255,255,255,0.74), rgba(255,255,255,0));
+  border-radius: 30px;
+  background: none;
+}
+.ff-modal.ff-modal-advisor .ff-modal-body{
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 .ff-modal.ff-modal-advisor .ff-close{
-  border-color: rgba(123, 97, 255, 0.32);
-  background: #f8f8ff;
-  color: rgba(56, 48, 118, 0.85);
+  top: 12px;
+  right: 12px;
+  width: 34px;
+  height: 34px;
+  border-color: rgba(17, 24, 39, 0.12);
+  background: #f8f9fc;
+  color: #4b5563;
+  font-size: 26px !important;
+  line-height: 0.74 !important;
 }
 .ff-modal.ff-modal-advisor .ff-close:hover{
-  background: rgba(123, 97, 255, 0.14);
-  color: #342f70;
+  background: #eef1fa;
+  color: #374151;
 }
 .ff-modal.ff-modal-advisor .ff-sub{
-  color:#5e6488;
+  color:#6b7288;
 }
 .ff-modal.ff-modal-advisor .ff-error{
-  color:#b73357;
+  color:#b42345;
 }
 .ff-modal.ff-modal-advisor .ff-btn-ghost{
   background:#ffffff;
   color:#313857;
-  border-color:rgba(123,97,255,.28);
+  border-color:rgba(17, 24, 39, 0.16);
 }
 
 .ff-close {
@@ -638,9 +647,9 @@ const CSS = `
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  margin: 0 0 10px;
-  padding: 2px 44px 10px 2px;
-  border-bottom: 1px solid rgba(123, 97, 255, 0.16);
+  margin: 0 0 8px;
+  padding: 4px 44px 12px 2px;
+  border-bottom: 1px solid rgba(17, 24, 39, 0.1);
 }
 .ff-advisor-header-profile{
   display: flex;
@@ -654,19 +663,19 @@ const CSS = `
   border-radius: 50%;
   flex-shrink: 0;
   background: radial-gradient(circle at 32% 26%, #95a4ff 0%, #6978ff 42%, #8b5cff 72%, #ffb15c 100%);
-  box-shadow: 0 12px 22px -14px rgba(79, 70, 229, 0.85);
+  box-shadow: 0 10px 20px -14px rgba(79, 70, 229, 0.8);
 }
 .ff-advisor-header-copy b{
   display: block;
-  color: #17182f;
-  font: 700 14px/1.25 "Space Grotesk", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+  color: #151826;
+  font: 700 15px/1.2 "Space Grotesk", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
 }
 .ff-advisor-header-copy span{
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  margin-top: 2px;
-  color: #55606e;
+  margin-top: 3px;
+  color: #6b7280;
   font-size: 12px;
   font-weight: 600;
 }
@@ -715,35 +724,36 @@ const CSS = `
   line-height: 1.45;
 }
 .ff-chat-list {
-  border: 1px solid rgba(123, 97, 255, 0.2);
-  border-radius: 18px;
-  background: #f4f6ff;
-  max-height: min(48vh, 420px);
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  max-height: min(52vh, 430px);
   overflow: auto;
   overflow-x: hidden;
-  padding: 10px;
+  padding: 10px 2px 4px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
   min-width: 0;
+  flex: 1 1 auto;
 }
 .ff-chat-day{
   width: max-content;
-  margin: 0 auto 2px;
+  margin: 0 auto 4px;
   padding: 4px 10px;
   border-radius: 999px;
-  border: 1px solid rgba(123, 97, 255, 0.2);
-  background: #ffffff;
-  color: #72799a;
+  border: none;
+  background: #f3f4f8;
+  color: #8a90a5;
   font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  text-transform: none;
   font-weight: 600;
 }
 .ff-chat-row {
   display: flex;
   align-items: flex-end;
-  gap: 8px;
+  gap: 10px;
   min-width: 0;
 }
 .ff-chat-user {
@@ -753,15 +763,15 @@ const CSS = `
   justify-content: flex-start;
 }
 .ff-chat-avatar{
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  background: #eceeff;
-  border: 1px solid rgba(123, 97, 255, 0.2);
+  background: #eef1ff;
+  border: 1px solid rgba(123, 97, 255, 0.24);
 }
 .ff-chat-avatar-core{
   width: 17px;
@@ -772,30 +782,32 @@ const CSS = `
 }
 .ff-chat-stack{
   min-width: 0;
-  max-width: calc(100% - 36px);
+  max-width: calc(100% - 40px);
   display: grid;
-  gap: 8px;
+  gap: 9px;
 }
 .ff-chat-bubble {
-  max-width: min(92%, 520px);
-  border-radius: 16px;
-  padding: 10px 13px;
+  max-width: min(90%, 480px);
+  border-radius: 18px 18px 18px 10px;
+  padding: 11px 14px;
   line-height: 1.45;
   font-size: 14px;
-  border: 1px solid rgba(127, 135, 172, 0.28);
-  background: #ffffff;
-  color: #21243a;
-  box-shadow: 0 8px 20px -18px rgba(34, 40, 78, 0.5);
+  border: 1px solid rgba(17, 24, 39, 0.1);
+  background: #f3f4f6;
+  color: #111827;
+  box-shadow: 0 4px 12px -10px rgba(17, 24, 39, 0.24);
   overflow-wrap: anywhere;
 }
 .ff-chat-user .ff-chat-bubble {
-  border-color: rgba(123, 97, 255, 0.72);
-  background: linear-gradient(120deg, #7b61ff, #4f46e5);
+  border: none;
+  border-radius: 18px 18px 10px 18px;
+  background: linear-gradient(135deg, #7b61ff, #4f46e5);
   color: #fff;
+  box-shadow: 0 12px 24px -18px rgba(79, 70, 229, 0.9);
 }
 .ff-chat-bubble-loading {
-  color: #505c8a;
-  background: #edf0ff;
+  color: #4e5a83;
+  background: #eceffd;
 }
 .ff-advisor-input-wrap {
   margin-top: 0;
@@ -805,18 +817,18 @@ const CSS = `
 .ff-advisor-input {
   width: 100%;
   resize: none;
-  min-height: 50px;
+  min-height: 46px;
   max-height: 180px;
-  border: 1px solid rgba(123, 97, 255, 0.25);
+  border: 1px solid #e1e4ee;
   border-radius: 999px;
-  padding: 13px 16px;
+  padding: 11px 15px;
   font-size: 14px;
   line-height: 1.4;
-  color: #1f1f34;
-  background: #ffffff;
+  color: #171720;
+  background: #f8f9fc;
 }
 .ff-advisor-input::placeholder {
-  color: #8d93af;
+  color: #8d93a5;
 }
 .ff-advisor-input:disabled {
   background: #f3f4fb;
@@ -826,11 +838,11 @@ const CSS = `
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-top: 10px;
-  padding: 8px;
-  border: 1px solid rgba(123, 97, 255, 0.2);
-  border-radius: 16px;
-  background: #f7f8ff;
+  margin-top: 12px;
+  padding: 10px;
+  border: 1px solid #e4e7f0;
+  border-radius: 18px;
+  background: #ffffff;
 }
 .ff-advisor-mic{
   width: 44px;
@@ -838,9 +850,9 @@ const CSS = `
   height: 44px;
   padding: 0;
   border-radius: 999px;
-  border-color: rgba(123, 97, 255, 0.24);
-  color: #5f6689;
-  background: #ffffff;
+  border-color: #dfe3ee;
+  color: #8a90a6;
+  background: #f6f7fb;
 }
 .ff-advisor-send {
   width: 46px;
@@ -931,10 +943,10 @@ const CSS = `
   font-size: 13px;
 }
 .ff-advisor-foot{
-  margin-top: 10px;
-  padding-top: 8px;
-  border-top: 1px solid rgba(123, 97, 255, 0.14);
-  color: #6b7193;
+  margin-top: 8px;
+  padding-top: 10px;
+  border-top: 1px solid #eaedf4;
+  color: #7a8094;
   font-size: 11px;
   text-align: center;
 }
@@ -966,6 +978,10 @@ const CSS = `
     align-items: flex-end;
     padding: 0;
   }
+  .ff-overlay.ff-overlay-advisor {
+    align-items: center;
+    padding: 12px;
+  }
   .ff-modal {
     width: 100vw;
     height: min(100dvh, 100vh);
@@ -975,11 +991,11 @@ const CSS = `
     padding-bottom: max(16px, env(safe-area-inset-bottom));
   }
   .ff-modal.ff-modal-advisor{
-    width: 100vw;
-    height: min(100dvh, 100vh);
-    max-height: min(100dvh, 100vh);
-    border-radius: 18px 18px 0 0;
-    padding: 14px 10px 12px;
+    width: min(430px, calc(100vw - 24px));
+    height: auto;
+    max-height: calc(100dvh - 24px);
+    border-radius: 24px;
+    padding: 14px 12px 12px;
   }
   .ff-h {
     font-size: 31px !important;
@@ -1010,9 +1026,8 @@ const CSS = `
     grid-template-columns: 1fr;
   }
   .ff-chat-list {
-    max-height: 38vh;
-    border-radius: 16px;
-    padding: 8px;
+    max-height: min(44vh, 360px);
+    padding: 8px 1px 2px;
   }
   .ff-advisor-header-copy b { font-size: 13px !important; }
   .ff-advisor-header-copy span { font-size: 11px !important; }
@@ -1024,7 +1039,7 @@ const CSS = `
   }
   .ff-advisor-composer {
     gap: 6px;
-    padding: 7px;
+    padding: 8px;
     border-radius: 14px;
   }
   .ff-advisor-mic{
