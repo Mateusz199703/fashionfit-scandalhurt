@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Shirt, ShoppingCart, Gauge, ArrowRight, Wallet, Lightbulb, Search, Bell } from 'lucide-react';
+import { Shirt, ShoppingCart, Gauge, Wallet, Lightbulb, Search, Bell } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { api, apiErrorMessage } from '../api/client';
 import { AnalyticsOverview, BillingOverview, OnboardingProgress, Shop } from '../types';
@@ -35,7 +34,6 @@ function metricDelta(values: number[]) {
 }
 
 export function DashboardPage() {
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<ShopStat[]>([]);
   const [totals, setTotals] = useState({ completions: 0, addToCarts: 0, purchases: 0, buyers: 0, revenue: 0 });
@@ -127,10 +125,11 @@ export function DashboardPage() {
     };
   }, []);
 
-  const today = new Date().toLocaleDateString('pl-PL', { day: '2-digit', month: 'long', year: 'numeric' });
+  const today = new Date().toLocaleDateString('pl-PL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   const conversion = totals.completions ? totals.addToCarts / totals.completions : 0;
   const lookConversion = totals.addToCarts ? totals.purchases / totals.addToCarts : 0;
   const activeShops = stats.filter((s) => s.shop.is_active).length;
+  const averageBasket = totals.purchases > 0 ? totals.revenue / totals.purchases : null;
 
   const chartSeriesA = useMemo(() => series.completions.slice(-14), [series.completions]);
   const chartSeriesB = useMemo(() => series.purchases.slice(-14), [series.purchases]);
@@ -159,10 +158,10 @@ export function DashboardPage() {
   ] as const;
 
   const metrics = [
-    { label: 'Przymiarki 30 dni', value: String(totals.completions), delta: deltas.completions, icon: <Shirt size={14} /> },
-    { label: 'Konwersja po przymiarce', value: formatPercent(conversion), delta: deltas.addToCarts, icon: <ShoppingCart size={14} /> },
-    { label: 'Zakupy po przymiarce', value: String(totals.purchases), delta: deltas.purchases, icon: <Wallet size={14} /> },
-    { label: 'Przychód z przymiarek', value: formatMoney(totals.revenue), delta: deltas.revenue, icon: <Gauge size={14} /> },
+    { label: 'Konwersja', value: formatPercent(conversion), delta: deltas.addToCarts, icon: <ShoppingCart size={14} />, spark: series.addToCarts.slice(-12), sparkColor: 'var(--green)' },
+    { label: 'Zwroty', value: '—', delta: null, icon: <Wallet size={14} />, spark: series.purchases.slice(-12), sparkColor: 'var(--green)' },
+    { label: 'Śr. wartość koszyka', value: averageBasket !== null ? formatMoney(averageBasket) : '—', delta: deltas.revenue, icon: <Gauge size={14} />, spark: series.revenue.slice(-12), sparkColor: 'var(--accent)' },
+    { label: 'Trafność rozmiaru', value: '—', delta: null, icon: <Shirt size={14} />, spark: series.completions.slice(-12), sparkColor: 'var(--accent)' },
   ];
 
   const sparklinePath = (points: number[]) => {
@@ -179,17 +178,22 @@ export function DashboardPage() {
       .join(' ');
   };
 
-  const metricSeries = [series.completions, series.addToCarts, series.purchases, series.revenue].map((s) => s.slice(-12));
-
   const deltaClass = (value: number | null) => {
     if (value === null) return 'kd warn';
     return value >= 0 ? 'kd up' : 'kd left';
   };
 
   const deltaLabel = (value: number | null) => {
-    if (value === null) return 'brak porównania';
+    if (value === null) return 'dane niedostępne';
     return `${value >= 0 ? '+' : ''}${value.toFixed(1)}% vs 7 dni`;
   };
+
+  const demoConversations = [
+    { initials: 'KW', name: 'Karolina W.', ago: '2 min temu', query: 'Sukienka na letnie wesele, romantyczna', size: 'M', status: 'Kupiła look', statusClass: 'buy', value: '876 zł' },
+    { initials: 'MT', name: 'Marta T.', ago: '11 min temu', query: 'Marynarka do biura, oversize', size: 'L', status: 'W koszyku', statusClass: 'cart', value: '329 zł' },
+    { initials: 'AN', name: 'Anna N.', ago: '24 min temu', query: 'Jeansy — który rozmiar przy 170 cm?', size: '28', status: 'Kupiła', statusClass: 'buy', value: '259 zł' },
+    { initials: 'JZ', name: 'Julia Z.', ago: '38 min temu', query: 'Stylizacja na koncert, wieczorowa', size: 'S', status: 'Porzuciła', statusClass: 'left', value: '—' },
+  ] as const;
 
   return (
     <div>
@@ -206,7 +210,7 @@ export function DashboardPage() {
           <div className="seg" aria-hidden="true">
             <button type="button">7 dni</button>
             <button type="button" className="on">30 dni</button>
-            <button type="button">90 dni</button>
+            <button type="button">Kwartał</button>
           </div>
           <button type="button" className="barbtn" aria-label="Powiadomienia">
             <Bell size={16} />
@@ -215,7 +219,7 @@ export function DashboardPage() {
       </div>
 
       <div className="kgrid">
-        {metrics.map((metric, index) => (
+        {metrics.map((metric) => (
           <div key={metric.label} className="kcard">
             <div className="kt">
               <span className="ki">{metric.icon}</span>
@@ -225,9 +229,9 @@ export function DashboardPage() {
             <div className={deltaClass(metric.delta)}>{loading ? 'ładowanie…' : deltaLabel(metric.delta)}</div>
             <svg viewBox="0 0 74 34" className="spark" aria-hidden="true">
               <polyline
-                points={sparklinePath(metricSeries[index])}
+                points={sparklinePath(metric.spark)}
                 fill="none"
-                stroke="currentColor"
+                stroke={metric.sparkColor}
                 strokeWidth="2.2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -313,51 +317,45 @@ export function DashboardPage() {
       <div className="row3">
         <div className="card">
           <div className="ch">
-            <h3>Aktywność sklepów</h3>
-            <span className="tag">{loading ? 'Ładowanie' : `${stats.length} sklepów`}</span>
+            <h3>Ostatnie rozmowy z AI stylistą</h3>
+            <span className="tag">demo</span>
           </div>
-          {loading ? (
-            <div className="empty">Ładowanie danych sklepów...</div>
-          ) : stats.length === 0 ? (
-            <div className="empty">Brak danych aktywności. Dodaj pierwszy sklep, aby rozpocząć analizę.</div>
-          ) : (
-            <table className="tbl">
-              <thead>
-                <tr>
-                  <th>Sklep</th>
-                  <th>Status</th>
-                  <th>Przymiarki</th>
-                  <th>Konwersja</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {stats.slice(0, 6).map(({ shop, completions, conversion: shopConversion }) => (
-                  <tr key={shop.id}>
-                    <td>
-                      <div className="cust">
-                        <span className="ca">{(shop.name || shop.domain).slice(0, 2).toUpperCase()}</span>
-                        <div>
-                          <b>{shop.name || shop.domain}</b>
-                          <span>{shop.domain}</span>
-                        </div>
+          <table className="tbl">
+            <thead>
+              <tr>
+                <th>Klient</th>
+                <th>Zapytanie</th>
+                <th>Rozmiar</th>
+                <th>Status</th>
+                <th style={{ textAlign: 'right' }}>Wartość</th>
+              </tr>
+            </thead>
+            <tbody>
+              {demoConversations.map((row) => (
+                <tr key={`${row.initials}-${row.name}`}>
+                  <td>
+                    <div className="cust">
+                      <span className="ca">{row.initials}</span>
+                      <div>
+                        <b>{row.name}</b>
+                        <span>{row.ago}</span>
                       </div>
-                    </td>
-                    <td>
-                      <span className={`pill ${shop.is_active ? 'buy' : 'left'}`}>{shop.is_active ? 'Aktywny' : 'Nieaktywny'}</span>
-                    </td>
-                    <td className="val">{completions}</td>
-                    <td className="val">{formatPercent(shopConversion)}</td>
-                    <td>
-                      <button type="button" className="go" onClick={() => navigate(`/shops/${shop.id}`)} aria-label={`Przejdź do sklepu ${shop.name || shop.domain}`}>
-                        <ArrowRight size={15} />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+                    </div>
+                  </td>
+                  <td className="q-txt">{row.query}</td>
+                  <td><span className="szbadge">{row.size}</span></td>
+                  <td>
+                    <span className={`pill ${row.statusClass}`}>
+                      {row.statusClass === 'buy' ? <span className="dot-live" /> : null}
+                      {row.status}
+                    </span>
+                  </td>
+                  <td style={{ textAlign: 'right' }}><span className="val">{row.value}</span></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <div className="table-note">Dane demonstracyjne układu tabeli (nie jest to feed live).</div>
         </div>
 
         <div className="card synccard">

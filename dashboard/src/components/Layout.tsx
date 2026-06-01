@@ -1,14 +1,89 @@
 import React from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Store, CreditCard, Settings, LogOut, Shirt } from 'lucide-react';
+import { ChevronDown, LogOut } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
-import { PlanBadge } from './ui';
 
-const NAV = [
-  { to: '/dashboard', label: 'Pulpit', icon: LayoutDashboard, group: 'Studio' },
-  { to: '/shops', label: 'Sklepy', icon: Store, group: 'Studio' },
-  { to: '/billing', label: 'Płatności', icon: CreditCard, group: 'Studio' },
-  { to: '/settings', label: 'Ustawienia', icon: Settings, group: 'System' },
+const TOP_TABS: Array<{ label: string; to?: string }> = [
+  { label: 'Pulpit', to: '/dashboard' },
+  { label: 'Agent mody' },
+  { label: 'Przymierzalnia' },
+  { label: 'System wizualny' },
+];
+
+const sideIcon = {
+  dashboard: (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="3" y="3" width="7" height="9" rx="1.5" />
+      <rect x="14" y="3" width="7" height="5" rx="1.5" />
+      <rect x="14" y="12" width="7" height="9" rx="1.5" />
+      <rect x="3" y="16" width="7" height="5" rx="1.5" />
+    </svg>
+  ),
+  chat: (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+    </svg>
+  ),
+  star: (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 3l2.5 5L20 9l-4 4 1 6-5-3-5 3 1-6-4-4 5.5-1z" />
+    </svg>
+  ),
+  size: (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M3 6h18M3 12h18M3 18h18" />
+    </svg>
+  ),
+  catalog: (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="3" y="3" width="7" height="7" rx="1.5" />
+      <rect x="14" y="3" width="7" height="7" rx="1.5" />
+      <rect x="3" y="14" width="7" height="7" rx="1.5" />
+      <rect x="14" y="14" width="7" height="7" rx="1.5" />
+    </svg>
+  ),
+  tryon: (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="5" y="3" width="14" height="18" rx="2" />
+      <path d="M9 8h6M9 12h6" />
+    </svg>
+  ),
+  customers: (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 21c0-4 4-6 8-6s8 2 8 6" />
+    </svg>
+  ),
+  analytics: (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M3 3v18h18" />
+      <path d="M7 14l3-3 3 3 4-5" />
+    </svg>
+  ),
+  settings: (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="3" />
+      <path d="M12 3v3M12 18v3M3 12h3M18 12h3" />
+    </svg>
+  ),
+};
+
+type RouteItem = { type: 'route'; label: string; to: string; icon: React.ReactNode; active?: boolean };
+type DisabledItem = { type: 'disabled'; label: string; icon: React.ReactNode; badge?: string; badgeSoft?: boolean };
+type GroupItem = { type: 'group'; label: string };
+type SideItem = RouteItem | DisabledItem | GroupItem;
+
+const SIDE_ITEMS: SideItem[] = [
+  { type: 'route', label: 'Pulpit', to: '/dashboard', icon: sideIcon.dashboard, active: true },
+  { type: 'disabled', label: 'Rozmowy AI', icon: sideIcon.chat, badge: '128' },
+  { type: 'disabled', label: 'Rekomendacje', icon: sideIcon.star },
+  { type: 'disabled', label: 'Dopasowanie rozmiaru', icon: sideIcon.size },
+  { type: 'disabled', label: 'Katalog', icon: sideIcon.catalog, badge: '1 240', badgeSoft: true },
+  { type: 'disabled', label: 'Przymierzalnia', icon: sideIcon.tryon },
+  { type: 'group', label: 'Wzrost' },
+  { type: 'disabled', label: 'Klienci', icon: sideIcon.customers },
+  { type: 'disabled', label: 'Analityka', icon: sideIcon.analytics },
+  { type: 'route', label: 'Ustawienia', to: '/settings', icon: sideIcon.settings },
 ];
 
 export function Layout() {
@@ -25,27 +100,48 @@ export function Layout() {
     .slice(0, 2)
     .map((chunk) => chunk[0]?.toUpperCase() || '')
     .join('') || 'FF';
-  const navGroups = ['Studio', 'System'] as const;
 
   return (
     <div className="ff-dashboard-ref">
       <header className="appbar">
         <div className="brand">
-          <span className="coremark" aria-hidden="true">
-            <Shirt size={15} />
+          <span className="core" style={{ width: 28, height: 28 }} aria-hidden="true">
+            <svg viewBox="0 0 200 200" width="28" height="28">
+              <defs>
+                <radialGradient id="ffCoreSph" cx="38%" cy="32%" r="80%">
+                  <stop offset="0%" stopColor="#7C8BFF" />
+                  <stop offset="45%" stopColor="#5B6CFF" />
+                  <stop offset="70%" stopColor="#8B5CFF" />
+                  <stop offset="100%" stopColor="#FFB15C" />
+                </radialGradient>
+              </defs>
+              <circle className="sph" cx="100" cy="100" r="42" fill="url(#ffCoreSph)" />
+              <g className="frm" fill="none" stroke="#fff" strokeWidth="6" strokeLinecap="round">
+                <path d="M48 64 L48 48 L64 48" />
+                <path d="M136 48 L152 48 L152 64" />
+                <path d="M152 136 L152 152 L136 152" />
+                <path d="M64 152 L48 152 L48 136" />
+              </g>
+            </svg>
           </span>
-          <span>FashionFit <span className="sp">AI</span> <small>Studio</small></span>
+          FashionFit <span className="sp">AI</span> <small>Studio</small>
         </div>
 
         <nav className="tabs" aria-label="Nawigacja Studio">
-          {NAV.map(({ to, label }) => (
-            <NavLink
-              key={to}
-              to={to}
-              className={({ isActive }) => `tab ${isActive ? 'on' : ''}`}
-            >
-              {label}
-            </NavLink>
+          {TOP_TABS.map((tab) => (
+            tab.to ? (
+              <NavLink
+                key={tab.label}
+                to={tab.to}
+                className={({ isActive }) => `tab ${isActive ? 'on' : ''}`}
+              >
+                {tab.label}
+              </NavLink>
+            ) : (
+              <button key={tab.label} type="button" className="tab is-disabled" aria-disabled="true">
+                {tab.label}
+              </button>
+            )
           ))}
         </nav>
 
@@ -64,46 +160,51 @@ export function Layout() {
 
       <div className="shell">
         <aside className="side">
-          <button type="button" className="store">
-            <span className="av">{storeInitials}</span>
-            <span className="store-meta">
-              <b>{client?.name || 'FashionFit Store'}</b>
-              <span>{client?.email || 'Sklep aktywny'}</span>
-            </span>
-          </button>
+          <div className="store">
+            <div className="av">{storeInitials}</div>
+            <div className="store-meta">
+              <b>{client?.name || 'Atelier Nord'}</b>
+              <span>{client?.email || 'atelier-nord.pl'}</span>
+            </div>
+            <ChevronDown className="chev" size={16} />
+          </div>
 
           <nav aria-label="Nawigacja boczna">
-            {navGroups.map((groupName) => (
-              <div key={groupName}>
-                <div className="navg">{groupName}</div>
-                {NAV.filter((entry) => entry.group === groupName).map(({ to, label, icon: Icon }) => (
+            {SIDE_ITEMS.map((item) => {
+              if (item.type === 'group') {
+                return <div key={item.label} className="navg">{item.label}</div>;
+              }
+
+              if (item.type === 'route') {
+                return (
                   <NavLink
-                    key={to}
-                    to={to}
+                    key={item.label}
+                    to={item.to}
                     className={({ isActive }) => `nav-i ${isActive ? 'on' : ''}`}
                   >
-                    <Icon size={17} />
-                    <span>{label}</span>
-                    {label === 'Sklepy' ? <span className="badge soft">live</span> : null}
+                    {item.icon}
+                    {item.label}
                   </NavLink>
-                ))}
-              </div>
-            ))}
+                );
+              }
+
+              return (
+                <div key={item.label} className="nav-i is-disabled" aria-disabled="true">
+                  {item.icon}
+                  {item.label}
+                  {item.badge ? <span className={`badge ${item.badgeSoft ? 'soft' : ''}`}>{item.badge}</span> : null}
+                </div>
+              );
+            })}
           </nav>
 
           <div className="planbox">
-            {client && (
-              <>
-                <div className="planmeta">
-                  <b>Plan aktywny</b>
-                  <p>Twoje centrum FashionFit Studio</p>
-                </div>
-                <div className="planbadge">
-                  <PlanBadge plan={client.plan} />
-                </div>
-              </>
-            )}
-            <button onClick={handleLogout} className="up" type="button">
+            <b>Plan Growth</b>
+            <p>Limity i wykorzystanie sprawdzisz w module płatności</p>
+            <NavLink className="up" to="/billing">Zwiększ limit →</NavLink>
+            {client ? <div className="plan-real-badge"><span className="label">Aktualny plan:</span> <span className="value">{client.plan}</span></div> : null}
+            <button onClick={handleLogout} className="plan-logout-btn" type="button" aria-label="Wyloguj">
+              <LogOut size={14} />
               Wyloguj
             </button>
           </div>
