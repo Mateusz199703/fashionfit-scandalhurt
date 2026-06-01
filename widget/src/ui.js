@@ -110,7 +110,7 @@ export function createWidget({ config, api, product, externalId }) {
     if (overlay) {
       const node = overlay;
       node.classList.remove('ff-open');
-    setTimeout(() => {
+      setTimeout(() => {
         node.remove();
         if (moduleAccessResolved && !moduleAccessError) {
           mountAdvisorLauncher();
@@ -489,6 +489,15 @@ export function createWidget({ config, api, product, externalId }) {
           ),
         ),
       ),
+      h('div', { class: 'ff-advisor-header-actions' },
+        h('button', {
+          class: 'ff-advisor-menu',
+          type: 'button',
+          disabled: 'true',
+          'aria-disabled': 'true',
+          'aria-label': 'Opcje rozmowy (wkrótce)',
+        }, '⋯'),
+      ),
     );
 
     if (!advisorModuleChecked && !advisorModuleCheckError && !advisorLockedPayload) {
@@ -599,22 +608,33 @@ export function createWidget({ config, api, product, externalId }) {
       }
     }
 
-    const chatRows = advisorMessages.length > 0
-      ? advisorMessages.map((msg) => h('div', { class: `ff-chat-row ff-chat-${msg.role === 'user' ? 'user' : 'assistant'}` },
-        h('div', { class: 'ff-chat-bubble' }, msg.text || ''),
-        msg.role === 'assistant' ? renderAdvisorRecommendationsWithState(msg.recommendations || [], msg.responseType) : null,
-      ))
-      : [
-        h('div', { class: 'ff-chat-row ff-chat-assistant' },
-          h('div', { class: 'ff-chat-bubble' }, ADVISOR_GREETING_MESSAGE),
+    function buildAssistantRow(text, recommendations = [], responseType = null, bubbleClass = '') {
+      return h('div', { class: 'ff-chat-row ff-chat-assistant' },
+        h('span', { class: 'ff-chat-avatar', 'aria-hidden': 'true' },
+          h('span', { class: 'ff-chat-avatar-core', 'aria-hidden': 'true' }),
         ),
-      ];
+        h('div', { class: 'ff-chat-stack' },
+          h('div', { class: `ff-chat-bubble${bubbleClass ? ` ${bubbleClass}` : ''}` }, text || ''),
+          renderAdvisorRecommendationsWithState(recommendations || [], responseType),
+        ),
+      );
+    }
+
+    function buildUserRow(text) {
+      return h('div', { class: 'ff-chat-row ff-chat-user' },
+        h('div', { class: 'ff-chat-bubble' }, text || ''),
+      );
+    }
+
+    const chatRows = advisorMessages.length > 0
+      ? advisorMessages.map((msg) => (msg.role === 'assistant'
+        ? buildAssistantRow(msg.text || '', msg.recommendations || [], msg.responseType)
+        : buildUserRow(msg.text || '')))
+      : [buildAssistantRow(ADVISOR_GREETING_MESSAGE)];
 
     if (advisorPending) {
       chatRows.push(
-        h('div', { class: 'ff-chat-row ff-chat-assistant' },
-          h('div', { class: 'ff-chat-bubble ff-chat-bubble-loading' }, 'Przygotowuję propozycje...'),
-        ),
+        buildAssistantRow('Przygotowuję propozycje...', [], null, 'ff-chat-bubble-loading'),
       );
     }
 
@@ -622,7 +642,7 @@ export function createWidget({ config, api, product, externalId }) {
       class: 'ff-advisor-input',
       rows: '3',
       maxlength: '1000',
-      placeholder: 'Napisz wiadomość…',
+      placeholder: 'Napisz wiadomość...',
       value: advisorDraft,
       oninput: (e) => {
         advisorDraft = e.target.value || '';
@@ -637,10 +657,19 @@ export function createWidget({ config, api, product, externalId }) {
       },
     });
     const sendButton = h('button', {
-      class: 'ff-btn ff-advisor-send',
+      class: `ff-btn ff-advisor-send${advisorPending ? ' is-loading' : ''}`,
       type: 'button',
       onclick: () => sendAdvisorMessage(advisorDraft),
-    }, advisorPending ? 'Wysyłanie...' : 'Wyślij');
+      'aria-label': advisorPending ? 'Wysyłanie wiadomości' : 'Wyślij wiadomość',
+    }, advisorPending ? '…' : '➤');
+
+    const micButton = h('button', {
+      class: 'ff-btn ff-btn-ghost ff-advisor-mic',
+      type: 'button',
+      disabled: 'true',
+      'aria-disabled': 'true',
+      'aria-label': 'Mikrofon (wkrótce)',
+    }, '🎤');
 
     function updateSendButtonState() {
       if (advisorPending || !advisorDraft.trim()) {
@@ -653,7 +682,12 @@ export function createWidget({ config, api, product, externalId }) {
     if (advisorPending) input.setAttribute('disabled', 'true');
     updateSendButtonState();
 
-    const chatList = h('div', { class: 'ff-chat-list' }, chatRows);
+    const chatList = h(
+      'div',
+      { class: 'ff-chat-list' },
+      h('div', { class: 'ff-chat-day' }, 'Dzisiaj'),
+      ...chatRows,
+    );
 
     setBody(
       advisorHeader,
@@ -673,6 +707,7 @@ export function createWidget({ config, api, product, externalId }) {
         : null,
       h('div', { class: 'ff-advisor-composer' },
         h('div', { class: 'ff-advisor-input-wrap' }, input),
+        micButton,
         sendButton,
       ),
       h('div', { class: 'ff-advisor-foot' }, 'Napędzane przez FashionFit AI · zgodne z RODO'),

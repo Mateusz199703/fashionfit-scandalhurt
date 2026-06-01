@@ -64,7 +64,7 @@ async function init() {
       product = {
         id: `global:${location.pathname || '/'}`,
         external_id: null,
-        name: 'AI Stylist',
+        name: 'Lume · stylista AI',
         garment_image_url: null,
         product_url: null,
         category: null,
