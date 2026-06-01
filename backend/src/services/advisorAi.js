@@ -1,6 +1,16 @@
 const fetch = require('node-fetch');
 const config = require('../config');
 
+const ALLOWED_RESPONSE_TYPES = new Set([
+  'answer_only',
+  'ask_follow_up',
+  'product_search',
+  'browse_catalog',
+  'no_match',
+  'recommend_products',
+  'product_explanation',
+]);
+
 function isEnabled() {
   return Boolean(config.advisorAi.enabled && config.advisorAi.apiKey);
 }
@@ -36,37 +46,61 @@ function parseStylistOutput(rawContent) {
   const reply = parsed && typeof parsed.reply === 'string' ? parsed.reply.trim() : '';
   if (!reply) throw new Error('AI output is missing non-empty reply');
 
-  if (!Array.isArray(parsed.selectedProductIds)) {
-    throw new Error('AI output is missing selectedProductIds array');
+  const responseType = parsed && typeof parsed.responseType === 'string'
+    ? parsed.responseType.trim().toLowerCase()
+    : '';
+  if (!ALLOWED_RESPONSE_TYPES.has(responseType)) {
+    throw new Error('AI output contains invalid responseType');
   }
 
-  const selectedProductIds = parsed.selectedProductIds
+  const rawRecommendedIds = Array.isArray(parsed.recommendedProductIds)
+    ? parsed.recommendedProductIds
+    : Array.isArray(parsed.selectedProductIds)
+    ? parsed.selectedProductIds
+    : null;
+  if (!rawRecommendedIds) {
+    throw new Error('AI output is missing recommendedProductIds array');
+  }
+
+  const recommendedProductIds = rawRecommendedIds
     .map((value) => String(value || '').trim())
     .filter(Boolean);
 
+  const followUpQuestion = parsed && typeof parsed.followUpQuestion === 'string'
+    ? parsed.followUpQuestion.trim()
+    : '';
+  const confidence = Number(parsed && parsed.confidence);
+
   return {
+    responseType,
     reply,
-    selectedProductIds,
+    recommendedProductIds,
+    followUpQuestion: followUpQuestion || null,
+    confidence: Number.isFinite(confidence) ? Math.max(0, Math.min(1, confidence)) : null,
     selectionReasons: normalizeSelectionReasons(parsed.selectionReasons),
   };
 }
 
 function buildSystemPrompt() {
   return [
-    'You are FashionFit AI Stylist, a premium ecommerce fashion stylist assistant.',
-    'Your role: provide natural, contextual styling guidance based on customer intent, occasion, tone, and outfit logic.',
-    'If the user asks a general styling question, answer conversationally first and ask one useful follow-up question when needed.',
-    'Do not force product recommendations when user intent is broad or exploratory.',
-    'You MUST only select products from the provided productCandidates list.',
-    'If there are no relevant productCandidates, return an empty selectedProductIds array.',
-    'If user asks for a category not present in productCandidates, say clearly there are no matching products in this catalog now.',
-    'Never invent products, prices, images, URLs, sizes, stock, or availability.',
-    'Do not mention products outside productCandidates.',
+    'You are FashionFit AI Stylist: a friendly boutique fashion consultant.',
+    'Default language: Polish.',
+    'Be natural, concise, conversational, and fashion-aware.',
+    'Decide intent per message and set responseType accordingly.',
+    'Allowed responseType values:',
+    'answer_only, ask_follow_up, product_search, browse_catalog, no_match, recommend_products, product_explanation.',
+    'If user asks general styling advice, prefer answer_only and no product IDs.',
+    'If context is vague, prefer ask_follow_up with one useful follow-up question.',
+    'If user asks to browse general offer, use browse_catalog.',
+    'If user asks product/category availability and there is no relevant candidate, use no_match.',
+    'Only recommend products when they are relevant to user intent.',
+    'You MUST only pick IDs from provided productCandidates.',
+    'Never invent product names, prices, URLs, sizes, stock, or availability.',
+    'Do not mention internal system logic.',
     'Do not provide medical/body-sensitive judgments.',
-    'Do not claim exact fit/size certainty unless explicitly provided in candidate data.',
-    'If intent is unclear or candidate list is insufficient, ask one short follow-up question in reply.',
+    'Do not claim exact fit certainty unless data explicitly supports it.',
     'Return JSON only with this schema:',
-    '{"reply":"string","selectedProductIds":["string"],"selectionReasons":[{"productId":"string","reason":"string"}]}.',
+    '{"responseType":"string","reply":"string","recommendedProductIds":["string"],"followUpQuestion":"string","confidence":0.0,"selectionReasons":[{"productId":"string","reason":"string"}]}.',
     'Do not return markdown or extra keys.',
   ].join(' ');
 }
@@ -79,12 +113,16 @@ function buildUserPrompt({
   maxRecommendations,
   shoppingIntentLikely,
   catalogHasRelevantMatches,
+  desiredResponseType,
+  allowedResponseTypes,
 }) {
   const payload = {
     userMessage: message,
     contextSignals: {
       shoppingIntentLikely: Boolean(shoppingIntentLikely),
       catalogHasRelevantMatches: Boolean(catalogHasRelevantMatches),
+      desiredResponseType: desiredResponseType || null,
+      allowedResponseTypes: Array.isArray(allowedResponseTypes) ? allowedResponseTypes : null,
     },
     advisorSettings: {
       tone: advisorSettings.tone,
@@ -107,6 +145,7 @@ function buildUserPrompt({
       maxRecommendations,
       mustUseProvidedCandidatesOnly: true,
       outputLanguage: 'Polish',
+      allowedResponseTypes: Array.isArray(allowedResponseTypes) ? allowedResponseTypes : null,
     },
   };
 
@@ -121,6 +160,8 @@ async function getStylistResponse({
   maxRecommendations,
   shoppingIntentLikely = false,
   catalogHasRelevantMatches = false,
+  desiredResponseType = null,
+  allowedResponseTypes = null,
 }) {
   if (!isEnabled()) throw new Error('Advisor AI is disabled or missing OPENAI_API_KEY');
 
@@ -153,6 +194,8 @@ async function getStylistResponse({
               maxRecommendations,
               shoppingIntentLikely,
               catalogHasRelevantMatches,
+              desiredResponseType,
+              allowedResponseTypes,
             }),
           },
         ],
@@ -180,6 +223,7 @@ async function getStylistResponse({
 }
 
 module.exports = {
+  ALLOWED_RESPONSE_TYPES,
   isEnabled,
   getStylistResponse,
   parseStylistOutput,

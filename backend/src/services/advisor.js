@@ -3,6 +3,15 @@ const { ApiError } = require('../middleware/errorHandler');
 const MAX_RECOMMENDATIONS = 3;
 const MAX_MESSAGE_LENGTH = 1000;
 const DEFAULT_TONE = 'friendly';
+const RESPONSE_TYPES = [
+  'answer_only',
+  'ask_follow_up',
+  'product_search',
+  'browse_catalog',
+  'no_match',
+  'recommend_products',
+  'product_explanation',
+];
 const SHOPPING_INTENT_TERMS = [
   'szukam',
   'szukamy',
@@ -12,21 +21,50 @@ const SHOPPING_INTENT_TERMS = [
   'zamówi',
   'chcę',
   'chce',
-  'potrzebuję',
-  'potrzebuje',
   'znajdę',
   'znajde',
-  'macie',
-  'czy są',
-  'czy sa',
-  'pokaż',
-  'pokaz',
   'produkt',
   'produkty',
+  'pokaż produkt',
+  'pokaz produkt',
+  'czy są',
+  'czy sa',
+  'czy znajdę',
+  'czy znajde',
+  'macie',
+];
+const BROWSE_CATALOG_TERMS = [
+  'pokaż co macie',
+  'pokaz co macie',
+  'pokaż co macie w ofercie',
+  'pokaz co macie w ofercie',
+  'co macie w sklepie',
+  'pokaż dostępne produkty',
+  'pokaz dostepne produkty',
+  'pokaż coś ogólnie',
+  'pokaz cos ogolnie',
+  'może coś znajdę dla siebie',
+  'moze cos znajde dla siebie',
+  'to pokaż coś z oferty',
+  'to pokaz cos z oferty',
+  'pokaż ofertę',
+  'pokaz oferte',
+];
+const VAGUE_REQUEST_TERMS = [
+  'doradź coś',
+  'doradz cos',
+  'potrzebuję czegoś',
+  'potrzebuje czegos',
+  'coś fajnego',
+  'cos fajnego',
+  'co wybrać',
+  'co wybrac',
+  'co polecasz',
 ];
 const STYLING_INTENT_TERMS = [
   'co pasuje',
   'jaki kolor',
+  'jakie kolory',
   'jaka stylizacja',
   'co ubrać',
   'co ubrac',
@@ -37,6 +75,7 @@ const STYLING_INTENT_TERMS = [
   'do blondynek',
   'jak łączyć',
   'jak laczyc',
+  'na jakie okazje',
 ];
 
 function isValidUuid(value) {
@@ -71,16 +110,51 @@ function buildTokenVariants(token) {
   return [...variants].filter((value) => value.length >= 2);
 }
 
+function hasTerm(text, terms) {
+  const normalized = String(text || '').trim().toLowerCase();
+  if (!normalized) return false;
+  return terms.some((term) => normalized.includes(term));
+}
+
+function hasBrowseCatalogIntent(message) {
+  return hasTerm(message, BROWSE_CATALOG_TERMS);
+}
+
 function hasShoppingIntent(message) {
-  const text = String(message || '').trim().toLowerCase();
-  if (!text) return false;
-  return SHOPPING_INTENT_TERMS.some((term) => text.includes(term));
+  if (hasBrowseCatalogIntent(message)) return false;
+  return hasTerm(message, SHOPPING_INTENT_TERMS);
 }
 
 function hasStylingIntent(message) {
+  return hasTerm(message, STYLING_INTENT_TERMS);
+}
+
+function hasVagueRequestIntent(message) {
+  return hasTerm(message, VAGUE_REQUEST_TERMS);
+}
+
+function hasProductExplanationIntent(message) {
   const text = String(message || '').trim().toLowerCase();
   if (!text) return false;
-  return STYLING_INTENT_TERMS.some((term) => text.includes(term));
+  return /(czy\s+(ten|ta|to)\b)|(ten\s+produkt)|(ta\s+rzecz)|(czy\s+.*\b(będzie|bedzie)\b)/u.test(text);
+}
+
+function inferRequestedResponseType(message) {
+  if (hasBrowseCatalogIntent(message)) return 'browse_catalog';
+  if (hasProductExplanationIntent(message)) return 'product_explanation';
+  if (hasShoppingIntent(message)) return 'product_search';
+  if (hasStylingIntent(message)) return 'answer_only';
+  if (hasVagueRequestIntent(message)) return 'ask_follow_up';
+  return 'ask_follow_up';
+}
+
+function normalizeResponseType(value, fallback = 'ask_follow_up') {
+  const candidate = String(value || '').trim().toLowerCase();
+  return RESPONSE_TYPES.includes(candidate) ? candidate : fallback;
+}
+
+function shouldAllowRecommendationsForResponseType(responseType) {
+  return ['recommend_products', 'product_search', 'browse_catalog', 'product_explanation'].includes(responseType);
 }
 
 function clampRecommendationLimit(value) {
@@ -250,6 +324,39 @@ function selectCandidateProducts(products, message, maxCandidates = 24) {
   return scored.slice(0, maxCandidates).map((item) => item.product);
 }
 
+function selectBrowseCatalogProducts(products, maxCandidates = 24) {
+  const list = (products || []).slice().sort((a, b) => {
+    const aCreated = Date.parse(a.created_at || 0) || 0;
+    const bCreated = Date.parse(b.created_at || 0) || 0;
+    return bCreated - aCreated;
+  });
+
+  const byCategory = new Map();
+  for (const product of list) {
+    const category = String(product.category || 'other');
+    if (!byCategory.has(category)) byCategory.set(category, []);
+    byCategory.get(category).push(product);
+  }
+
+  const picks = [];
+  const categories = [...byCategory.keys()];
+  let guard = 0;
+  while (picks.length < maxCandidates && guard < 400) {
+    guard += 1;
+    let progressed = false;
+    for (const category of categories) {
+      const bucket = byCategory.get(category);
+      if (!bucket || bucket.length === 0) continue;
+      picks.push(bucket.shift());
+      progressed = true;
+      if (picks.length >= maxCandidates) break;
+    }
+    if (!progressed) break;
+  }
+
+  return picks;
+}
+
 function buildLockedModuleResponse() {
   return {
     error: 'Advisor module is locked for this shop',
@@ -366,15 +473,192 @@ function buildFallbackReply(recommendations) {
     : 'Nie znalazłam pasujących produktów w katalogu tego sklepu.';
 }
 
-function buildFallbackStylistReply({ message, shoppingIntentLikely, hasRecommendations }) {
-  if (hasRecommendations) return null;
-  if (shoppingIntentLikely) {
-    return 'Nie widzę teraz pasujących produktów w katalogu tego sklepu dla tego zapytania. Mogę pomóc doprecyzować styl, kolor albo okazję i sprawdzę ponownie.';
+function buildFallbackReplyByType({ responseType, message, hasCatalogProducts, hasRecommendations }) {
+  switch (responseType) {
+    case 'answer_only':
+      return 'Jasne ✨ Chętnie pomogę stylistycznie. Napisz proszę, na jaką okazję i jaki klimat lubisz, a podpowiem najlepsze kierunki.';
+    case 'ask_follow_up':
+      return 'Chętnie pomogę ✨ Jaki styl, okazję albo kolor masz na myśli?';
+    case 'product_explanation':
+      return 'Jasne, mogę to ocenić. Napisz proszę, na jaką okazję i w jakim stylu chcesz nosić ten produkt.';
+    case 'no_match':
+      return 'Nie widzę teraz pasujących produktów w katalogu tego sklepu dla tego zapytania. Mogę pomóc doprecyzować styl, kolor albo okazję i sprawdzę ponownie.';
+    case 'browse_catalog':
+      return hasCatalogProducts
+        ? 'Jasne, pokazuję kilka propozycji z aktualnej oferty sklepu.'
+        : 'W tej chwili nie widzę jeszcze produktów w katalogu tego sklepu.';
+    case 'recommend_products':
+    case 'product_search':
+      if (hasRecommendations) return null;
+      if (hasTerm(message, VAGUE_REQUEST_TERMS)) {
+        return 'Jasne, chętnie pomogę stylistycznie ✨ Powiedz proszę na jaką okazję szukasz stylizacji i jaki klimat lubisz, a dopasuję wskazówki i potem sprawdzę produkty.';
+      }
+      return 'Nie widzę teraz pasujących produktów w katalogu tego sklepu dla tego zapytania. Mogę pomóc doprecyzować styl, kolor albo okazję i sprawdzę ponownie.';
+    default:
+      return 'Chętnie pomogę ✨ Napisz proszę, czego dokładnie szukasz (okazja, styl, kolor), a dopasuję odpowiedź.';
   }
-  if (hasStylingIntent(message)) {
-    return 'Jasne, chętnie pomogę stylizacyjnie ✨ Powiedz proszę na jaką okazję szukasz stylizacji i jaki klimat lubisz, a dopasuję wskazówki i potem sprawdzę produkty.';
+}
+
+function buildDeterministicBrowseRecommendations(candidates, recommendationLimit) {
+  return (candidates || [])
+    .slice(0, recommendationLimit)
+    .map((product) => buildRecommendation(product, 'Propozycja z aktualnej oferty sklepu.'));
+}
+
+function buildRecommendationsFromIds({
+  rawIds,
+  candidates,
+  shopId,
+  recommendationLimit,
+  reasonMap,
+  defaultReason,
+}) {
+  const candidateById = new Map((candidates || []).map((product) => [String(product.id), product]));
+  const recommendations = [];
+  const seen = new Set();
+
+  for (const rawId of rawIds || []) {
+    const id = String(rawId || '').trim();
+    if (!id || seen.has(id)) continue;
+    seen.add(id);
+
+    const product = candidateById.get(id);
+    if (!product) continue;
+    if (product.shop_id == null || String(product.shop_id) !== String(shopId)) continue;
+    if (product.is_synced === false) continue;
+
+    recommendations.push(buildRecommendation(
+      product,
+      (reasonMap && reasonMap.get(id)) || defaultReason,
+    ));
+
+    if (recommendations.length >= recommendationLimit) break;
   }
-  return 'Chętnie pomogę ✨ Napisz proszę, czego dokładnie szukasz (okazja, styl, kolor), a dobiorę najlepsze propozycje z tego katalogu.';
+
+  return recommendations;
+}
+
+function buildDeterministicOutcome({
+  message,
+  requestedType,
+  relevantCandidates,
+  browseCandidates,
+  recommendationLimit,
+}) {
+  if (requestedType === 'no_match') {
+    return {
+      responseType: 'no_match',
+      reply: buildFallbackReplyByType({
+        responseType: 'no_match',
+        message,
+        hasCatalogProducts: relevantCandidates.length > 0,
+        hasRecommendations: false,
+      }),
+      recommendations: [],
+      maxRecommendations: recommendationLimit,
+      usedAi: false,
+    };
+  }
+
+  if (requestedType === 'browse_catalog') {
+    const recommendations = buildDeterministicBrowseRecommendations(browseCandidates, recommendationLimit);
+    return {
+      responseType: 'browse_catalog',
+      reply: buildFallbackReplyByType({
+        responseType: 'browse_catalog',
+        message,
+        hasCatalogProducts: browseCandidates.length > 0,
+        hasRecommendations: recommendations.length > 0,
+      }),
+      recommendations,
+      maxRecommendations: recommendationLimit,
+      usedAi: false,
+    };
+  }
+
+  if (requestedType === 'product_search') {
+    const searchRecommendations = selectTopRecommendations(relevantCandidates, message, recommendationLimit);
+    if (searchRecommendations.length === 0) {
+      return {
+        responseType: 'no_match',
+        reply: buildFallbackReplyByType({
+          responseType: 'no_match',
+          message,
+          hasCatalogProducts: relevantCandidates.length > 0,
+          hasRecommendations: false,
+        }),
+        recommendations: [],
+        maxRecommendations: recommendationLimit,
+        usedAi: false,
+      };
+    }
+
+    return {
+      responseType: 'recommend_products',
+      reply: buildFallbackReply(searchRecommendations),
+      recommendations: searchRecommendations,
+      maxRecommendations: recommendationLimit,
+      usedAi: false,
+    };
+  }
+
+  if (requestedType === 'product_explanation') {
+    return {
+      responseType: 'product_explanation',
+      reply: buildFallbackReplyByType({
+        responseType: 'product_explanation',
+        message,
+        hasCatalogProducts: relevantCandidates.length > 0,
+        hasRecommendations: false,
+      }),
+      recommendations: [],
+      maxRecommendations: recommendationLimit,
+      usedAi: false,
+    };
+  }
+
+  if (requestedType === 'answer_only') {
+    return {
+      responseType: 'answer_only',
+      reply: buildFallbackReplyByType({
+        responseType: 'answer_only',
+        message,
+        hasCatalogProducts: relevantCandidates.length > 0,
+        hasRecommendations: false,
+      }),
+      recommendations: [],
+      maxRecommendations: recommendationLimit,
+      usedAi: false,
+    };
+  }
+
+  if (requestedType === 'ask_follow_up') {
+    return {
+      responseType: 'ask_follow_up',
+      reply: buildFallbackReplyByType({
+        responseType: 'ask_follow_up',
+        message,
+        hasCatalogProducts: relevantCandidates.length > 0,
+        hasRecommendations: false,
+      }),
+      recommendations: [],
+      maxRecommendations: recommendationLimit,
+      usedAi: false,
+    };
+  }
+
+  return {
+    responseType: 'ask_follow_up',
+    reply: buildFallbackReplyByType({
+      responseType: 'ask_follow_up',
+      message,
+      hasCatalogProducts: relevantCandidates.length > 0,
+      hasRecommendations: false,
+    }),
+    recommendations: [],
+    maxRecommendations: recommendationLimit,
+    usedAi: false,
+  };
 }
 
 async function resolveAdvisorOutcome({
@@ -388,29 +672,38 @@ async function resolveAdvisorOutcome({
   const settings = normalizeAdvisorSettings(advisorSettings);
   const recommendationLimit = clampRecommendationLimit(settings.maxRecommendations);
   const effectiveCatalog = catalogProducts || [];
-  const shoppingIntentLikely = hasShoppingIntent(message);
-  const candidateProducts = shoppingIntentLikely
-    ? selectCandidateProducts(effectiveCatalog, message, 24)
+  const requestedType = inferRequestedResponseType(message);
+  const relevantCandidates = selectCandidateProducts(effectiveCatalog, message, 24);
+  const browseCandidates = selectBrowseCatalogProducts(effectiveCatalog, 24);
+
+  const decisionCandidates = requestedType === 'browse_catalog'
+    ? browseCandidates
+    : ['product_search', 'product_explanation'].includes(requestedType)
+    ? relevantCandidates
     : [];
-  const catalogHasRelevantMatches = candidateProducts.length > 0;
-  const forceNoMatchReply = shoppingIntentLikely && !catalogHasRelevantMatches;
+
+  const forcedType = requestedType === 'product_search' && relevantCandidates.length === 0
+    ? 'no_match'
+    : requestedType;
 
   const ai = aiClient || require('./advisorAi');
   const canUseAi = Boolean(ai && typeof ai.isEnabled === 'function' && ai.isEnabled());
 
-  if (canUseAi && effectiveCatalog.length > 0) {
+  if (canUseAi) {
     try {
       const aiResult = await ai.getStylistResponse({
         message,
         advisorSettings: settings,
         conversationMessages: conversationMessages || [],
-        productCandidates: candidateProducts,
+        productCandidates: decisionCandidates,
         maxRecommendations: recommendationLimit,
-        shoppingIntentLikely,
-        catalogHasRelevantMatches,
+        shoppingIntentLikely: requestedType === 'product_search',
+        catalogHasRelevantMatches: decisionCandidates.length > 0,
+        desiredResponseType: forcedType,
+        allowedResponseTypes: RESPONSE_TYPES,
       });
 
-      if (!aiResult || typeof aiResult.reply !== 'string' || !Array.isArray(aiResult.selectedProductIds)) {
+      if (!aiResult || typeof aiResult.reply !== 'string' || !Array.isArray(aiResult.recommendedProductIds)) {
         throw new Error('AI response schema mismatch');
       }
 
@@ -422,33 +715,41 @@ async function resolveAdvisorOutcome({
         reasonMap.set(key, item.reason.trim());
       }
 
-      const candidateById = new Map(candidateProducts.map((product) => [String(product.id), product]));
-      const recommendations = [];
-      const seen = new Set();
+      let responseType = normalizeResponseType(aiResult.responseType, forcedType);
+      const allowRecommendationsByType = shouldAllowRecommendationsForResponseType(responseType);
 
-      for (const rawId of aiResult.selectedProductIds) {
-        const id = String(rawId || '').trim();
-        if (!id || seen.has(id)) continue;
-        seen.add(id);
-
-        const product = candidateById.get(id);
-        if (!product) continue;
-        if (product.shop_id == null || String(product.shop_id) !== String(shopId)) continue;
-        if (product.is_synced === false) continue;
-
-        recommendations.push(buildRecommendation(
-          product,
-          reasonMap.get(id) || 'Wybrane przez AI Stylist na podstawie Twojego opisu.',
-        ));
-
-        if (recommendations.length >= recommendationLimit) break;
+      if (forcedType === 'no_match') responseType = 'no_match';
+      if (forcedType === 'browse_catalog') {
+        responseType = responseType === 'recommend_products' ? 'recommend_products' : 'browse_catalog';
       }
 
-      if (forceNoMatchReply) {
+      const recommendationSource = forcedType === 'browse_catalog' ? browseCandidates : relevantCandidates;
+      let recommendations = allowRecommendationsByType
+        ? buildRecommendationsFromIds({
+          rawIds: aiResult.recommendedProductIds,
+          candidates: recommendationSource,
+          shopId,
+          recommendationLimit,
+          reasonMap,
+          defaultReason: 'Wybrane przez AI Stylist na podstawie Twojej wiadomości.',
+        })
+        : [];
+
+      if (forcedType === 'browse_catalog' && recommendations.length === 0 && browseCandidates.length > 0) {
+        recommendations = buildDeterministicBrowseRecommendations(browseCandidates, recommendationLimit);
+      }
+
+      if (forcedType === 'product_search' && recommendations.length === 0) {
+        responseType = 'no_match';
+      }
+
+      if (responseType === 'no_match') {
         return {
-          reply: buildFallbackStylistReply({
+          responseType: 'no_match',
+          reply: buildFallbackReplyByType({
+            responseType: 'no_match',
             message,
-            shoppingIntentLikely,
+            hasCatalogProducts: relevantCandidates.length > 0,
             hasRecommendations: false,
           }),
           recommendations: [],
@@ -457,8 +758,18 @@ async function resolveAdvisorOutcome({
         };
       }
 
+      const reply = String(aiResult.reply || '').trim()
+        || buildFallbackReplyByType({
+          responseType,
+          message,
+          hasCatalogProducts: recommendationSource.length > 0,
+          hasRecommendations: recommendations.length > 0,
+        })
+        || buildFallbackReply(recommendations);
+
       return {
-        reply: aiResult.reply.trim(),
+        responseType,
+        reply,
         recommendations,
         maxRecommendations: recommendationLimit,
         usedAi: true,
@@ -468,27 +779,29 @@ async function resolveAdvisorOutcome({
     }
   }
 
-  const recommendations = forceNoMatchReply
-    ? []
-    : shoppingIntentLikely
-    ? selectTopRecommendations(effectiveCatalog, message, recommendationLimit)
-    : [];
-  const fallbackStylistReply = buildFallbackStylistReply({
+  return buildDeterministicOutcome({
     message,
-    shoppingIntentLikely,
-    hasRecommendations: recommendations.length > 0,
+    requestedType: forcedType,
+    relevantCandidates,
+    browseCandidates,
+    recommendationLimit,
   });
-
-  return {
-    reply: fallbackStylistReply || buildFallbackReply(recommendations),
-    recommendations,
-    maxRecommendations: recommendationLimit,
-    usedAi: false,
-  };
 }
 
-function buildSuccessResponse({ conversationId, assistantMessageId, shopId, recommendations, reply, maxResults }) {
-  const resolvedReply = typeof reply === 'string' && reply.trim() ? reply.trim() : buildFallbackReply(recommendations || []);
+function buildSuccessResponse({
+  conversationId,
+  assistantMessageId,
+  shopId,
+  recommendations,
+  reply,
+  maxResults,
+  responseType,
+}) {
+  const safeResponseType = normalizeResponseType(responseType, recommendations && recommendations.length > 0 ? 'recommend_products' : 'answer_only');
+  const resolvedReply = typeof reply === 'string' && reply.trim()
+    ? reply.trim()
+    : buildFallbackReply(recommendations || []);
+
   return {
     conversationId,
     assistantMessageId,
@@ -499,6 +812,7 @@ function buildSuccessResponse({ conversationId, assistantMessageId, shopId, reco
       resultCount: (recommendations || []).length,
       maxResults: clampRecommendationLimit(maxResults),
       module: 'ai_stylist_advisor',
+      responseType: safeResponseType,
     },
   };
 }
@@ -506,15 +820,22 @@ function buildSuccessResponse({ conversationId, assistantMessageId, shopId, reco
 module.exports = {
   MAX_RECOMMENDATIONS,
   MAX_MESSAGE_LENGTH,
+  RESPONSE_TYPES,
   isValidUuid,
   tokenizeMessage,
   hasShoppingIntent,
   hasStylingIntent,
+  hasBrowseCatalogIntent,
+  hasVagueRequestIntent,
+  hasProductExplanationIntent,
+  inferRequestedResponseType,
+  normalizeResponseType,
   clampRecommendationLimit,
   normalizeAdvisorSettings,
   validateAdvisorChatPayload,
   selectTopRecommendations,
   selectCandidateProducts,
+  selectBrowseCatalogProducts,
   resolveConversation,
   insertMessage,
   fetchShopProducts,

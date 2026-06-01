@@ -181,6 +181,7 @@ function createAdvisorRouter(options = {}) {
       recommendations: outcome.recommendations,
       reply: outcome.reply,
       maxResults: outcome.maxRecommendations,
+      responseType: outcome.responseType,
     }));
   });
 
