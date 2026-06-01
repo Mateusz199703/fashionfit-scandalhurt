@@ -1,10 +1,38 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { ArrowLeft, ArrowRight, Shirt, Eye, EyeOff, Mail, Lock, Store, Sun, Moon } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Shirt, Eye, EyeOff, Mail, Lock, Store, Sun, Moon, Hash } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 import { apiErrorMessage } from '../api/client';
 import { Plan } from '../types';
+
+const NIP_WEIGHTS = [6, 5, 7, 2, 3, 4, 5, 6, 7];
+
+function normalizeNip(value: string) {
+  return value.replace(/[\s-]+/g, '').replace(/\D/g, '');
+}
+
+function isValidPolishNip(nip: string) {
+  if (!/^\d{10}$/.test(nip)) return false;
+  const digits = nip.split('').map(Number);
+  const checksum = NIP_WEIGHTS.reduce((sum, weight, idx) => sum + (digits[idx] * weight), 0) % 11;
+  return checksum !== 10 && checksum === digits[9];
+}
+
+function getPasswordStrength(password: string) {
+  const score = [
+    password.length >= 8,
+    /[a-z]/.test(password),
+    /[A-Z]/.test(password),
+    /\d/.test(password),
+    /[^A-Za-z0-9]/.test(password),
+  ].filter(Boolean).length;
+
+  if (score <= 1) return { label: 'Słabe', segments: password.length ? 1 : 0 };
+  if (score === 2) return { label: 'Średnie', segments: 2 };
+  if (score <= 4) return { label: 'Dobre', segments: 3 };
+  return { label: 'Mocne', segments: 4 };
+}
 
 export function RegisterPage() {
   const { register } = useAuth();
@@ -19,9 +47,12 @@ export function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [termsAccepted, setTermsAccepted] = useState(true);
+  const passwordStrength = getPasswordStrength(form.password);
 
   const set = (key: string) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((prev) => ({ ...prev, [key]: e.target.value }));
+  const setCompanyNip = (e: React.ChangeEvent<HTMLInputElement>) =>
+    setForm((prev) => ({ ...prev, company_nip: normalizeNip(e.target.value) }));
 
   const validate = () => {
     const next: Record<string, string> = {};
@@ -29,8 +60,9 @@ export function RegisterPage() {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) next.email = 'Podaj poprawny adres e-mail';
     if (form.password.length < 8) next.password = 'Hasło musi mieć co najmniej 8 znaków';
     if (!termsAccepted) next.terms = 'Aby założyć konto, zaakceptuj regulamin i politykę prywatności.';
-    const nipDigits = form.company_nip.replace(/\D/g, '');
-    if (form.company_nip.trim() && nipDigits.length !== 10) next.company_nip = 'NIP musi mieć 10 cyfr';
+    const nipDigits = normalizeNip(form.company_nip);
+    if (!nipDigits) next.company_nip = 'NIP firmy jest wymagany.';
+    else if (!isValidPolishNip(nipDigits)) next.company_nip = 'Podaj poprawny NIP firmy.';
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -45,7 +77,7 @@ export function RegisterPage() {
         email: form.email,
         password: form.password,
         company_name: form.company_name || undefined,
-        company_nip: form.company_nip || undefined,
+        company_nip: normalizeNip(form.company_nip) || undefined,
         plan: selectedPlan || undefined,
       });
       if (checkoutUrl) {
@@ -182,6 +214,28 @@ export function RegisterPage() {
                 {errors.name && <p className="ff-auth-error-text">{errors.name}</p>}
               </div>
 
+              <div className={errors.company_nip ? 'ff-auth-field ff-auth-field-error' : 'ff-auth-field'}>
+                <label className="ff-label" htmlFor="company_nip">NIP firmy</label>
+                <div className="ff-auth-input-wrap">
+                  <span className="ff-auth-input-lead" aria-hidden="true">
+                    <Hash size={16} />
+                  </span>
+                  <input
+                    id="company_nip"
+                    className="ff-input"
+                    inputMode="numeric"
+                    autoComplete="off"
+                    value={form.company_nip}
+                    onChange={setCompanyNip}
+                    placeholder="np. 1234567890"
+                    aria-invalid={errors.company_nip ? 'true' : 'false'}
+                    aria-describedby={errors.company_nip ? 'company-nip-help company-nip-error' : 'company-nip-help'}
+                  />
+                </div>
+                <p id="company-nip-help" className="ff-auth-help-text">Podaj NIP firmy, dla której zakładasz konto.</p>
+                {errors.company_nip && <p id="company-nip-error" className="ff-auth-error-text">{errors.company_nip}</p>}
+              </div>
+
               <div className={errors.email ? 'ff-auth-field ff-auth-field-error' : 'ff-auth-field'}>
                 <label className="ff-label" htmlFor="email">E-mail</label>
                 <div className="ff-auth-input-wrap">
@@ -217,6 +271,20 @@ export function RegisterPage() {
                   </button>
                 </div>
                 {errors.password && <p className="ff-auth-error-text">{errors.password}</p>}
+                <div className="ff-auth-password-strength" aria-live="polite">
+                  <div className="ff-auth-password-strength-bars" aria-hidden="true">
+                    {Array.from({ length: 4 }).map((_, index) => (
+                      <span
+                        key={index}
+                        className={index < passwordStrength.segments ? 'ff-auth-password-strength-bar is-active' : 'ff-auth-password-strength-bar'}
+                      />
+                    ))}
+                  </div>
+                  <p className="ff-auth-password-strength-label">
+                    Siła hasła: <strong>{passwordStrength.label}</strong>
+                  </p>
+                  <p className="ff-auth-password-strength-help">Użyj min. 8 znaków, cyfry i wielkiej litery.</p>
+                </div>
               </div>
 
               <label className="ff-auth-check-row">

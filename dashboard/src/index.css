@@ -900,6 +900,12 @@
     color: var(--rose);
   }
 
+  .ff-auth-help-text {
+    margin-top: 0.3rem;
+    font-size: 0.72rem;
+    color: var(--auth-text-faint);
+  }
+
   .ff-auth-field-error .ff-input {
     border-color: color-mix(in srgb, var(--rose) 70%, transparent);
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--rose) 25%, transparent);
@@ -927,6 +933,42 @@
     padding-bottom: 0.93rem;
     margin-top: 0.28rem;
     font-size: 0.9rem;
+  }
+
+  .ff-auth-password-strength {
+    margin-top: 0.48rem;
+  }
+
+  .ff-auth-password-strength-bars {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.35rem;
+  }
+
+  .ff-auth-password-strength-bar {
+    height: 0.34rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--auth-text-faint) 30%, transparent);
+  }
+
+  .ff-auth-password-strength-bar.is-active {
+    background: linear-gradient(120deg, var(--accent), var(--accent2));
+  }
+
+  .ff-auth-password-strength-label {
+    margin-top: 0.35rem;
+    font-size: 0.73rem;
+    color: var(--auth-text-dim);
+  }
+
+  .ff-auth-password-strength-label strong {
+    color: var(--auth-text);
+  }
+
+  .ff-auth-password-strength-help {
+    margin-top: 0.18rem;
+    font-size: 0.7rem;
+    color: var(--auth-text-faint);
   }
 
   .ff-auth-alt-link {
