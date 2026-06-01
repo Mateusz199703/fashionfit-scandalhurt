@@ -239,6 +239,335 @@
       linear-gradient(180deg, #0b0b0f 0%, #07070a 45%, #050507 100%);
   }
 
+  .ff-studio-shell {
+    color: var(--text);
+  }
+
+  .ff-studio-appbar {
+    position: sticky;
+    top: 0;
+    z-index: 45;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.72rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--glass);
+    backdrop-filter: blur(20px);
+  }
+
+  .ff-studio-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.68rem;
+    min-width: fit-content;
+  }
+
+  .ff-studio-brand-core {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border-strong);
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff;
+    box-shadow: 0 12px 26px -16px var(--glow);
+  }
+
+  .ff-studio-brand strong {
+    display: block;
+    font-family: 'Space Grotesk', 'Inter', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -0.01em;
+  }
+
+  .ff-studio-brand strong span {
+    color: var(--accent);
+  }
+
+  .ff-studio-brand small {
+    display: block;
+    margin-top: 0.2rem;
+    font-size: 0.58rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    font-weight: 600;
+  }
+
+  .ff-studio-tabs {
+    display: flex;
+    gap: 0.25rem;
+    margin: 0 auto;
+    padding: 0.22rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  .ff-studio-tab {
+    border-radius: 999px;
+    padding: 0.48rem 0.88rem;
+    color: var(--text-dim);
+    font-size: 0.79rem;
+    font-weight: 500;
+    transition: all 0.25s var(--ease);
+    white-space: nowrap;
+  }
+
+  .ff-studio-tab:hover {
+    color: var(--text);
+  }
+
+  .ff-studio-tab-active {
+    color: #fff;
+    background: linear-gradient(120deg, var(--accent), var(--accent2));
+    box-shadow: 0 10px 20px -14px var(--glow);
+  }
+
+  .ff-studio-appbar-right {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.72rem;
+    min-width: fit-content;
+  }
+
+  .ff-studio-user {
+    display: none;
+    text-align: right;
+    line-height: 1.15;
+  }
+
+  .ff-studio-user b {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .ff-studio-user span {
+    display: block;
+    max-width: 14rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 0.7rem;
+    color: var(--text-faint);
+  }
+
+  .ff-studio-logout {
+    border-color: var(--border-strong);
+    background: var(--surface);
+    color: var(--text);
+    padding: 0.5rem 0.8rem;
+    border-radius: 999px;
+    font-size: 0.73rem;
+  }
+
+  .ff-studio-layout {
+    display: grid;
+    grid-template-columns: 236px 1fr;
+    min-height: calc(100vh - 63px);
+  }
+
+  .ff-studio-side {
+    position: sticky;
+    top: 63px;
+    height: calc(100vh - 63px);
+    border-right: 1px solid var(--border);
+    background: var(--panel);
+    padding: 1.25rem 0.86rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+
+  .ff-studio-store {
+    display: flex;
+    align-items: center;
+    gap: 0.66rem;
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 0.85rem;
+    background: var(--surface);
+    padding: 0.66rem 0.72rem;
+    text-align: left;
+    cursor: default;
+  }
+
+  .ff-studio-store-avatar {
+    width: 2rem;
+    height: 2rem;
+    flex-shrink: 0;
+    border-radius: 0.58rem;
+    display: grid;
+    place-items: center;
+    font-family: 'Space Grotesk', 'Inter', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #fff;
+    background: linear-gradient(135deg, var(--accent), var(--orange));
+  }
+
+  .ff-studio-store-meta {
+    min-width: 0;
+    display: block;
+    line-height: 1.25;
+  }
+
+  .ff-studio-store-meta b {
+    display: block;
+    font-family: 'Space Grotesk', 'Inter', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .ff-studio-store-meta span {
+    display: block;
+    margin-top: 0.08rem;
+    font-size: 0.66rem;
+    color: var(--text-faint);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .ff-studio-nav {
+    margin-top: 0.48rem;
+    display: grid;
+    gap: 0.15rem;
+  }
+
+  .ff-studio-nav-group {
+    padding: 0.6rem 0.72rem 0.32rem;
+    font-size: 0.58rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    font-weight: 600;
+  }
+
+  .ff-studio-side .ff-nav-link {
+    position: relative;
+    color: var(--text-dim);
+    border-radius: 0.72rem;
+    padding: 0.62rem 0.74rem;
+    font-size: 0.82rem;
+  }
+
+  .ff-studio-side .ff-nav-link-idle:hover {
+    color: var(--text);
+    background: var(--surface);
+  }
+
+  .ff-studio-side .ff-nav-link-active {
+    color: var(--text);
+    background: var(--surface-2);
+    box-shadow: none;
+  }
+
+  .ff-studio-side .ff-nav-link-active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 18px;
+    border-radius: 99px;
+    background: var(--accent);
+    box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 52%, transparent);
+  }
+
+  .ff-studio-planbox {
+    margin-top: auto;
+    border: 1px solid var(--border);
+    border-radius: 0.9rem;
+    background: linear-gradient(160deg, var(--surface-2), transparent);
+    padding: 0.78rem;
+  }
+
+  .ff-studio-planmeta {
+    margin-bottom: 0.55rem;
+  }
+
+  .ff-studio-planname {
+    font-family: 'Space Grotesk', 'Inter', sans-serif;
+    font-size: 0.76rem;
+    color: var(--text-dim);
+    margin-bottom: 0.3rem;
+  }
+
+  .ff-studio-planbadge span {
+    background: var(--surface);
+    color: var(--text);
+    border-color: var(--border-strong);
+  }
+
+  .ff-studio-planlogout {
+    width: 100%;
+    justify-content: flex-start;
+    border-color: var(--border-strong);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 0.78rem;
+  }
+
+  .ff-studio-main {
+    min-width: 0;
+    padding: 1.6rem 1.55rem 2rem;
+  }
+
+  .ff-studio-main-wrap {
+    margin: 0 auto;
+    max-width: 1200px;
+    border-color: var(--border);
+    background:
+      radial-gradient(34rem 22rem at 100% 0%, color-mix(in srgb, var(--accent) 14%, transparent) 0%, transparent 68%),
+      color-mix(in srgb, var(--panel) 84%, transparent);
+  }
+
+  .ff-studio-bottomnav {
+    position: fixed;
+    inset-inline: 0.72rem;
+    bottom: 0.72rem;
+    z-index: 40;
+    border-radius: 1rem;
+    border: 1px solid var(--border-strong);
+    background: color-mix(in srgb, var(--panel) 90%, transparent);
+    padding: 0.5rem;
+    backdrop-filter: blur(18px);
+    box-shadow: 0 20px 40px -28px rgba(0, 0, 0, 0.72);
+  }
+
+  .ff-studio-bottomlink {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    border-radius: 0.72rem;
+    padding: 0.48rem 0.4rem;
+    font-size: 0.66rem;
+    font-weight: 500;
+    color: var(--text-dim);
+    transition: all 0.22s var(--ease);
+  }
+
+  .ff-studio-bottomlink-active {
+    color: #fff;
+    background: linear-gradient(120deg, var(--accent), var(--accent2));
+    box-shadow: 0 10px 22px -14px var(--glow);
+  }
+
   .ff-main-wrap {
     border-radius: 30px;
     border: 1px solid var(--ff-border);
@@ -1010,6 +1339,39 @@
 }
 
 @media (max-width: 1024px) {
+  .ff-studio-tabs {
+    display: none;
+  }
+
+  .ff-studio-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .ff-studio-side {
+    display: none;
+  }
+
+  .ff-studio-main {
+    padding: 1.1rem 0.9rem 5rem;
+  }
+
+  .ff-studio-main-wrap {
+    border-radius: 20px;
+    padding: 0.9rem;
+  }
+
+  .ff-studio-logout span {
+    display: none;
+  }
+
+  .ff-studio-logout {
+    width: 2.15rem;
+    height: 2.15rem;
+    min-width: 2.15rem;
+    border-radius: 999px;
+    padding: 0;
+  }
+
   .ff-auth-layout {
     grid-template-columns: 1fr;
   }
@@ -1035,6 +1397,18 @@
 }
 
 @media (max-width: 920px) {
+  .ff-studio-appbar {
+    padding: 0.64rem 0.86rem;
+  }
+
+  .ff-studio-brand strong {
+    font-size: 0.92rem;
+  }
+
+  .ff-studio-user {
+    display: none !important;
+  }
+
   .ff-auth-hero {
     display: none;
   }
@@ -1054,6 +1428,15 @@
 }
 
 @media (max-width: 640px) {
+  .ff-studio-brand small {
+    display: none;
+  }
+
+  .ff-studio-bottomnav {
+    inset-inline: 0.55rem;
+    bottom: 0.55rem;
+  }
+
   .ff-auth-panel {
     padding: 1.1rem 0.9rem;
   }
@@ -1085,6 +1468,12 @@
   .ff-main-wrap {
     border-radius: 18px;
     padding: 0.85rem;
+  }
+}
+
+@media (min-width: 1025px) {
+  .ff-studio-user {
+    display: block;
   }
 }
 

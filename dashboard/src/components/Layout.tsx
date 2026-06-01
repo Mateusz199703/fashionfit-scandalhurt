@@ -5,10 +5,10 @@ import { useAuth } from '../auth/AuthContext';
 import { PlanBadge } from './ui';
 
 const NAV = [
-  { to: '/dashboard', label: 'Pulpit', icon: LayoutDashboard },
-  { to: '/shops', label: 'Sklepy', icon: Store },
-  { to: '/billing', label: 'Płatności', icon: CreditCard },
-  { to: '/settings', label: 'Ustawienia', icon: Settings },
+  { to: '/dashboard', label: 'Pulpit', icon: LayoutDashboard, group: 'Wzrost' },
+  { to: '/shops', label: 'Sklepy', icon: Store, group: 'Wzrost' },
+  { to: '/billing', label: 'Płatności', icon: CreditCard, group: 'Konto' },
+  { to: '/settings', label: 'Ustawienia', icon: Settings, group: 'Konto' },
 ];
 
 export function Layout() {
@@ -19,89 +19,118 @@ export function Layout() {
     logout();
     navigate('/login');
   };
+  const storeInitials = (client?.name || 'FF')
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((chunk) => chunk[0]?.toUpperCase() || '')
+    .join('') || 'FF';
+  const navGroups = ['Wzrost', 'Konto'] as const;
 
   return (
-    <div className="ff-app-shell min-h-screen pb-24 md:pb-0">
-      <header className="sticky top-0 z-40 border-b border-white/10 bg-[#06060b]/90 px-4 py-3 backdrop-blur-xl md:hidden">
-        <div className="mx-auto flex max-w-6xl items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <span className="flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-gradient-to-br from-[#7b61ff] to-[#4f46e5] text-white shadow-[0_10px_30px_-16px_rgba(123,97,255,0.9)]">
-              <Shirt size={18} />
-            </span>
-            <div>
-              <div className="text-[10px] uppercase tracking-[0.18em] text-white/60">FashionFit</div>
-              <div className="text-sm font-semibold text-white">Client Studio</div>
-            </div>
+    <div className="ff-app-shell ff-studio-shell min-h-screen pb-24 md:pb-0">
+      <header className="ff-studio-appbar">
+        <div className="ff-studio-brand">
+          <span className="ff-studio-brand-core" aria-hidden="true">
+            <Shirt size={16} />
+          </span>
+          <div>
+            <strong>
+              FashionFit <span>AI</span>
+            </strong>
+            <small>Studio</small>
           </div>
-          <button onClick={handleLogout} className="ff-btn-secondary border-white/20 bg-white/10 px-3 py-2 text-xs text-white hover:bg-white/15">
-            <LogOut size={14} /> Wyloguj
+        </div>
+
+        <nav className="ff-studio-tabs" aria-label="Nawigacja Studio">
+          {NAV.map(({ to, label }) => (
+            <NavLink
+              key={to}
+              to={to}
+              className={({ isActive }) =>
+                `ff-studio-tab ${isActive ? 'ff-studio-tab-active' : ''}`
+              }
+            >
+              {label}
+            </NavLink>
+          ))}
+        </nav>
+
+        <div className="ff-studio-appbar-right">
+          {client && (
+            <div className="ff-studio-user">
+              <b>{client.name}</b>
+              <span>{client.email}</span>
+            </div>
+          )}
+          <button onClick={handleLogout} className="ff-btn-secondary ff-studio-logout" type="button">
+            <LogOut size={15} />
+            <span>Wyloguj</span>
           </button>
         </div>
       </header>
 
-      <div className="mx-auto flex w-full max-w-[1400px] gap-5 px-4 py-5 sm:px-6 lg:px-8 lg:py-8">
-        <aside className="hidden w-[290px] shrink-0 flex-col rounded-[28px] border border-white/10 bg-[rgba(18,18,24,0.7)] p-5 text-white shadow-[0_30px_80px_-40px_rgba(0,0,0,0.9)] backdrop-blur-xl md:flex">
-          <div className="rounded-2xl border border-white/15 bg-[rgba(255,255,255,0.04)] p-4">
-            <div className="flex items-center gap-3">
-              <span className="flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-gradient-to-br from-[#7b61ff] to-[#4f46e5] text-white shadow-[0_14px_32px_-16px_rgba(123,97,255,0.95)]">
-                <Shirt size={20} />
-              </span>
-              <div>
-                <div className="text-[10px] uppercase tracking-[0.18em] text-white/50">Fashion SaaS</div>
-                <div className="font-display text-2xl leading-none text-white">FashionFit</div>
-              </div>
-            </div>
-          </div>
+      <div className="ff-studio-layout">
+        <aside className="ff-studio-side">
+          <button type="button" className="ff-studio-store">
+            <span className="ff-studio-store-avatar">{storeInitials}</span>
+            <span className="ff-studio-store-meta">
+              <b>{client?.name || 'FashionFit Store'}</b>
+              <span>{client?.email || 'studio@fashionfit.ai'}</span>
+            </span>
+          </button>
 
-          <nav className="mt-5 space-y-1.5">
-            {NAV.map(({ to, label, icon: Icon }) => (
-              <NavLink
-                key={to}
-                to={to}
-                className={({ isActive }) =>
-                  `ff-nav-link ${isActive ? 'ff-nav-link-active' : 'ff-nav-link-idle'}`
-                }
-              >
-                <Icon size={17} />
-                <span>{label}</span>
-              </NavLink>
+          <nav className="ff-studio-nav" aria-label="Nawigacja boczna">
+            {navGroups.map((groupName) => (
+              <div key={groupName}>
+                <div className="ff-studio-nav-group">{groupName}</div>
+                {NAV.filter((entry) => entry.group === groupName).map(({ to, label, icon: Icon }) => (
+                  <NavLink
+                    key={to}
+                    to={to}
+                    className={({ isActive }) =>
+                      `ff-nav-link ${isActive ? 'ff-nav-link-active' : 'ff-nav-link-idle'}`
+                    }
+                  >
+                    <Icon size={17} />
+                    <span>{label}</span>
+                  </NavLink>
+                ))}
+              </div>
             ))}
           </nav>
 
-          <div className="mt-auto rounded-2xl border border-white/15 bg-[rgba(255,255,255,0.04)] p-4">
+          <div className="ff-studio-planbox">
             {client && (
-              <div className="mb-4 space-y-1">
-                <div className="truncate text-sm font-semibold text-white">{client.name}</div>
-                <div className="truncate text-xs text-white/60">{client.email}</div>
-                <div className="pt-1">
+              <div className="ff-studio-planmeta">
+                <div className="ff-studio-planname">Plan aktywny</div>
+                <div className="ff-studio-planbadge">
                   <PlanBadge plan={client.plan} />
                 </div>
               </div>
             )}
-            <button onClick={handleLogout} className="ff-btn-secondary w-full justify-start border-white/20 bg-white/10 text-white hover:bg-white/15">
+            <button onClick={handleLogout} className="ff-btn-secondary ff-studio-planlogout" type="button">
               <LogOut size={16} />
               Wyloguj
             </button>
           </div>
         </aside>
 
-        <main className="min-w-0 flex-1">
-          <div className="ff-main-wrap mx-auto max-w-6xl">
+        <main className="ff-studio-main">
+          <div className="ff-main-wrap ff-studio-main-wrap">
             <Outlet />
           </div>
         </main>
       </div>
 
-      <nav className="fixed inset-x-3 bottom-3 z-40 rounded-2xl border border-white/15 bg-[rgba(10,10,14,0.9)] p-2 shadow-2xl backdrop-blur-xl md:hidden">
+      <nav className="ff-studio-bottomnav md:hidden" aria-label="Dolna nawigacja">
         <div className="grid grid-cols-4 gap-1.5">
           {NAV.map(({ to, label, icon: Icon }) => (
             <NavLink
               key={to}
               to={to}
               className={({ isActive }) =>
-                `flex flex-col items-center justify-center gap-1 rounded-xl px-2 py-2 text-[11px] font-medium transition ${
-                  isActive ? 'bg-gradient-to-r from-[#7b61ff] to-[#4f46e5] text-white shadow-[0_10px_28px_-16px_rgba(123,97,255,1)]' : 'text-white/72'
-                }`
+                `ff-studio-bottomlink ${isActive ? 'ff-studio-bottomlink-active' : ''}`
               }
             >
               <Icon size={16} />
