@@ -14,11 +14,12 @@ const POLL_MAX_TRIES = 20; // ~60s
 const ADVISOR_MODULE_KEY = 'ai_stylist_advisor';
 const TRYON_MODULE_KEY = 'virtual_try_on';
 const ADVISOR_WELCOME_BUBBLE_MAX = 120;
+const ADVISOR_DEFAULT_WELCOME_BUBBLE = 'Cześć, jestem Lume. Pomogę dobrać stylizację ✨';
 const TRYON_CTA_TEXT_MAX = 40;
 const DEFAULT_TRYON_CTA_TEXT = 'Przymierz wirtualnie';
 const TRYON_CTA_MARKER = 'data-fashionfit-tryon-cta';
 const ADVISOR_BUBBLE_KEY_PREFIX = 'fashionfit:advisor-bubble-dismissed:';
-const ADVISOR_GREETING_MESSAGE = 'Cześć ✨ Powiedz mi, czego szukasz — okazja, styl, kolor albo rozmiar. Dobiorę coś z produktów tego sklepu.';
+const ADVISOR_GREETING_MESSAGE = 'Cześć! 👋 Jestem Lume. Powiedz, na jaką okazję szukasz stylizacji?';
 
 export function createWidget({ config, api, product, externalId }) {
   const page = getPageProductInfo();
@@ -31,11 +32,17 @@ export function createWidget({ config, api, product, externalId }) {
     : 'bottom-right';
   const enableFloatingAdvisor = config.enableFloatingAdvisor !== false;
   const enableProductTryOnButton = config.enableProductTryOnButton !== false;
-  const advisorWelcomeBubble = String(config.advisorWelcomeBubble || '').slice(0, ADVISOR_WELCOME_BUBBLE_MAX).trim();
+  const advisorWelcomeBubbleRaw = config.advisorWelcomeBubble;
+  const advisorWelcomeBubble = (
+    advisorWelcomeBubbleRaw === undefined || advisorWelcomeBubbleRaw === null
+      ? ADVISOR_DEFAULT_WELCOME_BUBBLE
+      : String(advisorWelcomeBubbleRaw || '')
+  ).slice(0, ADVISOR_WELCOME_BUBBLE_MAX).trim();
   const productTryOnButtonText = (String(config.productTryOnButtonText || DEFAULT_TRYON_CTA_TEXT).trim().slice(0, TRYON_CTA_TEXT_MAX)
     || DEFAULT_TRYON_CTA_TEXT);
 
   let overlay = null;
+  let modalCard = null;
   let modalBody = null;
   let arSession = null;
   let selectedSize = 'M';
@@ -82,11 +89,12 @@ export function createWidget({ config, api, product, externalId }) {
     advisorModuleCheckError = '';
     advisorChecking = false;
     modalBody = h('div', { class: 'ff-modal-body' });
-    overlay = h('div', { class: 'ff-overlay', onclick: (e) => { if (e.target === overlay) close(); } },
-      h('div', { class: 'ff-modal' },
+    modalCard = h('div', { class: 'ff-modal' },
         h('button', { class: 'ff-close', type: 'button', 'aria-label': 'Zamknij', onclick: close }, '×'),
         modalBody,
-      ),
+      );
+    overlay = h('div', { class: 'ff-overlay', onclick: (e) => { if (e.target === overlay) close(); } },
+      modalCard,
     );
     document.body.appendChild(overlay);
     requestAnimationFrame(() => overlay.classList.add('ff-open'));
@@ -102,7 +110,7 @@ export function createWidget({ config, api, product, externalId }) {
     if (overlay) {
       const node = overlay;
       node.classList.remove('ff-open');
-      setTimeout(() => {
+    setTimeout(() => {
         node.remove();
         if (moduleAccessResolved && !moduleAccessError) {
           mountAdvisorLauncher();
@@ -111,6 +119,7 @@ export function createWidget({ config, api, product, externalId }) {
         }
       }, 200);
       overlay = null;
+      modalCard = null;
     }
   }
 
@@ -126,6 +135,13 @@ export function createWidget({ config, api, product, externalId }) {
     nodes.forEach((n) => {
       if (n instanceof Node) modalBody.appendChild(n);
     });
+  }
+
+  function setModalVariant(mode = 'default') {
+    if (!overlay || !modalCard) return;
+    const isAdvisor = mode === 'advisor';
+    overlay.classList.toggle('ff-overlay-advisor', isAdvisor);
+    modalCard.classList.toggle('ff-modal-advisor', isAdvisor);
   }
 
   function detectModuleEnabled(snapshot, moduleKey) {
@@ -250,9 +266,12 @@ export function createWidget({ config, api, product, externalId }) {
       advisorLauncher = h('button', {
         class: `ff-advisor-fab ff-pos-${launcherPosition}`,
         type: 'button',
-        'aria-label': 'Otwórz AI Stylist',
+        'aria-label': 'Otwórz Lume · stylistę AI',
         onclick: () => open('advisor'),
-      }, 'AI Stylist');
+      },
+      h('span', { class: 'ff-advisor-fab-core', 'aria-hidden': 'true' }),
+      h('span', { class: 'ff-advisor-fab-label' }, 'Zapytaj Lume'),
+      );
       document.body.appendChild(advisorLauncher);
     }
 
@@ -314,6 +333,7 @@ export function createWidget({ config, api, product, externalId }) {
 
   // -- Screen 1: choose mode ------------------------------------------------
   function renderModeScreen() {
+    setModalVariant('default');
     stopAr();
     const sizeRow = h('div', { class: 'ff-sizes' },
       ...SIZES.map((size) => {
@@ -332,7 +352,7 @@ export function createWidget({ config, api, product, externalId }) {
 
     setBody(
       h('h2', { class: 'ff-h' }, 'Wirtualna przymierzalnia'),
-      h('div', { class: 'ff-sub' }, 'Try-On i AI Stylist w jednym miejscu'),
+      h('div', { class: 'ff-sub' }, 'Try-On i Lume w jednym miejscu'),
       productHeader(),
       h('div', { class: 'ff-modes' },
         h('button', { class: 'ff-mode', type: 'button', onclick: renderPhotoScreen },
@@ -346,7 +366,7 @@ export function createWidget({ config, api, product, externalId }) {
         ),
         h('button', { class: 'ff-mode', type: 'button', onclick: renderAdvisorScreen },
           h('span', { class: 'ff-emoji' }, '✦'),
-          h('span', { class: 'ff-mode-label' }, 'AI Stylist'),
+          h('span', { class: 'ff-mode-label' }, 'Lume · stylista AI'),
         ),
       ),
       h('div', { class: 'ff-sub' }, 'Wybierz rozmiar'),
@@ -455,11 +475,25 @@ export function createWidget({ config, api, product, externalId }) {
   }
 
   function renderAdvisorScreen() {
+    setModalVariant('advisor');
     stopAr();
+
+    const advisorHeader = h('div', { class: 'ff-advisor-header' },
+      h('div', { class: 'ff-advisor-header-profile' },
+        h('span', { class: 'ff-advisor-core', 'aria-hidden': 'true' }),
+        h('div', { class: 'ff-advisor-header-copy' },
+          h('b', {}, 'Lume · stylista AI'),
+          h('span', {},
+            h('i', { class: 'ff-advisor-status-dot', 'aria-hidden': 'true' }),
+            'Online · odpowiada od razu',
+          ),
+        ),
+      ),
+    );
 
     if (!advisorModuleChecked && !advisorModuleCheckError && !advisorLockedPayload) {
       setBody(
-        h('h2', { class: 'ff-h' }, '✨ AI Stylist'),
+        advisorHeader,
         h('div', { class: 'ff-advisor-loading' },
           h('div', { class: 'ff-spinner' }),
           h('div', { class: 'ff-sub' }, 'Sprawdzam dostępność modułu...'),
@@ -474,7 +508,7 @@ export function createWidget({ config, api, product, externalId }) {
 
     if (advisorModuleCheckError) {
       setBody(
-        h('h2', { class: 'ff-h' }, '✨ AI Stylist'),
+        advisorHeader,
         h('div', { class: 'ff-error' }, advisorModuleCheckError),
         h('div', { class: 'ff-actions' },
           h('button', {
@@ -497,7 +531,7 @@ export function createWidget({ config, api, product, externalId }) {
       const lockedMessage = (advisorLockedPayload && (advisorLockedPayload.message || advisorLockedPayload.error))
         || 'Advisor module is locked for this shop';
       setBody(
-        h('h2', { class: 'ff-h' }, '✨ AI Stylist'),
+        advisorHeader,
         h('div', { class: 'ff-advisor-locked' },
           h('b', {}, 'Moduł niedostępny'),
           h('div', {}, lockedMessage),
@@ -588,7 +622,7 @@ export function createWidget({ config, api, product, externalId }) {
       class: 'ff-advisor-input',
       rows: '3',
       maxlength: '1000',
-      placeholder: 'Napisz, czego szukasz...',
+      placeholder: 'Napisz wiadomość…',
       value: advisorDraft,
       oninput: (e) => {
         advisorDraft = e.target.value || '';
@@ -622,7 +656,7 @@ export function createWidget({ config, api, product, externalId }) {
     const chatList = h('div', { class: 'ff-chat-list' }, chatRows);
 
     setBody(
-      h('h2', { class: 'ff-h' }, '✨ AI Stylist'),
+      advisorHeader,
       chatList,
       advisorError
         ? h('div', { class: 'ff-error ff-advisor-inline-error' },
@@ -641,6 +675,7 @@ export function createWidget({ config, api, product, externalId }) {
         h('div', { class: 'ff-advisor-input-wrap' }, input),
         sendButton,
       ),
+      h('div', { class: 'ff-advisor-foot' }, 'Napędzane przez FashionFit AI · zgodne z RODO'),
       h('div', { class: 'ff-actions ff-advisor-nav' },
         h('button', { class: 'ff-btn ff-btn-ghost', type: 'button', onclick: renderModeScreen }, '← Wróć'),
       ),
@@ -655,6 +690,7 @@ export function createWidget({ config, api, product, externalId }) {
 
   // -- Screen 2A: photo AI --------------------------------------------------
   function renderPhotoScreen() {
+    setModalVariant('default');
     let dataUrl = null;
     let imageMeta = null;
     const input = h('input', { type: 'file', accept: 'image/jpeg,image/png', style: { display: 'none' } });
@@ -856,6 +892,7 @@ export function createWidget({ config, api, product, externalId }) {
 
   // -- Screen 2B: live AR ---------------------------------------------------
   async function renderArScreen() {
+    setModalVariant('default');
     const video = h('video', { class: 'ff-video', playsinline: 'true', muted: 'true' });
     const canvas = h('canvas', { class: 'ff-canvas' });
     const slider = h('input', { class: 'ff-slider', type: 'range', min: '0.6', max: '1.6', step: '0.05', value: '1' });

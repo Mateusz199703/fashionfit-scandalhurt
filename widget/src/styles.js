@@ -51,8 +51,9 @@ const CSS = `
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  min-width: 124px !important;
-  padding: 13px 20px !important;
+  gap: 8px !important;
+  min-width: 138px !important;
+  padding: 12px 18px !important;
   border-radius: 999px !important;
   border: 1px solid rgba(255, 255, 255, 0.2) !important;
   background: linear-gradient(120deg, #7b61ff 0%, #4f46e5 100%) !important;
@@ -71,6 +72,19 @@ const CSS = `
     0 22px 44px rgba(46, 36, 146, 0.56),
     inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
 }
+.ff-advisor-fab-core{
+  width: 20px !important;
+  height: 20px !important;
+  border-radius: 999px !important;
+  display: inline-block !important;
+  background: radial-gradient(circle at 32% 28%, #93a4ff 0%, #6f7cff 45%, #8b5cff 72%, #ffb15c 100%) !important;
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.22), 0 8px 20px rgba(33, 22, 124, 0.45) !important;
+}
+.ff-advisor-fab-label{
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+}
 
 .ff-pos-bottom-right {
   right: 24px !important;
@@ -87,15 +101,15 @@ const CSS = `
   display: inline-flex !important;
   align-items: center !important;
   gap: 10px !important;
-  max-width: min(280px, calc(100vw - 32px)) !important;
+  max-width: min(290px, calc(100vw - 32px)) !important;
   padding: 12px 12px 12px 14px !important;
   border-radius: 14px !important;
-  border: 1px solid rgba(255, 255, 255, 0.16) !important;
-  background: rgba(16, 16, 24, 0.94) !important;
-  color: rgba(255, 255, 255, 0.92) !important;
+  border: 1px solid rgba(123, 97, 255, 0.26) !important;
+  background: rgba(255, 255, 255, 0.96) !important;
+  color: #2a2a3c !important;
   cursor: pointer !important;
   text-align: left !important;
-  box-shadow: 0 18px 38px rgba(0, 0, 0, 0.42) !important;
+  box-shadow: 0 20px 44px rgba(50, 40, 140, 0.2) !important;
 }
 
 .ff-advisor-bubble-text {
@@ -108,9 +122,9 @@ const CSS = `
   width: 24px !important;
   height: 24px !important;
   border-radius: 999px !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
-  background: rgba(255, 255, 255, 0.06) !important;
-  color: rgba(255, 255, 255, 0.82) !important;
+  border: 1px solid rgba(123, 97, 255, 0.28) !important;
+  background: rgba(123, 97, 255, 0.08) !important;
+  color: rgba(43, 36, 86, 0.85) !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -162,6 +176,12 @@ const CSS = `
 .ff-overlay.ff-open {
   opacity: 1;
 }
+.ff-overlay.ff-overlay-advisor {
+  background:
+    radial-gradient(circle at 22% 0%, rgba(123, 97, 255, 0.2), transparent 44%),
+    radial-gradient(circle at 88% 100%, rgba(79, 70, 229, 0.14), transparent 48%),
+    rgba(14, 14, 20, 0.5);
+}
 
 .ff-modal {
   position: relative;
@@ -194,6 +214,44 @@ const CSS = `
 .ff-overlay.ff-open .ff-modal {
   transform: translateY(0);
   animation: ff-fade-in 0.25s ease both;
+}
+.ff-modal.ff-modal-advisor{
+  width: min(440px, calc(100vw - 18px));
+  max-height: calc(100dvh - 18px);
+  border-radius: 24px;
+  padding: 16px;
+  background: linear-gradient(180deg, #fcfcff 0%, #f5f6ff 100%);
+  color: #1a1a2d;
+  border: 1px solid rgba(123, 97, 255, 0.2);
+  box-shadow:
+    0 30px 72px rgba(26, 20, 86, 0.26),
+    0 0 0 1px rgba(255, 255, 255, 0.64) inset;
+}
+.ff-modal.ff-modal-advisor::before{
+  border-radius: 24px;
+  background:
+    radial-gradient(30rem 14rem at 0% 0%, rgba(123, 97, 255, 0.16), transparent 68%),
+    linear-gradient(180deg, rgba(255,255,255,0.56), rgba(255,255,255,0));
+}
+.ff-modal.ff-modal-advisor .ff-close{
+  border-color: rgba(123, 97, 255, 0.26);
+  background: #ffffff;
+  color: rgba(61, 52, 132, 0.78);
+}
+.ff-modal.ff-modal-advisor .ff-close:hover{
+  background: rgba(123, 97, 255, 0.1);
+  color: #3d3484;
+}
+.ff-modal.ff-modal-advisor .ff-sub{
+  color:#6f7390;
+}
+.ff-modal.ff-modal-advisor .ff-error{
+  color:#d55671;
+}
+.ff-modal.ff-modal-advisor .ff-btn-ghost{
+  background:#fff;
+  color:#3c4062;
+  border-color:rgba(123,97,255,.24);
 }
 
 .ff-close {
@@ -575,6 +633,48 @@ const CSS = `
   margin: 8px 0;
 }
 
+.ff-advisor-header{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 10px;
+}
+.ff-advisor-header-profile{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.ff-advisor-core{
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: radial-gradient(circle at 32% 26%, #95a4ff 0%, #6978ff 42%, #8b5cff 72%, #ffb15c 100%);
+  box-shadow: 0 12px 22px -14px rgba(79, 70, 229, 0.85);
+}
+.ff-advisor-header-copy b{
+  display: block;
+  color: #1b1a33;
+  font: 700 14px/1.25 "Space Grotesk", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+}
+.ff-advisor-header-copy span{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+  color: #55606e;
+  font-size: 12px;
+  font-weight: 600;
+}
+.ff-advisor-status-dot{
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #2ecf8e;
+  box-shadow: 0 0 0 0 rgba(46, 207, 142, 0.42);
+  animation: ff-live-dot 2s infinite;
+}
+
 .ff-advisor-loading {
   display: flex;
   flex-direction: column;
@@ -584,22 +684,22 @@ const CSS = `
 }
 .ff-advisor-locked {
   border: 1px solid rgba(255, 177, 92, 0.42);
-  background: rgba(255, 177, 92, 0.1);
+  background: rgba(255, 177, 92, 0.12);
   border-radius: 14px;
   padding: 14px;
-  color: #ffe4c2;
+  color: #8a5119;
   line-height: 1.45;
 }
 .ff-chat-list {
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.03);
-  max-height: 320px;
+  border: 1px solid rgba(123, 97, 255, 0.18);
+  border-radius: 16px;
+  background: #ffffff;
+  max-height: min(48vh, 420px);
   overflow: auto;
-  padding: 10px;
+  padding: 12px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 .ff-chat-row {
   display: flex;
@@ -614,22 +714,22 @@ const CSS = `
 }
 .ff-chat-bubble {
   max-width: min(92%, 500px);
-  border-radius: 14px;
-  padding: 10px 12px;
+  border-radius: 16px;
+  padding: 11px 13px;
   line-height: 1.45;
   font-size: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  background: rgba(255, 255, 255, 0.06);
-  color: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(123, 97, 255, 0.16);
+  background: #f6f7ff;
+  color: #25253b;
 }
 .ff-chat-user .ff-chat-bubble {
-  border-color: rgba(123, 97, 255, 0.88);
+  border-color: rgba(123, 97, 255, 0.72);
   background: linear-gradient(120deg, #7b61ff, #4f46e5);
   color: #fff;
 }
 .ff-chat-bubble-loading {
-  color: rgba(255, 255, 255, 0.78);
-  background: rgba(255, 255, 255, 0.1);
+  color: #4c5682;
+  background: #eef0ff;
 }
 .ff-advisor-input-wrap {
   margin-top: 0;
@@ -638,49 +738,48 @@ const CSS = `
 .ff-advisor-input {
   width: 100%;
   resize: vertical;
-  min-height: 74px;
+  min-height: 56px;
   max-height: 180px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 12px;
-  padding: 10px 12px;
+  border: 1px solid rgba(123, 97, 255, 0.22);
+  border-radius: 999px;
+  padding: 12px 16px;
   font-size: 14px;
   line-height: 1.4;
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.05);
+  color: #1f1f34;
+  background: #ffffff;
 }
 .ff-advisor-input::placeholder {
-  color: rgba(255, 255, 255, 0.48);
+  color: #8d93af;
 }
 .ff-advisor-input:disabled {
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.58);
+  background: #f3f4fb;
+  color: #858aa3;
 }
 .ff-advisor-composer {
-  position: sticky;
-  bottom: 0;
-  z-index: 3;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   gap: 8px;
   margin-top: 10px;
-  padding-top: 8px;
-  background: linear-gradient(180deg, rgba(10, 10, 16, 0), rgba(10, 10, 16, 0.88) 36%);
+  padding-top: 0;
 }
 .ff-advisor-send {
   width: auto;
-  min-width: 104px;
-  align-self: stretch;
+  min-width: 52px;
+  height: 52px;
+  padding: 0;
+  border-radius: 999px;
+  align-self: center;
 }
 .ff-advisor-nav {
-  margin-top: 8px;
+  margin-top: 10px;
 }
 .ff-advisor-empty {
-  border: 1px dashed rgba(255, 255, 255, 0.22);
+  border: 1px dashed rgba(123, 97, 255, 0.34);
   border-radius: 12px;
   padding: 12px;
-  color: rgba(255, 255, 255, 0.74);
+  color: #5b6489;
   font-size: 13px;
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(123, 97, 255, 0.04);
 }
 .ff-advisor-cards {
   display: grid;
@@ -689,9 +788,9 @@ const CSS = `
   width: 100%;
 }
 .ff-advisor-card {
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(123, 97, 255, 0.16);
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.05);
+  background: #ffffff;
   overflow: hidden;
 }
 .ff-advisor-card-image {
@@ -708,16 +807,16 @@ const CSS = `
   gap: 8px;
 }
 .ff-advisor-card-name {
-  color: #ffffff !important;
+  color: #1f2139 !important;
   font-size: 14px !important;
   line-height: 1.35 !important;
 }
 .ff-advisor-card-category {
-  color: rgba(255, 255, 255, 0.64);
+  color: #5e6487;
   font-size: 12px;
 }
 .ff-advisor-card-code {
-  color: rgba(255, 255, 255, 0.5);
+  color: #8f95b2;
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.02em;
@@ -742,6 +841,12 @@ const CSS = `
   border-radius: 10px;
   font-size: 13px;
 }
+.ff-advisor-foot{
+  margin-top: 8px;
+  color: #6f7390;
+  font-size: 11px;
+  text-align: center;
+}
 
 .ff-mode:focus-visible,
 .ff-size:focus-visible,
@@ -759,6 +864,11 @@ const CSS = `
 @keyframes ff-spin { to { transform: rotate(360deg); } }
 @keyframes ff-fade-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes ff-slide-up { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes ff-live-dot {
+  0% { box-shadow: 0 0 0 0 rgba(46, 207, 142, 0.42); }
+  70% { box-shadow: 0 0 0 7px rgba(46, 207, 142, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(46, 207, 142, 0); }
+}
 
 @media (max-width: 760px) {
   .ff-overlay {
@@ -772,6 +882,13 @@ const CSS = `
     border-radius: 18px 18px 0 0;
     padding: 20px 16px 16px;
     padding-bottom: max(16px, env(safe-area-inset-bottom));
+  }
+  .ff-modal.ff-modal-advisor{
+    width: 100vw;
+    height: min(100dvh, 100vh);
+    max-height: min(100dvh, 100vh);
+    border-radius: 18px 18px 0 0;
+    padding: 14px 12px 12px;
   }
   .ff-h {
     font-size: 31px !important;
@@ -804,22 +921,28 @@ const CSS = `
   .ff-chat-list {
     max-height: 34vh;
   }
+  .ff-advisor-header-copy b { font-size: 13px !important; }
+  .ff-advisor-header-copy span { font-size: 11px !important; }
   .ff-advisor-card-image {
     height: 120px;
   }
   .ff-advisor-composer {
     gap: 6px;
-    padding-top: 6px;
+    padding-top: 0;
   }
   .ff-advisor-send {
-    min-width: 96px;
+    min-width: 48px;
+    height: 48px;
   }
+  .ff-advisor-input { min-height: 48px; padding: 10px 14px; }
   .ff-advisor-fab {
     bottom: max(16px, env(safe-area-inset-bottom)) !important;
-    min-width: 112px !important;
+    min-width: 124px !important;
     padding: 12px 16px !important;
     font-size: 13px !important;
   }
+  .ff-advisor-fab-label { font-size: 13px !important; }
+  .ff-advisor-fab-core { width: 18px !important; height: 18px !important; }
   .ff-pos-bottom-right {
     right: 12px !important;
   }

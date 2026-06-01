@@ -14,6 +14,7 @@ import { AnalyticsPage } from './pages/AnalyticsPage';
 import { BillingPage } from './pages/BillingPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { ModulePlaceholderPage } from './pages/ModulePlaceholderPage';
+import { FashionAgentPage } from './pages/FashionAgentPage';
 
 function App() {
   return (
@@ -43,15 +44,7 @@ function App() {
             }
           >
             <Route path="/dashboard" element={<DashboardPage />} />
-            <Route
-              path="/fashion-agent"
-              element={(
-                <ModulePlaceholderPage
-                  title="Agent mody"
-                  description="Asystent rozmów, który analizuje intencję klienta i wspiera rekomendacje produktowe."
-                />
-              )}
-            />
+            <Route path="/fashion-agent" element={<FashionAgentPage />} />
             <Route
               path="/try-on"
               element={(
