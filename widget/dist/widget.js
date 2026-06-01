@@ -1,4 +1,4 @@
-(()=>{function t(r,n={},...i){let o=document.createElement(r);for(let[s,f]of Object.entries(n||{}))f!=null&&(s==="class"?o.className=f:s==="html"?o.innerHTML=f:s==="style"&&typeof f=="object"?Object.assign(o.style,f):s.startsWith("on")&&typeof f=="function"?o.addEventListener(s.slice(2).toLowerCase(),f):o.setAttribute(s,f));for(let s of i.flat())s==null||s===!1||o.appendChild(typeof s=="string"?document.createTextNode(s):s);return o}function _t(r){let n=window.FashionFitConfig||{},i=r||document.currentScript||[...document.querySelectorAll('script[src*="widget"]')].pop(),o=i&&i.dataset||{};return{apiKey:n.apiKey||o.fashionfitKey||null,shopId:n.shopId||o.fashionfitShop||null,apiUrl:(n.apiUrl||o.fashionfitApi||"https://api.fashionfit.app").replace(/\/$/,""),primaryColor:n.primaryColor||o.fashionfitColor||"#C4883A",buttonLabel:n.buttonLabel||o.fashionfitLabel||"Przymierz wirtualnie \u2728",tryonProvider:n.tryonProvider||o.fashionfitProvider||"auto"}}function St(){return/\/product\//.test(location.pathname)||document.body.classList.contains("single-product")||!!document.querySelector(".product, .single-product")}function jt(){let r=document.body.className.match(/postid-(\d+)/);if(r)return r[1];let n=document.querySelector('[id^="product-"]');if(n&&n.id){let s=n.id.match(/^product-(\d+)$/);if(s)return s[1]}let i=document.querySelector('meta[property="product:retailer_item_id"]');if(i&&i.getAttribute("content"))return i.getAttribute("content");let o=document.querySelector('[data-product_id], button[name="add-to-cart"][value]');return o?o.getAttribute("data-product_id")||o.getAttribute("value"):null}var ae=["image/jpeg","image/png"],oe=10*1024*1024;function At(r){return r?ae.includes(r.type)?r.size>oe?"Maksymalny rozmiar zdj\u0119cia to 10MB":null:"Dozwolone formaty to JPG i PNG":"Nie wybrano pliku"}function It(r){return new Promise((n,i)=>{let o=new FileReader;o.onload=()=>n(o.result),o.onerror=()=>i(new Error("Nie uda\u0142o si\u0119 odczyta\u0107 pliku")),o.readAsDataURL(r)})}function Lt(r){return new Promise((n,i)=>{let o=new Image;o.onload=()=>{let s=Number(o.naturalWidth||o.width||0),f=Number(o.naturalHeight||o.height||0),m=s>0&&f>0?Number((s*f/1e6).toFixed(2)):0,b="unknown";m>=4.5?b="ultra":m>=2?b="high":m>=.9?b="medium":m>0&&(b="low"),n({image_width:s,image_height:f,image_megapixels:m,image_quality_bucket:b,output_quality:"max"})},o.onerror=()=>i(new Error("Nie uda\u0142o si\u0119 odczyta\u0107 rozdzielczo\u015Bci zdj\u0119cia")),o.src=r})}async function Et(r,n){try{let o=await(await fetch(r)).blob(),s=URL.createObjectURL(o),f=t("a",{href:s,download:n});document.body.appendChild(f),f.click(),f.remove(),URL.revokeObjectURL(s)}catch{window.open(r,"_blank")}}function et(){let r=document.querySelector(".product_title, h1.entry-title, h1"),n=document.querySelector('meta[property="og:title"]'),i=document.querySelector('meta[property="og:image"]'),o=document.querySelector(".woocommerce-product-gallery img, .wp-post-image");return{name:r&&r.textContent.trim()||n&&n.content||"Produkt",image:o&&(o.currentSrc||o.src)||i&&i.content||null}}var re=`
+(()=>{function t(r,n={},...i){let a=document.createElement(r);for(let[s,d]of Object.entries(n||{}))d!=null&&(s==="class"?a.className=d:s==="html"?a.innerHTML=d:s==="style"&&typeof d=="object"?Object.assign(a.style,d):s.startsWith("on")&&typeof d=="function"?a.addEventListener(s.slice(2).toLowerCase(),d):a.setAttribute(s,d));for(let s of i.flat())s==null||s===!1||a.appendChild(typeof s=="string"?document.createTextNode(s):s);return a}function _t(r){let n=window.FashionFitConfig||{},i=r||document.currentScript||[...document.querySelectorAll('script[src*="widget"]')].pop(),a=i&&i.dataset||{};return{apiKey:n.apiKey||a.fashionfitKey||null,shopId:n.shopId||a.fashionfitShop||null,apiUrl:(n.apiUrl||a.fashionfitApi||"https://api.fashionfit.app").replace(/\/$/,""),primaryColor:n.primaryColor||a.fashionfitColor||"#C4883A",buttonLabel:n.buttonLabel||a.fashionfitLabel||"Przymierz wirtualnie \u2728",tryonProvider:n.tryonProvider||a.fashionfitProvider||"auto"}}function St(){return/\/product\//.test(location.pathname)||document.body.classList.contains("single-product")||!!document.querySelector(".product, .single-product")}function jt(){let r=document.body.className.match(/postid-(\d+)/);if(r)return r[1];let n=document.querySelector('[id^="product-"]');if(n&&n.id){let s=n.id.match(/^product-(\d+)$/);if(s)return s[1]}let i=document.querySelector('meta[property="product:retailer_item_id"]');if(i&&i.getAttribute("content"))return i.getAttribute("content");let a=document.querySelector('[data-product_id], button[name="add-to-cart"][value]');return a?a.getAttribute("data-product_id")||a.getAttribute("value"):null}var oe=["image/jpeg","image/png"],ae=10*1024*1024;function At(r){return r?oe.includes(r.type)?r.size>ae?"Maksymalny rozmiar zdj\u0119cia to 10MB":null:"Dozwolone formaty to JPG i PNG":"Nie wybrano pliku"}function It(r){return new Promise((n,i)=>{let a=new FileReader;a.onload=()=>n(a.result),a.onerror=()=>i(new Error("Nie uda\u0142o si\u0119 odczyta\u0107 pliku")),a.readAsDataURL(r)})}function Lt(r){return new Promise((n,i)=>{let a=new Image;a.onload=()=>{let s=Number(a.naturalWidth||a.width||0),d=Number(a.naturalHeight||a.height||0),m=s>0&&d>0?Number((s*d/1e6).toFixed(2)):0,b="unknown";m>=4.5?b="ultra":m>=2?b="high":m>=.9?b="medium":m>0&&(b="low"),n({image_width:s,image_height:d,image_megapixels:m,image_quality_bucket:b,output_quality:"max"})},a.onerror=()=>i(new Error("Nie uda\u0142o si\u0119 odczyta\u0107 rozdzielczo\u015Bci zdj\u0119cia")),a.src=r})}async function Et(r,n){try{let a=await(await fetch(r)).blob(),s=URL.createObjectURL(a),d=t("a",{href:s,download:n});document.body.appendChild(d),d.click(),d.remove(),URL.revokeObjectURL(s)}catch{window.open(r,"_blank")}}function et(){let r=document.querySelector(".product_title, h1.entry-title, h1"),n=document.querySelector('meta[property="og:title"]'),i=document.querySelector('meta[property="og:image"]'),a=document.querySelector(".woocommerce-product-gallery img, .wp-post-image");return{name:r&&r.textContent.trim()||n&&n.content||"Produkt",image:a&&(a.currentSrc||a.src)||i&&i.content||null}}var re=`
 .ff-overlay, .ff-overlay * {
   box-sizing: border-box !important;
 }
@@ -216,16 +216,20 @@
   animation: ff-fade-in 0.25s ease both;
 }
 .ff-modal.ff-modal-advisor{
-  width: min(500px, calc(100vw - 24px));
-  max-height: calc(100dvh - 24px);
+  width: min(450px, calc(100vw - 24px));
+  height: min(720px, calc(100vh - 48px));
+  max-height: calc(100vh - 48px);
   border-radius: 30px;
-  padding: 16px 14px 14px;
+  padding: 0;
   background: #ffffff;
   color: #16182d;
   border: 1px solid rgba(17, 17, 24, 0.12);
   box-shadow:
     0 28px 70px rgba(15, 21, 41, 0.26),
     0 1px 0 rgba(255, 255, 255, 0.85) inset;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 .ff-modal.ff-modal-advisor::before{
   border-radius: 30px;
@@ -234,11 +238,12 @@
 .ff-modal.ff-modal-advisor .ff-modal-body{
   display: flex;
   flex-direction: column;
+  height: 100%;
   min-height: 0;
 }
 .ff-modal.ff-modal-advisor .ff-close{
-  top: 12px;
-  right: 12px;
+  top: 16px;
+  right: 16px;
   width: 34px;
   height: 34px;
   border-color: rgba(17, 24, 39, 0.12);
@@ -647,9 +652,11 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  margin: 0 0 8px;
-  padding: 4px 44px 12px 2px;
+  margin: 0;
+  padding: 18px 58px 14px 18px;
   border-bottom: 1px solid rgba(17, 24, 39, 0.1);
+  background: #ffffff;
+  flex-shrink: 0;
 }
 .ff-advisor-header-profile{
   display: flex;
@@ -679,26 +686,6 @@
   font-size: 12px;
   font-weight: 600;
 }
-.ff-advisor-header-actions{
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.ff-advisor-menu{
-  width: 30px;
-  height: 30px;
-  border: 1px solid rgba(123, 97, 255, 0.24);
-  border-radius: 10px;
-  background: #ffffff;
-  color: #525b88;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 20px;
-  line-height: 1;
-  cursor: not-allowed;
-  opacity: 0.72;
-}
 .ff-advisor-status-dot{
   width: 8px;
   height: 8px;
@@ -726,20 +713,20 @@
 .ff-chat-list {
   border: none;
   border-radius: 0;
-  background: transparent;
-  max-height: min(52vh, 430px);
+  background: #ffffff;
+  max-height: none;
   overflow: auto;
   overflow-x: hidden;
-  padding: 10px 2px 4px;
+  padding: 16px 16px 12px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
   min-width: 0;
   flex: 1 1 auto;
 }
 .ff-chat-day{
   width: max-content;
-  margin: 0 auto 4px;
+  margin: 0 auto;
   padding: 4px 10px;
   border-radius: 999px;
   border: none;
@@ -753,18 +740,23 @@
 .ff-chat-row {
   display: flex;
   align-items: flex-end;
-  gap: 10px;
+  gap: 9px;
   min-width: 0;
+  max-width: 90%;
 }
 .ff-chat-user {
   justify-content: flex-end;
+  align-self: flex-end;
+  max-width: 88%;
 }
 .ff-chat-assistant {
   justify-content: flex-start;
+  align-self: flex-start;
+  max-width: 100%;
 }
 .ff-chat-avatar{
-  width: 30px;
-  height: 30px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   display: inline-flex;
   align-items: center;
@@ -782,26 +774,28 @@
 }
 .ff-chat-stack{
   min-width: 0;
-  max-width: calc(100% - 40px);
+  max-width: calc(100% - 37px);
   display: grid;
-  gap: 9px;
+  gap: 10px;
 }
 .ff-chat-bubble {
-  max-width: min(90%, 480px);
-  border-radius: 18px 18px 18px 10px;
-  padding: 11px 14px;
-  line-height: 1.45;
+  max-width: 100%;
+  border-radius: 17px;
+  border-bottom-left-radius: 5px;
+  padding: 12px 15px;
+  line-height: 1.5;
   font-size: 14px;
   border: 1px solid rgba(17, 24, 39, 0.1);
-  background: #f3f4f6;
+  background: #f5f6fa;
   color: #111827;
-  box-shadow: 0 4px 12px -10px rgba(17, 24, 39, 0.24);
+  box-shadow: none;
   overflow-wrap: anywhere;
 }
 .ff-chat-user .ff-chat-bubble {
   border: none;
-  border-radius: 18px 18px 10px 18px;
-  background: linear-gradient(135deg, #7b61ff, #4f46e5);
+  border-radius: 17px;
+  border-bottom-right-radius: 5px;
+  background: linear-gradient(120deg, #7b61ff, #4f46e5);
   color: #fff;
   box-shadow: 0 12px 24px -18px rgba(79, 70, 229, 0.9);
 }
@@ -813,51 +807,71 @@
   margin-top: 0;
   flex: 1 1 auto;
   min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f3f4f7;
+  border: 1px solid #e2e5ed;
+  border-radius: 999px;
+  padding: 9px 12px;
 }
 .ff-advisor-input {
   width: 100%;
   resize: none;
-  min-height: 46px;
+  min-height: 22px;
+  height: 22px;
   max-height: 180px;
-  border: 1px solid #e1e4ee;
-  border-radius: 999px;
-  padding: 11px 15px;
+  border: none;
+  border-radius: 0;
+  padding: 0;
   font-size: 14px;
-  line-height: 1.4;
+  line-height: 1.35;
   color: #171720;
-  background: #f8f9fc;
+  background: transparent;
+  overflow-y: auto;
 }
 .ff-advisor-input::placeholder {
   color: #8d93a5;
 }
 .ff-advisor-input:disabled {
-  background: #f3f4fb;
+  background: transparent;
   color: #858aa3;
 }
 .ff-advisor-composer {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-top: 12px;
-  padding: 10px;
-  border: 1px solid #e4e7f0;
-  border-radius: 18px;
+  gap: 10px;
+  margin-top: 0;
+  padding: 14px 14px;
+  border-top: 1px solid #e5e7ef;
+  border-radius: 0;
+  border-left: none;
+  border-right: none;
+  border-bottom: none;
   background: #ffffff;
+  flex-shrink: 0;
 }
 .ff-advisor-mic{
+  width: 20px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0;
+  border-radius: 0;
+  border: none;
+  color: #8a90a6;
+  background: transparent;
+  font-size: 16px;
+  box-shadow: none;
+}
+.ff-advisor-mic:hover{
+  transform: none;
+  filter: none;
+  background: transparent;
+}
+.ff-advisor-send {
   width: 44px;
   min-width: 44px;
   height: 44px;
-  padding: 0;
-  border-radius: 999px;
-  border-color: #dfe3ee;
-  color: #8a90a6;
-  background: #f6f7fb;
-}
-.ff-advisor-send {
-  width: 46px;
-  min-width: 46px;
-  height: 46px;
   padding: 0;
   border-radius: 999px;
   align-self: center;
@@ -865,11 +879,12 @@
   font-size: 18px;
   line-height: 1;
 }
+.ff-advisor-send:hover{
+  transform: scale(1.06);
+  filter: none;
+}
 .ff-advisor-send.is-loading {
   font-size: 22px;
-}
-.ff-advisor-nav {
-  margin-top: 10px;
 }
 .ff-advisor-empty {
   border: 1px dashed rgba(123, 97, 255, 0.34);
@@ -880,43 +895,52 @@
   background: rgba(123, 97, 255, 0.04);
 }
 .ff-advisor-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(156px, 1fr));
-  gap: 8px;
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 2px 0 6px;
+  scrollbar-width: none;
   width: 100%;
 }
+.ff-advisor-cards::-webkit-scrollbar {
+  display: none;
+}
 .ff-advisor-card {
+  min-width: 146px;
+  width: 146px;
+  flex: 0 0 auto;
   border: 1px solid rgba(123, 97, 255, 0.22);
-  border-radius: 12px;
-  background: #ffffff;
+  border-radius: 14px;
+  background: #fafafe;
   overflow: hidden;
-  box-shadow: 0 8px 22px -20px rgba(38, 45, 92, 0.52);
+  box-shadow: none;
 }
 .ff-advisor-card-image {
   width: 100%;
-  height: 160px;
+  height: 124px;
   object-fit: cover;
   display: block;
   background: rgba(255, 255, 255, 0.08);
 }
 .ff-advisor-card-body {
-  padding: 10px;
+  padding: 9px 10px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 .ff-advisor-card-name {
-  color: #1f2139 !important;
-  font-size: 14px !important;
+  color: #191c30 !important;
+  font-size: 12px !important;
   line-height: 1.35 !important;
 }
 .ff-advisor-card-category {
   color: #5e6487;
-  font-size: 12px;
+  font-size: 11px;
 }
 .ff-advisor-card-code {
   color: #8f95b2;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.02em;
   text-transform: uppercase;
@@ -924,9 +948,9 @@
 .ff-advisor-card-cta {
   width: auto;
   align-self: flex-start;
-  padding: 8px 12px;
+  padding: 7px 10px;
   border-radius: 10px;
-  font-size: 13px;
+  font-size: 11.5px;
   border-color: rgba(123, 97, 255, 0.3);
   color: #2f3763;
 }
@@ -943,12 +967,14 @@
   font-size: 13px;
 }
 .ff-advisor-foot{
-  margin-top: 8px;
-  padding-top: 10px;
-  border-top: 1px solid #eaedf4;
+  margin-top: 0;
+  padding: 0 14px 10px;
+  border-top: none;
   color: #7a8094;
-  font-size: 11px;
+  font-size: 10px;
+  letter-spacing: 0.04em;
   text-align: center;
+  flex-shrink: 0;
 }
 
 .ff-mode:focus-visible,
@@ -991,11 +1017,12 @@
     padding-bottom: max(16px, env(safe-area-inset-bottom));
   }
   .ff-modal.ff-modal-advisor{
-    width: min(430px, calc(100vw - 24px));
-    height: auto;
+    width: calc(100vw - 24px);
+    max-width: 430px;
+    height: calc(100dvh - 24px);
     max-height: calc(100dvh - 24px);
     border-radius: 24px;
-    padding: 14px 12px 12px;
+    padding: 0;
   }
   .ff-h {
     font-size: 31px !important;
@@ -1026,26 +1053,29 @@
     grid-template-columns: 1fr;
   }
   .ff-chat-list {
-    max-height: min(44vh, 360px);
-    padding: 8px 1px 2px;
+    max-height: none;
+    padding: 12px 12px 8px;
   }
   .ff-advisor-header-copy b { font-size: 13px !important; }
   .ff-advisor-header-copy span { font-size: 11px !important; }
   .ff-chat-avatar { width: 24px; height: 24px; }
   .ff-chat-avatar-core { width: 15px; height: 15px; }
-  .ff-chat-stack { max-width: calc(100% - 30px); }
+  .ff-chat-stack { max-width: calc(100% - 33px); }
   .ff-advisor-card-image {
-    height: 120px;
+    height: 108px;
   }
   .ff-advisor-composer {
-    gap: 6px;
-    padding: 8px;
-    border-radius: 14px;
+    gap: 8px;
+    padding: 10px 10px;
+  }
+  .ff-advisor-input-wrap {
+    padding: 8px 11px;
   }
   .ff-advisor-mic{
-    width: 40px;
-    min-width: 40px;
-    height: 40px;
+    width: 18px;
+    min-width: 18px;
+    height: 18px;
+    font-size: 15px;
   }
   .ff-advisor-send {
     width: 40px;
@@ -1053,8 +1083,8 @@
     height: 40px;
   }
   .ff-advisor-input {
-    min-height: 44px;
-    padding: 10px 13px;
+    min-height: 20px;
+    height: 20px;
   }
   .ff-advisor-fab {
     bottom: max(16px, env(safe-area-inset-bottom)) !important;
@@ -1094,4 +1124,4 @@
     transition: none !important;
   }
 }
-`;function Pt(r){if(document.getElementById("ff-styles"))return;document.documentElement.style.setProperty("--ff-primary",r);let n=document.createElement("style");n.id="ff-styles",n.textContent=re,document.head.appendChild(n)}function Mt(r){let n={"X-API-Key":r.apiKey,"Content-Type":"application/json"};async function i(o,s={}){let f=await fetch(r.apiUrl+o,{headers:n,...s}),m=await f.json().catch(()=>({}));if(!f.ok){let b=new Error(m.error||m.message||`\u017B\u0105danie nie powiod\u0142o si\u0119 (${f.status})`);throw b.status=f.status,b.code=m.code||null,b.payload=m,b}return m}return{getProducts(){return i(`/api/widget/products/${r.shopId}`)},startPhotoTryon(o,s,f){return i("/api/widget/tryon/photo",{method:"POST",body:JSON.stringify({shopId:r.shopId,productId:o,personImageBase64:s,preferredProvider:r.tryonProvider||"auto",metadata:{...f||{},preferredProvider:r.tryonProvider||"auto"}})})},getTryonStatus(o){return i(`/api/widget/tryon/status/${o}`)},getModules(){return i(`/api/widget/modules/${r.shopId}`)},advisorChat(o,s=null){let f={shopId:r.shopId,message:o};return s&&(f.conversationId=s),i("/api/widget/advisor/chat",{method:"POST",body:JSON.stringify(f)})},trackEvent(o,s={}){return i("/api/widget/events",{method:"POST",body:JSON.stringify({shopId:r.shopId,eventType:o,...s})}).catch(()=>{})}}}var ne="0.10.14",Tt=`https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${ne}`,ie=`${Tt}/wasm`,se="https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task",mt;function fe(){return mt||(mt=new Function("u","return import(u)")(Tt)),mt}async function Ot({video:r,canvas:n,garmentUrl:i}){let o=n.getContext("2d"),s=null,f=null,m=null,b=!1,S=1,w=new Image;w.crossOrigin="anonymous",i&&(w.src=i);let X=await fe(),G=await X.FilesetResolver.forVisionTasks(ie);f=await X.PoseLandmarker.createFromOptions(G,{baseOptions:{modelAssetPath:se,delegate:"GPU"},runningMode:"VIDEO",numPoses:1}),s=await navigator.mediaDevices.getUserMedia({video:{facingMode:"user"},audio:!1}),r.srcObject=s,await r.play(),n.width=r.videoWidth||640,n.height=r.videoHeight||480,b=!0,H();function H(){if(b){if(o.drawImage(r,0,0,n.width,n.height),f&&r.readyState>=2)try{let y=f.detectForVideo(r,performance.now()),j=y.landmarks&&y.landmarks[0];j&&at(j)}catch{}m=requestAnimationFrame(H)}}function at(y){if(!w.complete||!w.naturalWidth)return;let j=y[12],z=y[11];if(!j||!z)return;let L=n.width,D=n.height,E=j.x*L,P=j.y*D,v=z.x*L,M=z.y*D,C=Math.hypot(v-E,M-P)*1.8*S,A=w.naturalHeight/w.naturalWidth,k=C*A,T=(E+v)/2,W=(P+M)/2-k*.15;o.save(),o.globalAlpha=.92,o.drawImage(w,T-C/2,W,C,k),o.restore()}function h(){if(b=!1,m&&cancelAnimationFrame(m),s&&s.getTracks().forEach(y=>y.stop()),f&&f.close)try{f.close()}catch{}}return{setScale(y){S=y},capture(){return n.toDataURL("image/jpeg",.92)},stop:h}}var de=["XS","S","M","L","XL","XXL"],le=3e3,ce=20,Ct="ai_stylist_advisor",pe="virtual_try_on",ue=120,me="Cze\u015B\u0107, jestem Lume. Pomog\u0119 dobra\u0107 stylizacj\u0119 \u2728",be=40,Bt="Przymierz wirtualnie",bt="data-fashionfit-tryon-cta",ge="fashionfit:advisor-bubble-dismissed:",xe="Cze\u015B\u0107! \u{1F44B} Jestem Lume. Powiedz, na jak\u0105 okazj\u0119 szukasz stylizacji?";function Rt({config:r,api:n,product:i,externalId:o}){let s=et(),f=i.name||s.name,m=i.garment_image_url||s.image,b=!!(i&&i.id&&!i._fallback),S=r.launcherPosition==="bottom-left"||r.position==="bottom-left"?"bottom-left":"bottom-right",w=r.enableFloatingAdvisor!==!1,X=r.enableProductTryOnButton!==!1,G=r.advisorWelcomeBubble,H=(G==null?me:String(G||"")).slice(0,ue).trim(),at=String(r.productTryOnButtonText||Bt).trim().slice(0,be)||Bt,h=null,y=null,j=null,z=null,L="M",D=null,E=[],P="",v=!1,M="",V="",C=!1,A=!1,k=null,T="",W=!1,ot=!1,rt=!1,nt="",gt=!1,$=null,dt=null,q=null,B=null,x=null;function Ft(){gt||(gt=!0,Wt().catch(()=>{}))}function Z(e="default"){yt(),h&&h.remove(),D=null,E=[],P="",v=!1,M="",V="",C=!1,A=!1,k=null,T="",W=!1,j=t("div",{class:"ff-modal-body"}),y=t("div",{class:"ff-modal"},t("button",{class:"ff-close",type:"button","aria-label":"Zamknij",onclick:it},"\xD7"),j),h=t("div",{class:"ff-overlay",onclick:a=>{a.target===h&&it()}},y),document.body.appendChild(h),requestAnimationFrame(()=>h.classList.add("ff-open")),e==="advisor"?F():e==="tryon"?ft():O(),n.trackEvent("widget_open",{productId:i.id,metadata:{entryPoint:e}})}function it(){if(n.trackEvent("close",{productId:i.id}),J(),h){let e=h;e.classList.remove("ff-open"),setTimeout(()=>{e.remove(),rt&&!nt&&(wt(),ct(),vt())},200),h=null,y=null}}function J(){z&&(z.stop(),z=null)}function I(...e){j.innerHTML="",e.forEach(a=>{a instanceof Node&&j.appendChild(a)})}function st(e="default"){if(!h||!y)return;let a=e==="advisor";h.classList.toggle("ff-overlay-advisor",a),y.classList.toggle("ff-modal-advisor",a)}function lt(e,a){let c=(Array.isArray(e&&e.modules)?e.modules:[]).find(p=>p&&p.key===a);return!!(c&&c.enabled)}function xt(){let e=String(r.shopId||"unknown-shop");return`${ge}${e}`}function Nt(){try{return sessionStorage.getItem(xt())==="1"}catch{return!1}}function ht(){try{sessionStorage.setItem(xt(),"1")}catch{}B&&(B.remove(),B=null)}function yt(){q&&(q.remove(),q=null),B&&(B.remove(),B=null),x&&(x.remove(),x=null),$&&($.disconnect(),$=null)}function Dt(){try{let e=document.querySelector("form.cart .single_add_to_cart_button, .summary .single_add_to_cart_button, button.single_add_to_cart_button");return e?e.closest("form.cart")||e:document.querySelector("form.cart, .summary form.cart")}catch{return null}}function ct(){if(!X||!ot||!b){x&&(x.remove(),x=null);return}let e=Dt();if(!(!e||!e.parentNode)){if(!x){let a=document.querySelector(`[${bt}="1"]`);a instanceof HTMLButtonElement&&(x=a)}x||(x=t("button",{class:"ff-product-tryon-cta",type:"button",onclick:()=>Z("tryon")},at),x.setAttribute(bt,"1")),x.className="ff-product-tryon-cta",x.type="button",x.onclick=()=>Z("tryon"),x.setAttribute(bt,"1"),x.textContent=at,(!x.parentNode||x.parentNode!==e.parentNode||e.nextElementSibling!==x)&&e.insertAdjacentElement("afterend",x)}}function vt(){$||!X||!ot||($=new MutationObserver(()=>{dt&&cancelAnimationFrame(dt),dt=requestAnimationFrame(()=>ct())}),$.observe(document.body,{childList:!0,subtree:!0}))}function wt(){if(!w||!A||(q||(q=t("button",{class:`ff-advisor-fab ff-pos-${S}`,type:"button","aria-label":"Otw\xF3rz Lume \xB7 stylist\u0119 AI",onclick:()=>Z("advisor")},t("span",{class:"ff-advisor-fab-core","aria-hidden":"true"}),t("span",{class:"ff-advisor-fab-label"},"Zapytaj Lume")),document.body.appendChild(q)),!H||Nt()||B))return;let e=t("button",{class:"ff-advisor-bubble-close",type:"button","aria-label":"Zamknij wiadomo\u015B\u0107",onclick:a=>{a.stopPropagation(),ht()}},"\xD7");B=t("button",{class:`ff-advisor-bubble ff-pos-${S}`,type:"button",onclick:()=>{ht(),Z("advisor")}},t("span",{class:"ff-advisor-bubble-text"},H),e),document.body.appendChild(B)}async function Wt(){yt(),rt=!1,nt="",A=!1,ot=!1;try{let e=await n.getModules();A=lt(e,Ct),ot=lt(e,pe)}catch(e){nt=e&&e.message?e.message:"Nie uda\u0142o si\u0119 sprawdzi\u0107 modu\u0142\xF3w."}finally{rt=!0}!rt||nt||(wt(),ct(),vt())}function $t(){return t("div",{class:"ff-product"},m?t("img",{src:m,alt:f}):null,t("b",{},f))}function O(){st("default"),J();let e=t("div",{class:"ff-sizes"},...de.map(a=>{let l=t("button",{class:`ff-size${a===L?" ff-active":""}`,type:"button",onclick:()=>{L=a,e.querySelectorAll(".ff-size").forEach(c=>c.classList.remove("ff-active")),l.classList.add("ff-active")}},a);return l}));I(t("h2",{class:"ff-h"},"Wirtualna przymierzalnia"),t("div",{class:"ff-sub"},"Try-On i Lume w jednym miejscu"),$t(),t("div",{class:"ff-modes"},t("button",{class:"ff-mode",type:"button",onclick:ft},t("span",{class:"ff-emoji"},"\u2197"),t("span",{class:"ff-mode-label"},"Wgraj zdj\u0119cie")),t("button",{class:"ff-mode",type:"button",onclick:Jt},t("span",{class:"ff-badge"},"Nowe"),t("span",{class:"ff-emoji"},"\u25C9"),t("span",{class:"ff-mode-label"},"U\u017Cyj kamerki")),t("button",{class:"ff-mode",type:"button",onclick:F},t("span",{class:"ff-emoji"},"\u2726"),t("span",{class:"ff-mode-label"},"Lume \xB7 stylista AI"))),t("div",{class:"ff-sub"},"Wybierz rozmiar"),e,t("div",{class:"ff-privacy"},"\u{1F512} Twoje zdj\u0119cia nie s\u0105 zapisywane"))}function qt(e){if(!e)return null;try{let a=new URL(String(e));return a.protocol==="http:"||a.protocol==="https:"?a.toString():null}catch{return null}}async function Yt(){if(!W){W=!0,T="",k=null;try{let e=await n.getModules();C=!0,A=lt(e,Ct),A||(k={code:"MODULE_LOCKED",message:"Advisor module is locked for this shop",upgrade:{requiredModule:"ai_stylist_advisor",action:"upgrade_plan"}})}catch(e){T=e&&e.message?e.message:"Nie uda\u0142o si\u0119 sprawdzi\u0107 dost\u0119pno\u015Bci modu\u0142u."}finally{W=!1,h&&F()}}}function Kt(e){return!Array.isArray(e)||e.length===0?null:t("div",{class:"ff-advisor-cards"},...e.slice(0,3).map(a=>{let l=qt(a&&a.productUrl),c=a&&(a.externalId||a.productId)?String(a.externalId||a.productId):"";return t("div",{class:"ff-advisor-card"},a&&a.garmentImageUrl?t("img",{class:"ff-advisor-card-image",src:a.garmentImageUrl,alt:a.name||"Produkt"}):null,t("div",{class:"ff-advisor-card-body"},t("b",{class:"ff-advisor-card-name"},a&&a.name?a.name:"Produkt"),a&&a.category?t("div",{class:"ff-advisor-card-category"},a.category):null,c?t("div",{class:"ff-advisor-card-code"},`ID: ${c}`):null,l?t("button",{class:"ff-btn ff-btn-ghost ff-advisor-card-cta",type:"button",onclick:()=>window.open(l,"_blank","noopener,noreferrer")},"Zobacz produkt"):null))}))}function pt(e){let a=String(e||"").trim().toLowerCase();return a||""}function Xt(e,a){return Array.isArray(a)&&a.length>0?!1:pt(e)==="no_match"}function Gt(e,a){if(!Array.isArray(a)||a.length===0)return!1;let l=pt(e);return l?["browse_catalog","recommend_products","product_search","product_explanation"].includes(l):!0}function Ht(e){return e?t("div",{class:"ff-advisor-empty"},"Brak dopasowanych produkt\xF3w dla tej wiadomo\u015Bci."):null}function Vt(e,a){let l=Gt(a,e)?Kt(e):null;if(l)return l;let c=Xt(a,e);return Ht(c)}function F(){st("advisor"),J();let e=t("div",{class:"ff-advisor-header"},t("div",{class:"ff-advisor-header-profile"},t("span",{class:"ff-advisor-core","aria-hidden":"true"}),t("div",{class:"ff-advisor-header-copy"},t("b",{},"Lume \xB7 stylista AI"),t("span",{},t("i",{class:"ff-advisor-status-dot","aria-hidden":"true"}),"Online \xB7 odpowiada od razu"))));if(!C&&!T&&!k){I(e,t("div",{class:"ff-advisor-loading"},t("div",{class:"ff-spinner"}),t("div",{class:"ff-sub"},"Sprawdzam dost\u0119pno\u015B\u0107 modu\u0142u...")),t("div",{class:"ff-actions"},t("button",{class:"ff-btn ff-btn-ghost",type:"button",onclick:O},"\u2190 Wr\xF3\u0107"))),Yt();return}if(T){I(e,t("div",{class:"ff-error"},T),t("div",{class:"ff-actions"},t("button",{class:"ff-btn",type:"button",onclick:()=>{T="",C=!1,k=null,F()}},"Spr\xF3buj ponownie"),t("button",{class:"ff-btn ff-btn-ghost",type:"button",onclick:O},"\u2190 Wr\xF3\u0107")));return}if(!A||k){let g=k&&(k.message||k.error)||"Advisor module is locked for this shop";I(e,t("div",{class:"ff-advisor-locked"},t("b",{},"Modu\u0142 niedost\u0119pny"),t("div",{},g),t("div",{class:"ff-sub"},"Aby odblokowa\u0107 ten modu\u0142, przejd\u017A na wy\u017Cszy plan.")),t("div",{class:"ff-actions"},t("button",{class:"ff-btn",type:"button",onclick:()=>{C=!1,A=!1,k=null,T="",F()}},"Sprawd\u017A ponownie"),t("button",{class:"ff-btn ff-btn-ghost",type:"button",onclick:O},"\u2190 Wr\xF3\u0107")));return}async function a(g,Y={}){let{retry:K=!1}=Y;if(v)return;let R=String(g||"").trim();if(R){v=!0,M="",V=R,K||(E=E.concat([{role:"user",text:R}]),P=""),F();try{let d=await n.advisorChat(R,D);d&&d.conversationId&&(D=d.conversationId);let U=Array.isArray(d&&d.recommendations)?d.recommendations.slice(0,3):[],ee=d&&d.meta?d.meta.responseType:null;E=E.concat([{role:"assistant",text:d&&d.reply?d.reply:"Oto rekomendacje z Twojego katalogu.",recommendations:U,responseType:pt(ee)}])}catch(d){d&&d.code==="MODULE_LOCKED"?(k=d.payload||{code:"MODULE_LOCKED",message:d.message||"Advisor module is locked for this shop"},A=!1):M=d&&d.message?d.message:"Nie uda\u0142o si\u0119 wys\u0142a\u0107 wiadomo\u015Bci."}finally{v=!1,h&&F()}}}function l(g,Y=[],K=null,R=""){return t("div",{class:"ff-chat-row ff-chat-assistant"},t("span",{class:"ff-chat-avatar","aria-hidden":"true"},t("span",{class:"ff-chat-avatar-core","aria-hidden":"true"})),t("div",{class:"ff-chat-stack"},t("div",{class:`ff-chat-bubble${R?` ${R}`:""}`},g||""),Vt(Y||[],K)))}function c(g){return t("div",{class:"ff-chat-row ff-chat-user"},t("div",{class:"ff-chat-bubble"},g||""))}let p=E.length>0?E.map(g=>g.role==="assistant"?l(g.text||"",g.recommendations||[],g.responseType):c(g.text||"")):[l(xe)];v&&p.push(l("Przygotowuj\u0119 propozycje...",[],null,"ff-chat-bubble-loading"));let u=t("textarea",{class:"ff-advisor-input",rows:"3",maxlength:"1000",placeholder:"Napisz wiadomo\u015B\u0107...",value:P,oninput:g=>{P=g.target.value||"",Q(),M&&(M="")},onkeydown:g=>{g.key==="Enter"&&!g.shiftKey&&(g.preventDefault(),a(P))}}),_=t("button",{class:`ff-btn ff-advisor-send${v?" is-loading":""}`,type:"button",onclick:()=>a(P),"aria-label":v?"Wysy\u0142anie wiadomo\u015Bci":"Wy\u015Blij wiadomo\u015B\u0107"},v?"\u2026":"\u27A4"),N=t("button",{class:"ff-btn ff-btn-ghost ff-advisor-mic",type:"button",disabled:"true","aria-disabled":"true","aria-label":"Mikrofon (wkr\xF3tce)"},"\u{1F3A4}");function Q(){v||!P.trim()?_.setAttribute("disabled","true"):_.removeAttribute("disabled")}v&&u.setAttribute("disabled","true"),Q();let tt=t("div",{class:"ff-chat-list"},t("div",{class:"ff-chat-day"},"Dzisiaj"),...p);I(e,tt,M?t("div",{class:"ff-error ff-advisor-inline-error"},M,V?t("button",{class:"ff-btn ff-btn-ghost ff-advisor-retry",type:"button",onclick:()=>a(V,{retry:!0}),disabled:v?"true":null},"Spr\xF3buj ponownie"):null):null,t("div",{class:"ff-advisor-composer"},t("div",{class:"ff-advisor-input-wrap"},u),N,_),t("div",{class:"ff-advisor-foot"},"Nap\u0119dzane przez FashionFit AI \xB7 zgodne z RODO"),t("div",{class:"ff-actions ff-advisor-nav"},t("button",{class:"ff-btn ff-btn-ghost",type:"button",onclick:O},"\u2190 Wr\xF3\u0107"))),requestAnimationFrame(()=>{tt.scrollTop=tt.scrollHeight,!(!h||v)&&document.activeElement!==u&&u.focus()})}function ft(){st("default");let e=null,a=null,l=t("input",{type:"file",accept:"image/jpeg,image/png",style:{display:"none"}}),c=t("div",{class:"ff-error",style:{display:"none"}}),p=t("button",{class:"ff-btn",type:"button",disabled:"true",onclick:()=>R()},"Przymierz"),u=t("div",{class:"ff-drop"},t("span",{class:"ff-emoji"},"\u2B06\uFE0F"),t("span",{},"Przeci\u0105gnij zdj\u0119cie lub kliknij, aby wgra\u0107"),t("span",{class:"ff-sub"},"JPG lub PNG, maks. 10MB")),_=t("div",{class:"ff-upload-wrap"},u),N=t("img",{class:"ff-preview",alt:"Podgl\u0105d zdj\u0119cia"}),Q=t("div",{class:"ff-upload-meta"}),tt=t("button",{class:"ff-btn ff-btn-ghost",type:"button",onclick:()=>l.click()},"Zmie\u0144 zdj\u0119cie"),g=t("div",{class:"ff-upload-card",style:{display:"none"}},N,Q,tt);function Y(d){c.textContent=d,c.style.display=d?"block":"none"}async function K(d){let U=At(d);if(U){Y(U);return}Y(""),e=await It(d);try{a=await Lt(e)}catch{a={output_quality:"max"}}N.src=e,Q.textContent=a&&a.image_width&&a.image_height?`Rozdzielczo\u015B\u0107: ${a.image_width}\xD7${a.image_height} \xB7 ${a.image_megapixels} MP \xB7 jako\u015B\u0107 wej\u015Bciowa: ${a.image_quality_bucket}`:"Jako\u015B\u0107 wej\u015Bciowa: automatycznie wykryta",u.style.display="none",g.style.display="block",p.removeAttribute("disabled")}u.addEventListener("click",()=>l.click()),u.addEventListener("dragover",d=>{d.preventDefault(),u.classList.add("ff-over")}),u.addEventListener("dragleave",()=>u.classList.remove("ff-over")),u.addEventListener("drop",d=>{d.preventDefault(),u.classList.remove("ff-over"),d.dataTransfer.files[0]&&K(d.dataTransfer.files[0])}),l.addEventListener("change",()=>{l.files[0]&&K(l.files[0])});async function R(){if(!e)return;let d={mode:"photo",size:L,output_quality:"max",...a||{}};n.trackEvent("tryon_start",{productId:i.id,metadata:d}),kt();try{let{sessionId:U}=await n.startPhotoTryon(i.id,e,d);Zt(U)}catch(U){ut(U.message)}}I(t("h2",{class:"ff-h"},"\u{1F4F8} Wgraj swoje zdj\u0119cie"),_,g,l,c,t("div",{class:"ff-actions"},p,t("button",{class:"ff-btn ff-btn-ghost",type:"button",onclick:O},"\u2190 Wr\xF3\u0107")))}function kt(){let e=t("span",{}),a=[t("div",{class:"ff-step ff-step-active"},"1. Analiza zdj\u0119cia"),t("div",{class:"ff-step"},"2. Dopasowanie produktu"),t("div",{class:"ff-step"},"3. Render HD"),t("div",{class:"ff-step"},"4. Finalizacja")],l=t("div",{class:"ff-steps"},a);I(t("div",{class:"ff-loading"},t("div",{class:"ff-spinner"}),t("b",{},"Generuj\u0119 dla Ciebie..."),t("div",{class:"ff-sub"},"Zachowujemy najwy\u017Csz\u0105 jako\u015B\u0107 finalnego zdj\u0119cia"),l,t("div",{class:"ff-progress"},e)));let c=5,p=0,u=setInterval(()=>{c=Math.min(90,c+6),e.style.width=`${c}%`,c>=25&&p<1&&(p=1),c>=55&&p<2&&(p=2),c>=80&&p<3&&(p=3),a.forEach((_,N)=>{_.classList.remove("ff-step-done","ff-step-active"),N<p&&_.classList.add("ff-step-done"),N===p&&_.classList.add("ff-step-active")}),h||clearInterval(u)},700);return()=>{clearInterval(u),e.style.width="100%",a.forEach(_=>{_.classList.remove("ff-step-active"),_.classList.add("ff-step-done")})}}function Zt(e){let a=0,l=kt(),c=setInterval(async()=>{if(a+=1,!h){clearInterval(c);return}try{let{status:p,resultImageUrl:u}=await n.getTryonStatus(e);p==="completed"&&u?(clearInterval(c),l(),zt(u)):(p==="failed"||a>=ce)&&(clearInterval(c),ut("Nie uda\u0142o si\u0119 wygenerowa\u0107 przymiarki. Spr\xF3buj ponownie."))}catch(p){clearInterval(c),ut(p.message)}},le)}function ut(e){I(t("h2",{class:"ff-h"},"Co\u015B posz\u0142o nie tak"),t("div",{class:"ff-error"},e),t("div",{class:"ff-actions"},t("button",{class:"ff-btn",type:"button",onclick:ft},"Spr\xF3buj ponownie"),t("button",{class:"ff-btn ff-btn-ghost",type:"button",onclick:O},"\u2190 Wr\xF3\u0107")))}function zt(e){n.trackEvent("tryon_complete",{productId:i.id,metadata:{size:L,output_quality:"max"}}),I(t("div",{class:"ff-result-head"},t("h2",{class:"ff-h"},"Twoja przymiarka"),t("div",{class:"ff-result-pills"},t("span",{class:"ff-pill"},`Rozmiar ${L}`),t("span",{class:"ff-pill"},"MAX QUALITY"))),t("div",{class:"ff-result-stage"},t("img",{class:"ff-result",src:e,alt:"Wynik przymiarki"})),t("div",{class:"ff-result-note"},"Wskaz\xF3wka: najlepiej dzia\u0142a zdj\u0119cie samego ubrania bez torebki i dodatk\xF3w."),t("div",{class:"ff-actions"},t("button",{class:"ff-btn",type:"button",onclick:te},"Dodaj do koszyka"),t("button",{class:"ff-btn ff-btn-ghost",type:"button",onclick:()=>window.open(e,"_blank","noopener,noreferrer")},"Otw\xF3rz pe\u0142ny podgl\u0105d"),t("button",{class:"ff-btn ff-btn-ghost",type:"button",onclick:()=>{n.trackEvent("download",{productId:i.id}),Et(e,"fashionfit.jpg")}},"Pobierz zdj\u0119cie"),t("button",{class:"ff-btn ff-btn-ghost",type:"button",onclick:O},"Przymierz inne")))}async function Jt(){st("default");let e=t("video",{class:"ff-video",playsinline:"true",muted:"true"}),a=t("canvas",{class:"ff-canvas"}),l=t("input",{class:"ff-slider",type:"range",min:"0.6",max:"1.6",step:"0.05",value:"1"}),c=t("div",{class:"ff-sub"},"Uruchamiam kamer\u0119...");l.addEventListener("input",()=>{z&&z.setScale(parseFloat(l.value))}),I(t("h2",{class:"ff-h"},"\u{1F4F9} Przymierzalnia na \u017Cywo"),c,e,a,t("label",{class:"ff-sub"},"Dopasuj rozmiar"),l,t("div",{class:"ff-actions"},t("button",{class:"ff-btn",type:"button",onclick:p},"\u{1F4F8} Zr\xF3b zdj\u0119cie"),t("button",{class:"ff-btn ff-btn-ghost",type:"button",onclick:O},"\u2190 Wr\xF3\u0107"))),n.trackEvent("tryon_start",{productId:i.id,metadata:{mode:"ar",size:L}});try{z=await Ot({video:e,canvas:a,garmentUrl:i.garment_image_url}),c.textContent="Sta\u0144 w kadrze ca\u0142\u0105 sylwetk\u0105"}catch{Qt()}function p(){if(!z)return;let u=z.capture();J(),zt(u)}}function Qt(){J(),I(t("h2",{class:"ff-h"},"Kamera niedost\u0119pna"),t("div",{class:"ff-sub"},"Nie uda\u0142o si\u0119 uzyska\u0107 dost\u0119pu do kamery. Skorzystaj z trybu zdj\u0119cia."),t("div",{class:"ff-actions"},t("button",{class:"ff-btn",type:"button",onclick:ft},"\u{1F4F8} U\u017Cyj trybu zdj\u0119cia"),t("button",{class:"ff-btn ff-btn-ghost",type:"button",onclick:O},"\u2190 Wr\xF3\u0107")))}async function te(){if(n.trackEvent("add_to_cart",{productId:i.id,metadata:{size:L}}),!o){i.product_url&&(window.location=i.product_url);return}try{let e=new FormData;e.append("product_id",o),e.append("quantity","1"),await fetch(`${location.origin}/?wc-ajax=add_to_cart`,{method:"POST",body:e}),document.body.dispatchEvent(new Event("wc_fragment_refresh")),it()}catch{window.location=`${location.pathname}?add-to-cart=${o}`}}return{mount:Ft,open:Z,close:it}}var he=document.currentScript;async function Ut(){let r=_t(he);if(!r.apiKey||!r.shopId){console.warn("[FashionFit] Brak apiKey lub shopId \u2014 widget nie zosta\u0142 uruchomiony.");return}let n=St(),i=n?jt():null;Pt(r.primaryColor);let o=Mt(r),s=null;if(n&&i)try{let{products:f}=await o.getProducts(),m=f||[];if(s=m.find(b=>String(b.external_id)===String(i))||null,!s){let b=location.pathname.replace(/\/+$/,"");s=m.find(S=>{if(!S.product_url)return!1;try{return new URL(S.product_url).pathname.replace(/\/+$/,"")===b}catch{return!1}})||null}if(!s){let b=et(),S=w=>String(w||"").trim().toLowerCase();s=m.find(w=>S(w.name)===S(b.name))||null}}catch(f){console.warn("[FashionFit] Nie uda\u0142o si\u0119 pobra\u0107 produkt\xF3w:",f.message)}if(!s)if(n){let f=et();s={id:i||`fallback:${location.pathname}`,external_id:i||null,name:f.name||"Produkt",garment_image_url:f.image||null,product_url:location.href,category:"tops",variants:null,_fallback:!0},console.warn("[FashionFit] Nie znaleziono zsynchronizowanego produktu dla id, uruchamiam fallback:",i)}else s={id:`global:${location.pathname||"/"}`,external_id:null,name:"Lume \xB7 stylista AI",garment_image_url:null,product_url:null,category:null,variants:null,_fallback:!0};if(n&&String(s.category||"").toLowerCase()==="accessories"){console.info("[FashionFit] Pomijam widget try-on dla kategorii accessories.");return}Rt({config:r,api:o,product:s,externalId:i}).mount()}document.readyState==="loading"?document.addEventListener("DOMContentLoaded",Ut):Ut();})();
+`;function Pt(r){if(document.getElementById("ff-styles"))return;document.documentElement.style.setProperty("--ff-primary",r);let n=document.createElement("style");n.id="ff-styles",n.textContent=re,document.head.appendChild(n)}function Mt(r){let n={"X-API-Key":r.apiKey,"Content-Type":"application/json"};async function i(a,s={}){let d=await fetch(r.apiUrl+a,{headers:n,...s}),m=await d.json().catch(()=>({}));if(!d.ok){let b=new Error(m.error||m.message||`\u017B\u0105danie nie powiod\u0142o si\u0119 (${d.status})`);throw b.status=d.status,b.code=m.code||null,b.payload=m,b}return m}return{getProducts(){return i(`/api/widget/products/${r.shopId}`)},startPhotoTryon(a,s,d){return i("/api/widget/tryon/photo",{method:"POST",body:JSON.stringify({shopId:r.shopId,productId:a,personImageBase64:s,preferredProvider:r.tryonProvider||"auto",metadata:{...d||{},preferredProvider:r.tryonProvider||"auto"}})})},getTryonStatus(a){return i(`/api/widget/tryon/status/${a}`)},getModules(){return i(`/api/widget/modules/${r.shopId}`)},advisorChat(a,s=null){let d={shopId:r.shopId,message:a};return s&&(d.conversationId=s),i("/api/widget/advisor/chat",{method:"POST",body:JSON.stringify(d)})},trackEvent(a,s={}){return i("/api/widget/events",{method:"POST",body:JSON.stringify({shopId:r.shopId,eventType:a,...s})}).catch(()=>{})}}}var ne="0.10.14",Tt=`https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${ne}`,ie=`${Tt}/wasm`,se="https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task",mt;function de(){return mt||(mt=new Function("u","return import(u)")(Tt)),mt}async function Ot({video:r,canvas:n,garmentUrl:i}){let a=n.getContext("2d"),s=null,d=null,m=null,b=!1,S=1,w=new Image;w.crossOrigin="anonymous",i&&(w.src=i);let X=await de(),G=await X.FilesetResolver.forVisionTasks(ie);d=await X.PoseLandmarker.createFromOptions(G,{baseOptions:{modelAssetPath:se,delegate:"GPU"},runningMode:"VIDEO",numPoses:1}),s=await navigator.mediaDevices.getUserMedia({video:{facingMode:"user"},audio:!1}),r.srcObject=s,await r.play(),n.width=r.videoWidth||640,n.height=r.videoHeight||480,b=!0,H();function H(){if(b){if(a.drawImage(r,0,0,n.width,n.height),d&&r.readyState>=2)try{let y=d.detectForVideo(r,performance.now()),j=y.landmarks&&y.landmarks[0];j&&ot(j)}catch{}m=requestAnimationFrame(H)}}function ot(y){if(!w.complete||!w.naturalWidth)return;let j=y[12],z=y[11];if(!j||!z)return;let L=n.width,D=n.height,E=j.x*L,P=j.y*D,v=z.x*L,M=z.y*D,O=Math.hypot(v-E,M-P)*1.8*S,A=w.naturalHeight/w.naturalWidth,k=O*A,T=(E+v)/2,W=(P+M)/2-k*.15;a.save(),a.globalAlpha=.92,a.drawImage(w,T-O/2,W,O,k),a.restore()}function h(){if(b=!1,m&&cancelAnimationFrame(m),s&&s.getTracks().forEach(y=>y.stop()),d&&d.close)try{d.close()}catch{}}return{setScale(y){S=y},capture(){return n.toDataURL("image/jpeg",.92)},stop:h}}var fe=["XS","S","M","L","XL","XXL"],le=3e3,ce=20,Ct="ai_stylist_advisor",pe="virtual_try_on",ue=120,me="Cze\u015B\u0107, jestem Lume. Pomog\u0119 dobra\u0107 stylizacj\u0119 \u2728",be=40,Bt="Przymierz wirtualnie",bt="data-fashionfit-tryon-cta",ge="fashionfit:advisor-bubble-dismissed:",xe="Cze\u015B\u0107! \u{1F44B} Jestem Lume. Powiedz, na jak\u0105 okazj\u0119 szukasz stylizacji?";function Rt({config:r,api:n,product:i,externalId:a}){let s=et(),d=i.name||s.name,m=i.garment_image_url||s.image,b=!!(i&&i.id&&!i._fallback),S=r.launcherPosition==="bottom-left"||r.position==="bottom-left"?"bottom-left":"bottom-right",w=r.enableFloatingAdvisor!==!1,X=r.enableProductTryOnButton!==!1,G=r.advisorWelcomeBubble,H=(G==null?me:String(G||"")).slice(0,ue).trim(),ot=String(r.productTryOnButtonText||Bt).trim().slice(0,be)||Bt,h=null,y=null,j=null,z=null,L="M",D=null,E=[],P="",v=!1,M="",V="",O=!1,A=!1,k=null,T="",W=!1,at=!1,rt=!1,nt="",gt=!1,$=null,ft=null,q=null,C=null,x=null;function Ft(){gt||(gt=!0,Wt().catch(()=>{}))}function Z(e="default"){yt(),h&&h.remove(),D=null,E=[],P="",v=!1,M="",V="",O=!1,A=!1,k=null,T="",W=!1,j=t("div",{class:"ff-modal-body"}),y=t("div",{class:"ff-modal"},t("button",{class:"ff-close",type:"button","aria-label":"Zamknij",onclick:it},"\xD7"),j),h=t("div",{class:"ff-overlay",onclick:o=>{o.target===h&&it()}},y),document.body.appendChild(h),requestAnimationFrame(()=>h.classList.add("ff-open")),e==="advisor"?F():e==="tryon"?dt():B(),n.trackEvent("widget_open",{productId:i.id,metadata:{entryPoint:e}})}function it(){if(n.trackEvent("close",{productId:i.id}),J(),h){let e=h;e.classList.remove("ff-open"),setTimeout(()=>{e.remove(),rt&&!nt&&(wt(),ct(),vt())},200),h=null,y=null}}function J(){z&&(z.stop(),z=null)}function I(...e){j.innerHTML="",e.forEach(o=>{o instanceof Node&&j.appendChild(o)})}function st(e="default"){if(!h||!y)return;let o=e==="advisor";h.classList.toggle("ff-overlay-advisor",o),y.classList.toggle("ff-modal-advisor",o)}function lt(e,o){let c=(Array.isArray(e&&e.modules)?e.modules:[]).find(p=>p&&p.key===o);return!!(c&&c.enabled)}function xt(){let e=String(r.shopId||"unknown-shop");return`${ge}${e}`}function Nt(){try{return sessionStorage.getItem(xt())==="1"}catch{return!1}}function ht(){try{sessionStorage.setItem(xt(),"1")}catch{}C&&(C.remove(),C=null)}function yt(){q&&(q.remove(),q=null),C&&(C.remove(),C=null),x&&(x.remove(),x=null),$&&($.disconnect(),$=null)}function Dt(){try{let e=document.querySelector("form.cart .single_add_to_cart_button, .summary .single_add_to_cart_button, button.single_add_to_cart_button");return e?e.closest("form.cart")||e:document.querySelector("form.cart, .summary form.cart")}catch{return null}}function ct(){if(!X||!at||!b){x&&(x.remove(),x=null);return}let e=Dt();if(!(!e||!e.parentNode)){if(!x){let o=document.querySelector(`[${bt}="1"]`);o instanceof HTMLButtonElement&&(x=o)}x||(x=t("button",{class:"ff-product-tryon-cta",type:"button",onclick:()=>Z("tryon")},ot),x.setAttribute(bt,"1")),x.className="ff-product-tryon-cta",x.type="button",x.onclick=()=>Z("tryon"),x.setAttribute(bt,"1"),x.textContent=ot,(!x.parentNode||x.parentNode!==e.parentNode||e.nextElementSibling!==x)&&e.insertAdjacentElement("afterend",x)}}function vt(){$||!X||!at||($=new MutationObserver(()=>{ft&&cancelAnimationFrame(ft),ft=requestAnimationFrame(()=>ct())}),$.observe(document.body,{childList:!0,subtree:!0}))}function wt(){if(!w||!A||(q||(q=t("button",{class:`ff-advisor-fab ff-pos-${S}`,type:"button","aria-label":"Otw\xF3rz Lume \xB7 stylist\u0119 AI",onclick:()=>Z("advisor")},t("span",{class:"ff-advisor-fab-core","aria-hidden":"true"}),t("span",{class:"ff-advisor-fab-label"},"Zapytaj Lume")),document.body.appendChild(q)),!H||Nt()||C))return;let e=t("button",{class:"ff-advisor-bubble-close",type:"button","aria-label":"Zamknij wiadomo\u015B\u0107",onclick:o=>{o.stopPropagation(),ht()}},"\xD7");C=t("button",{class:`ff-advisor-bubble ff-pos-${S}`,type:"button",onclick:()=>{ht(),Z("advisor")}},t("span",{class:"ff-advisor-bubble-text"},H),e),document.body.appendChild(C)}async function Wt(){yt(),rt=!1,nt="",A=!1,at=!1;try{let e=await n.getModules();A=lt(e,Ct),at=lt(e,pe)}catch(e){nt=e&&e.message?e.message:"Nie uda\u0142o si\u0119 sprawdzi\u0107 modu\u0142\xF3w."}finally{rt=!0}!rt||nt||(wt(),ct(),vt())}function $t(){return t("div",{class:"ff-product"},m?t("img",{src:m,alt:d}):null,t("b",{},d))}function B(){st("default"),J();let e=t("div",{class:"ff-sizes"},...fe.map(o=>{let l=t("button",{class:`ff-size${o===L?" ff-active":""}`,type:"button",onclick:()=>{L=o,e.querySelectorAll(".ff-size").forEach(c=>c.classList.remove("ff-active")),l.classList.add("ff-active")}},o);return l}));I(t("h2",{class:"ff-h"},"Wirtualna przymierzalnia"),t("div",{class:"ff-sub"},"Try-On i Lume w jednym miejscu"),$t(),t("div",{class:"ff-modes"},t("button",{class:"ff-mode",type:"button",onclick:dt},t("span",{class:"ff-emoji"},"\u2197"),t("span",{class:"ff-mode-label"},"Wgraj zdj\u0119cie")),t("button",{class:"ff-mode",type:"button",onclick:Jt},t("span",{class:"ff-badge"},"Nowe"),t("span",{class:"ff-emoji"},"\u25C9"),t("span",{class:"ff-mode-label"},"U\u017Cyj kamerki")),t("button",{class:"ff-mode",type:"button",onclick:F},t("span",{class:"ff-emoji"},"\u2726"),t("span",{class:"ff-mode-label"},"Lume \xB7 stylista AI"))),t("div",{class:"ff-sub"},"Wybierz rozmiar"),e,t("div",{class:"ff-privacy"},"\u{1F512} Twoje zdj\u0119cia nie s\u0105 zapisywane"))}function qt(e){if(!e)return null;try{let o=new URL(String(e));return o.protocol==="http:"||o.protocol==="https:"?o.toString():null}catch{return null}}async function Yt(){if(!W){W=!0,T="",k=null;try{let e=await n.getModules();O=!0,A=lt(e,Ct),A||(k={code:"MODULE_LOCKED",message:"Advisor module is locked for this shop",upgrade:{requiredModule:"ai_stylist_advisor",action:"upgrade_plan"}})}catch(e){T=e&&e.message?e.message:"Nie uda\u0142o si\u0119 sprawdzi\u0107 dost\u0119pno\u015Bci modu\u0142u."}finally{W=!1,h&&F()}}}function Kt(e){return!Array.isArray(e)||e.length===0?null:t("div",{class:"ff-advisor-cards"},...e.slice(0,3).map(o=>{let l=qt(o&&o.productUrl),c=o&&(o.externalId||o.productId)?String(o.externalId||o.productId):"";return t("div",{class:"ff-advisor-card"},o&&o.garmentImageUrl?t("img",{class:"ff-advisor-card-image",src:o.garmentImageUrl,alt:o.name||"Produkt"}):null,t("div",{class:"ff-advisor-card-body"},t("b",{class:"ff-advisor-card-name"},o&&o.name?o.name:"Produkt"),o&&o.category?t("div",{class:"ff-advisor-card-category"},o.category):null,c?t("div",{class:"ff-advisor-card-code"},`ID: ${c}`):null,l?t("button",{class:"ff-btn ff-btn-ghost ff-advisor-card-cta",type:"button",onclick:()=>window.open(l,"_blank","noopener,noreferrer")},"Zobacz produkt"):null))}))}function pt(e){let o=String(e||"").trim().toLowerCase();return o||""}function Xt(e,o){return Array.isArray(o)&&o.length>0?!1:pt(e)==="no_match"}function Gt(e,o){if(!Array.isArray(o)||o.length===0)return!1;let l=pt(e);return l?["browse_catalog","recommend_products","product_search","product_explanation"].includes(l):!0}function Ht(e){return e?t("div",{class:"ff-advisor-empty"},"Brak dopasowanych produkt\xF3w dla tej wiadomo\u015Bci."):null}function Vt(e,o){let l=Gt(o,e)?Kt(e):null;if(l)return l;let c=Xt(o,e);return Ht(c)}function F(){st("advisor"),J();let e=t("div",{class:"ff-advisor-header"},t("div",{class:"ff-advisor-header-profile"},t("span",{class:"ff-advisor-core","aria-hidden":"true"}),t("div",{class:"ff-advisor-header-copy"},t("b",{},"Lume \xB7 stylista AI"),t("span",{},t("i",{class:"ff-advisor-status-dot","aria-hidden":"true"}),"Online \xB7 odpowiada od razu"))));if(!O&&!T&&!k){I(e,t("div",{class:"ff-advisor-loading"},t("div",{class:"ff-spinner"}),t("div",{class:"ff-sub"},"Sprawdzam dost\u0119pno\u015B\u0107 modu\u0142u...")),t("div",{class:"ff-actions"},t("button",{class:"ff-btn ff-btn-ghost",type:"button",onclick:B},"\u2190 Wr\xF3\u0107"))),Yt();return}if(T){I(e,t("div",{class:"ff-error"},T),t("div",{class:"ff-actions"},t("button",{class:"ff-btn",type:"button",onclick:()=>{T="",O=!1,k=null,F()}},"Spr\xF3buj ponownie"),t("button",{class:"ff-btn ff-btn-ghost",type:"button",onclick:B},"\u2190 Wr\xF3\u0107")));return}if(!A||k){let g=k&&(k.message||k.error)||"Advisor module is locked for this shop";I(e,t("div",{class:"ff-advisor-locked"},t("b",{},"Modu\u0142 niedost\u0119pny"),t("div",{},g),t("div",{class:"ff-sub"},"Aby odblokowa\u0107 ten modu\u0142, przejd\u017A na wy\u017Cszy plan.")),t("div",{class:"ff-actions"},t("button",{class:"ff-btn",type:"button",onclick:()=>{O=!1,A=!1,k=null,T="",F()}},"Sprawd\u017A ponownie"),t("button",{class:"ff-btn ff-btn-ghost",type:"button",onclick:B},"\u2190 Wr\xF3\u0107")));return}async function o(g,Y={}){let{retry:K=!1}=Y;if(v)return;let R=String(g||"").trim();if(R){v=!0,M="",V=R,K||(E=E.concat([{role:"user",text:R}]),P=""),F();try{let f=await n.advisorChat(R,D);f&&f.conversationId&&(D=f.conversationId);let U=Array.isArray(f&&f.recommendations)?f.recommendations.slice(0,3):[],ee=f&&f.meta?f.meta.responseType:null;E=E.concat([{role:"assistant",text:f&&f.reply?f.reply:"Oto rekomendacje z Twojego katalogu.",recommendations:U,responseType:pt(ee)}])}catch(f){f&&f.code==="MODULE_LOCKED"?(k=f.payload||{code:"MODULE_LOCKED",message:f.message||"Advisor module is locked for this shop"},A=!1):M=f&&f.message?f.message:"Nie uda\u0142o si\u0119 wys\u0142a\u0107 wiadomo\u015Bci."}finally{v=!1,h&&F()}}}function l(g,Y=[],K=null,R=""){return t("div",{class:"ff-chat-row ff-chat-assistant"},t("span",{class:"ff-chat-avatar","aria-hidden":"true"},t("span",{class:"ff-chat-avatar-core","aria-hidden":"true"})),t("div",{class:"ff-chat-stack"},t("div",{class:`ff-chat-bubble${R?` ${R}`:""}`},g||""),Vt(Y||[],K)))}function c(g){return t("div",{class:"ff-chat-row ff-chat-user"},t("div",{class:"ff-chat-bubble"},g||""))}let p=E.length>0?E.map(g=>g.role==="assistant"?l(g.text||"",g.recommendations||[],g.responseType):c(g.text||"")):[l(xe)];v&&p.push(l("Przygotowuj\u0119 propozycje...",[],null,"ff-chat-bubble-loading"));let u=t("textarea",{class:"ff-advisor-input",rows:"1",maxlength:"1000",placeholder:"Napisz wiadomo\u015B\u0107...",value:P,oninput:g=>{P=g.target.value||"",Q(),M&&(M="")},onkeydown:g=>{g.key==="Enter"&&!g.shiftKey&&(g.preventDefault(),o(P))}}),_=t("button",{class:`ff-btn ff-advisor-send${v?" is-loading":""}`,type:"button",onclick:()=>o(P),"aria-label":v?"Wysy\u0142anie wiadomo\u015Bci":"Wy\u015Blij wiadomo\u015B\u0107"},v?"\u2026":"\u27A4"),N=t("button",{class:"ff-btn ff-btn-ghost ff-advisor-mic",type:"button",disabled:"true","aria-disabled":"true","aria-label":"Mikrofon (wkr\xF3tce)"},"\u{1F3A4}");function Q(){v||!P.trim()?_.setAttribute("disabled","true"):_.removeAttribute("disabled")}v&&u.setAttribute("disabled","true"),Q();let tt=t("div",{class:"ff-chat-list"},t("div",{class:"ff-chat-day"},"Dzisiaj"),...p);I(e,tt,M?t("div",{class:"ff-error ff-advisor-inline-error"},M,V?t("button",{class:"ff-btn ff-btn-ghost ff-advisor-retry",type:"button",onclick:()=>o(V,{retry:!0}),disabled:v?"true":null},"Spr\xF3buj ponownie"):null):null,t("div",{class:"ff-advisor-composer"},t("div",{class:"ff-advisor-input-wrap"},u,N),_),t("div",{class:"ff-advisor-foot"},"Nap\u0119dzane przez FashionFit AI \xB7 zgodne z RODO")),requestAnimationFrame(()=>{tt.scrollTop=tt.scrollHeight,!(!h||v)&&document.activeElement!==u&&u.focus()})}function dt(){st("default");let e=null,o=null,l=t("input",{type:"file",accept:"image/jpeg,image/png",style:{display:"none"}}),c=t("div",{class:"ff-error",style:{display:"none"}}),p=t("button",{class:"ff-btn",type:"button",disabled:"true",onclick:()=>R()},"Przymierz"),u=t("div",{class:"ff-drop"},t("span",{class:"ff-emoji"},"\u2B06\uFE0F"),t("span",{},"Przeci\u0105gnij zdj\u0119cie lub kliknij, aby wgra\u0107"),t("span",{class:"ff-sub"},"JPG lub PNG, maks. 10MB")),_=t("div",{class:"ff-upload-wrap"},u),N=t("img",{class:"ff-preview",alt:"Podgl\u0105d zdj\u0119cia"}),Q=t("div",{class:"ff-upload-meta"}),tt=t("button",{class:"ff-btn ff-btn-ghost",type:"button",onclick:()=>l.click()},"Zmie\u0144 zdj\u0119cie"),g=t("div",{class:"ff-upload-card",style:{display:"none"}},N,Q,tt);function Y(f){c.textContent=f,c.style.display=f?"block":"none"}async function K(f){let U=At(f);if(U){Y(U);return}Y(""),e=await It(f);try{o=await Lt(e)}catch{o={output_quality:"max"}}N.src=e,Q.textContent=o&&o.image_width&&o.image_height?`Rozdzielczo\u015B\u0107: ${o.image_width}\xD7${o.image_height} \xB7 ${o.image_megapixels} MP \xB7 jako\u015B\u0107 wej\u015Bciowa: ${o.image_quality_bucket}`:"Jako\u015B\u0107 wej\u015Bciowa: automatycznie wykryta",u.style.display="none",g.style.display="block",p.removeAttribute("disabled")}u.addEventListener("click",()=>l.click()),u.addEventListener("dragover",f=>{f.preventDefault(),u.classList.add("ff-over")}),u.addEventListener("dragleave",()=>u.classList.remove("ff-over")),u.addEventListener("drop",f=>{f.preventDefault(),u.classList.remove("ff-over"),f.dataTransfer.files[0]&&K(f.dataTransfer.files[0])}),l.addEventListener("change",()=>{l.files[0]&&K(l.files[0])});async function R(){if(!e)return;let f={mode:"photo",size:L,output_quality:"max",...o||{}};n.trackEvent("tryon_start",{productId:i.id,metadata:f}),kt();try{let{sessionId:U}=await n.startPhotoTryon(i.id,e,f);Zt(U)}catch(U){ut(U.message)}}I(t("h2",{class:"ff-h"},"\u{1F4F8} Wgraj swoje zdj\u0119cie"),_,g,l,c,t("div",{class:"ff-actions"},p,t("button",{class:"ff-btn ff-btn-ghost",type:"button",onclick:B},"\u2190 Wr\xF3\u0107")))}function kt(){let e=t("span",{}),o=[t("div",{class:"ff-step ff-step-active"},"1. Analiza zdj\u0119cia"),t("div",{class:"ff-step"},"2. Dopasowanie produktu"),t("div",{class:"ff-step"},"3. Render HD"),t("div",{class:"ff-step"},"4. Finalizacja")],l=t("div",{class:"ff-steps"},o);I(t("div",{class:"ff-loading"},t("div",{class:"ff-spinner"}),t("b",{},"Generuj\u0119 dla Ciebie..."),t("div",{class:"ff-sub"},"Zachowujemy najwy\u017Csz\u0105 jako\u015B\u0107 finalnego zdj\u0119cia"),l,t("div",{class:"ff-progress"},e)));let c=5,p=0,u=setInterval(()=>{c=Math.min(90,c+6),e.style.width=`${c}%`,c>=25&&p<1&&(p=1),c>=55&&p<2&&(p=2),c>=80&&p<3&&(p=3),o.forEach((_,N)=>{_.classList.remove("ff-step-done","ff-step-active"),N<p&&_.classList.add("ff-step-done"),N===p&&_.classList.add("ff-step-active")}),h||clearInterval(u)},700);return()=>{clearInterval(u),e.style.width="100%",o.forEach(_=>{_.classList.remove("ff-step-active"),_.classList.add("ff-step-done")})}}function Zt(e){let o=0,l=kt(),c=setInterval(async()=>{if(o+=1,!h){clearInterval(c);return}try{let{status:p,resultImageUrl:u}=await n.getTryonStatus(e);p==="completed"&&u?(clearInterval(c),l(),zt(u)):(p==="failed"||o>=ce)&&(clearInterval(c),ut("Nie uda\u0142o si\u0119 wygenerowa\u0107 przymiarki. Spr\xF3buj ponownie."))}catch(p){clearInterval(c),ut(p.message)}},le)}function ut(e){I(t("h2",{class:"ff-h"},"Co\u015B posz\u0142o nie tak"),t("div",{class:"ff-error"},e),t("div",{class:"ff-actions"},t("button",{class:"ff-btn",type:"button",onclick:dt},"Spr\xF3buj ponownie"),t("button",{class:"ff-btn ff-btn-ghost",type:"button",onclick:B},"\u2190 Wr\xF3\u0107")))}function zt(e){n.trackEvent("tryon_complete",{productId:i.id,metadata:{size:L,output_quality:"max"}}),I(t("div",{class:"ff-result-head"},t("h2",{class:"ff-h"},"Twoja przymiarka"),t("div",{class:"ff-result-pills"},t("span",{class:"ff-pill"},`Rozmiar ${L}`),t("span",{class:"ff-pill"},"MAX QUALITY"))),t("div",{class:"ff-result-stage"},t("img",{class:"ff-result",src:e,alt:"Wynik przymiarki"})),t("div",{class:"ff-result-note"},"Wskaz\xF3wka: najlepiej dzia\u0142a zdj\u0119cie samego ubrania bez torebki i dodatk\xF3w."),t("div",{class:"ff-actions"},t("button",{class:"ff-btn",type:"button",onclick:te},"Dodaj do koszyka"),t("button",{class:"ff-btn ff-btn-ghost",type:"button",onclick:()=>window.open(e,"_blank","noopener,noreferrer")},"Otw\xF3rz pe\u0142ny podgl\u0105d"),t("button",{class:"ff-btn ff-btn-ghost",type:"button",onclick:()=>{n.trackEvent("download",{productId:i.id}),Et(e,"fashionfit.jpg")}},"Pobierz zdj\u0119cie"),t("button",{class:"ff-btn ff-btn-ghost",type:"button",onclick:B},"Przymierz inne")))}async function Jt(){st("default");let e=t("video",{class:"ff-video",playsinline:"true",muted:"true"}),o=t("canvas",{class:"ff-canvas"}),l=t("input",{class:"ff-slider",type:"range",min:"0.6",max:"1.6",step:"0.05",value:"1"}),c=t("div",{class:"ff-sub"},"Uruchamiam kamer\u0119...");l.addEventListener("input",()=>{z&&z.setScale(parseFloat(l.value))}),I(t("h2",{class:"ff-h"},"\u{1F4F9} Przymierzalnia na \u017Cywo"),c,e,o,t("label",{class:"ff-sub"},"Dopasuj rozmiar"),l,t("div",{class:"ff-actions"},t("button",{class:"ff-btn",type:"button",onclick:p},"\u{1F4F8} Zr\xF3b zdj\u0119cie"),t("button",{class:"ff-btn ff-btn-ghost",type:"button",onclick:B},"\u2190 Wr\xF3\u0107"))),n.trackEvent("tryon_start",{productId:i.id,metadata:{mode:"ar",size:L}});try{z=await Ot({video:e,canvas:o,garmentUrl:i.garment_image_url}),c.textContent="Sta\u0144 w kadrze ca\u0142\u0105 sylwetk\u0105"}catch{Qt()}function p(){if(!z)return;let u=z.capture();J(),zt(u)}}function Qt(){J(),I(t("h2",{class:"ff-h"},"Kamera niedost\u0119pna"),t("div",{class:"ff-sub"},"Nie uda\u0142o si\u0119 uzyska\u0107 dost\u0119pu do kamery. Skorzystaj z trybu zdj\u0119cia."),t("div",{class:"ff-actions"},t("button",{class:"ff-btn",type:"button",onclick:dt},"\u{1F4F8} U\u017Cyj trybu zdj\u0119cia"),t("button",{class:"ff-btn ff-btn-ghost",type:"button",onclick:B},"\u2190 Wr\xF3\u0107")))}async function te(){if(n.trackEvent("add_to_cart",{productId:i.id,metadata:{size:L}}),!a){i.product_url&&(window.location=i.product_url);return}try{let e=new FormData;e.append("product_id",a),e.append("quantity","1"),await fetch(`${location.origin}/?wc-ajax=add_to_cart`,{method:"POST",body:e}),document.body.dispatchEvent(new Event("wc_fragment_refresh")),it()}catch{window.location=`${location.pathname}?add-to-cart=${a}`}}return{mount:Ft,open:Z,close:it}}var he=document.currentScript;async function Ut(){let r=_t(he);if(!r.apiKey||!r.shopId){console.warn("[FashionFit] Brak apiKey lub shopId \u2014 widget nie zosta\u0142 uruchomiony.");return}let n=St(),i=n?jt():null;Pt(r.primaryColor);let a=Mt(r),s=null;if(n&&i)try{let{products:d}=await a.getProducts(),m=d||[];if(s=m.find(b=>String(b.external_id)===String(i))||null,!s){let b=location.pathname.replace(/\/+$/,"");s=m.find(S=>{if(!S.product_url)return!1;try{return new URL(S.product_url).pathname.replace(/\/+$/,"")===b}catch{return!1}})||null}if(!s){let b=et(),S=w=>String(w||"").trim().toLowerCase();s=m.find(w=>S(w.name)===S(b.name))||null}}catch(d){console.warn("[FashionFit] Nie uda\u0142o si\u0119 pobra\u0107 produkt\xF3w:",d.message)}if(!s)if(n){let d=et();s={id:i||`fallback:${location.pathname}`,external_id:i||null,name:d.name||"Produkt",garment_image_url:d.image||null,product_url:location.href,category:"tops",variants:null,_fallback:!0},console.warn("[FashionFit] Nie znaleziono zsynchronizowanego produktu dla id, uruchamiam fallback:",i)}else s={id:`global:${location.pathname||"/"}`,external_id:null,name:"Lume \xB7 stylista AI",garment_image_url:null,product_url:null,category:null,variants:null,_fallback:!0};if(n&&String(s.category||"").toLowerCase()==="accessories"){console.info("[FashionFit] Pomijam widget try-on dla kategorii accessories.");return}Rt({config:r,api:a,product:s,externalId:i}).mount()}document.readyState==="loading"?document.addEventListener("DOMContentLoaded",Ut):Ut();})();

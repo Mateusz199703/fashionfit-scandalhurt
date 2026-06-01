@@ -631,7 +631,7 @@ export function createWidget({ config, api, product, externalId }) {
 
     const input = h('textarea', {
       class: 'ff-advisor-input',
-      rows: '3',
+      rows: '1',
       maxlength: '1000',
       placeholder: 'Napisz wiadomość...',
       value: advisorDraft,
@@ -697,14 +697,10 @@ export function createWidget({ config, api, product, externalId }) {
         )
         : null,
       h('div', { class: 'ff-advisor-composer' },
-        h('div', { class: 'ff-advisor-input-wrap' }, input),
-        micButton,
+        h('div', { class: 'ff-advisor-input-wrap' }, input, micButton),
         sendButton,
       ),
       h('div', { class: 'ff-advisor-foot' }, 'Napędzane przez FashionFit AI · zgodne z RODO'),
-      h('div', { class: 'ff-actions ff-advisor-nav' },
-        h('button', { class: 'ff-btn ff-btn-ghost', type: 'button', onclick: renderModeScreen }, '← Wróć'),
-      ),
     );
 
     requestAnimationFrame(() => {
