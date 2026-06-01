@@ -142,6 +142,24 @@ test('color advice returns advice-only response with zero recommendations', asyn
   assert.doesNotMatch(result.reply, /nie widzę teraz pasujących produktów/i);
 });
 
+test('general styling fallback is human-like when AI is unavailable', async () => {
+  const result = await resolveAdvisorOutcome({
+    message: 'co pasuje brunetce?',
+    shopId: SHOP_A,
+    catalogProducts: buildCatalog([{ id: 'a1', name: 'Sukienka letnia' }]),
+    advisorSettings: { maxRecommendations: 3 },
+    conversationMessages: [],
+    aiClient: {
+      isEnabled: () => false,
+      getStylistResponse: async () => ({}),
+    },
+  });
+
+  assert.equal(result.responseType, 'answer_only');
+  assert.equal(result.recommendations.length, 0);
+  assert.match(result.reply.toLowerCase(), /brunetk|kolor|granat|bordo|zieleń|zielen/u);
+});
+
 test('vague request returns follow-up guidance without random products', async () => {
   const result = await resolveAdvisorOutcome({
     message: 'potrzebuję czegoś fajnego',
@@ -191,6 +209,32 @@ test('no dresy in catalog returns no_match and no unrelated products', async () 
 
   assert.equal(result.responseType, 'no_match');
   assert.equal(result.recommendations.length, 0);
+});
+
+test('AI no_match response keeps natural AI reply with empty recommendations', async () => {
+  const result = await resolveAdvisorOutcome({
+    message: 'czy są dresy?',
+    shopId: SHOP_A,
+    catalogProducts: buildCatalog([
+      { id: 'a1', name: 'Sukienka letnia', category: 'one-pieces' },
+      { id: 'a2', name: 'Bluzka satynowa', category: 'tops' },
+    ]),
+    advisorSettings: { maxRecommendations: 3 },
+    conversationMessages: [],
+    aiClient: {
+      isEnabled: () => true,
+      getStylistResponse: async () => ({
+        responseType: 'no_match',
+        reply: 'Nie widzę obecnie dresów w tym katalogu, ale mogę pokazać Ci np. wygodne komplety casual.',
+        recommendedProductIds: [],
+        selectionReasons: [],
+      }),
+    },
+  });
+
+  assert.equal(result.responseType, 'no_match');
+  assert.equal(result.recommendations.length, 0);
+  assert.match(result.reply, /nie widzę obecnie dresów/i);
 });
 
 test('product search with relevant match returns validated recommendations and max 3', async () => {

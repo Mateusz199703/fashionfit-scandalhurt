@@ -139,6 +139,29 @@ function hasProductExplanationIntent(message) {
   return /(czy\s+(ten|ta|to)\b)|(ten\s+produkt)|(ta\s+rzecz)|(czy\s+.*\b(będzie|bedzie)\b)/u.test(text);
 }
 
+function hasAnyToken(text, tokens) {
+  const normalized = String(text || '').toLowerCase();
+  return tokens.some((token) => normalized.includes(token));
+}
+
+function buildStylingAdviceFallback(message) {
+  const text = String(message || '').toLowerCase();
+
+  if (hasAnyToken(text, ['brunetk', 'ciemnych włos', 'ciemnych wlos'])) {
+    return 'Brunetkom zwykle świetnie pasują głębokie i kontrastowe kolory: czerń, biel, bordo, butelkowa zieleń, granat i karmel. Jeśli chcesz, dopasuję to pod konkretną okazję i styl.';
+  }
+
+  if (hasAnyToken(text, ['blondyn', 'jasnych włos', 'jasnych wlos'])) {
+    return 'Przy jaśniejszych włosach często dobrze działają odcienie pastelowe, beże, błękity i pudrowe róże, ale sporo zależy od karnacji. Chcesz wersję bardziej codzienną czy elegancką?';
+  }
+
+  if (hasAnyToken(text, ['wesele', 'ślub', 'slub'])) {
+    return 'Na wesele najbezpieczniej celować w elegancję z wygodą: fason podkreślający sylwetkę, tkanina z lekkim ruchem i kolor dopasowany do pory dnia. Wolisz klasykę czy bardziej wyrazisty look?';
+  }
+
+  return 'Jasne, chętnie pomogę stylistycznie. Napisz proszę, na jaką okazję, w jakim stylu i kolorach chcesz się poruszać, a podpowiem konkretne kierunki.';
+}
+
 function inferRequestedResponseType(message) {
   if (hasBrowseCatalogIntent(message)) return 'browse_catalog';
   if (hasProductExplanationIntent(message)) return 'product_explanation';
@@ -476,7 +499,7 @@ function buildFallbackReply(recommendations) {
 function buildFallbackReplyByType({ responseType, message, hasCatalogProducts, hasRecommendations }) {
   switch (responseType) {
     case 'answer_only':
-      return 'Jasne ✨ Chętnie pomogę stylistycznie. Napisz proszę, na jaką okazję i jaki klimat lubisz, a podpowiem najlepsze kierunki.';
+      return buildStylingAdviceFallback(message);
     case 'ask_follow_up':
       return 'Chętnie pomogę ✨ Jaki styl, okazję albo kolor masz na myśli?';
     case 'product_explanation':
@@ -491,7 +514,7 @@ function buildFallbackReplyByType({ responseType, message, hasCatalogProducts, h
     case 'product_search':
       if (hasRecommendations) return null;
       if (hasTerm(message, VAGUE_REQUEST_TERMS)) {
-        return 'Jasne, chętnie pomogę stylistycznie ✨ Powiedz proszę na jaką okazję szukasz stylizacji i jaki klimat lubisz, a dopasuję wskazówki i potem sprawdzę produkty.';
+        return 'Jasne, chętnie pomogę. Powiedz proszę na jaką okazję, jaki styl i budżet bierzesz pod uwagę, a potem dobiorę konkretne propozycje z katalogu.';
       }
       return 'Nie widzę teraz pasujących produktów w katalogu tego sklepu dla tego zapytania. Mogę pomóc doprecyzować styl, kolor albo okazję i sprawdzę ponownie.';
     default:
@@ -744,9 +767,10 @@ async function resolveAdvisorOutcome({
       }
 
       if (responseType === 'no_match') {
+        const aiNoMatchReply = String(aiResult.reply || '').trim();
         return {
           responseType: 'no_match',
-          reply: buildFallbackReplyByType({
+          reply: aiNoMatchReply || buildFallbackReplyByType({
             responseType: 'no_match',
             message,
             hasCatalogProducts: relevantCandidates.length > 0,
@@ -754,7 +778,7 @@ async function resolveAdvisorOutcome({
           }),
           recommendations: [],
           maxRecommendations: recommendationLimit,
-          usedAi: false,
+          usedAi: Boolean(aiNoMatchReply),
         };
       }
 
