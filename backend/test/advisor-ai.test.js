@@ -47,7 +47,7 @@ test('system prompt contains catalog-only and no-hallucination guardrails', () =
   assert.match(prompt, /default language: polish/i);
   assert.match(prompt, /allowed responsetype values/i);
   assert.match(prompt, /only pick ids from provided productCandidates/i);
-  assert.match(prompt, /never invent product names, prices, urls, sizes, stock/i);
+  assert.match(prompt, /never invent product names, prices, urls, sizes, colors, stock, material, or availability/i);
   assert.match(prompt, /return json only/i);
 });
 

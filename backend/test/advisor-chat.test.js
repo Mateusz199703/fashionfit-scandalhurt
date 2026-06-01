@@ -32,6 +32,22 @@ function buildCatalog(items) {
     product_url: item.product_url || null,
     garment_image_url: item.garment_image_url || null,
     variants: item.variants || null,
+    price: item.price != null ? item.price : null,
+    regular_price: item.regular_price != null ? item.regular_price : null,
+    sale_price: item.sale_price != null ? item.sale_price : null,
+    currency: item.currency || null,
+    stock_status: item.stock_status || null,
+    stock_quantity: item.stock_quantity != null ? item.stock_quantity : null,
+    is_in_stock: item.is_in_stock != null ? item.is_in_stock : null,
+    attributes: item.attributes || null,
+    colors: item.colors || null,
+    sizes: item.sizes || null,
+    material: item.material || null,
+    description: item.description || null,
+    short_description: item.short_description || null,
+    tags: item.tags || null,
+    gallery_images: item.gallery_images || null,
+    source_updated_at: item.source_updated_at || null,
   }));
 }
 
@@ -171,6 +187,37 @@ test('price question with missing price returns safe missing-data reply and no r
   assert.match(result.reply, /nie widzę jeszcze ceny|nie widze jeszcze ceny/i);
 });
 
+test('sale/regular price question uses real catalog values when available', async () => {
+  const result = await resolveAdvisorOutcome({
+    message: 'ile kosztuje ta sukienka?',
+    shopId: SHOP_A,
+    catalogProducts: buildCatalog([{
+      id: 'a1',
+      name: 'Sukienka premium',
+      sale_price: 179.9,
+      regular_price: 249.9,
+      currency: 'PLN',
+    }]),
+    advisorSettings: { maxRecommendations: 3 },
+    conversationMessages: [],
+    aiClient: {
+      isEnabled: () => true,
+      getStylistResponse: async () => ({
+        responseType: 'product_explanation',
+        reply: 'Kosztuje 150 PLN.',
+        recommendedProductIds: [],
+        selectionReasons: [],
+      }),
+    },
+  });
+
+  assert.equal(result.responseType, 'product_explanation');
+  assert.equal(result.intentSubtype, 'product_price');
+  assert.equal(result.recommendations.length, 0);
+  assert.match(result.reply.toLowerCase(), /promocji 179\.90 pln/i);
+  assert.match(result.reply.toLowerCase(), /regularna 249\.90 pln/i);
+});
+
 test('size question without reliable availability returns safe missing-data reply', async () => {
   const result = await resolveAdvisorOutcome({
     message: 'czy jest rozmiar M?',
@@ -188,6 +235,24 @@ test('size question without reliable availability returns safe missing-data repl
   assert.equal(result.intentSubtype, 'product_variant_question');
   assert.equal(result.recommendations.length, 0);
   assert.match(result.reply, /nie widzę jeszcze dokładnej dostępności rozmiaru m|nie widze jeszcze dokladnej dostepnosci rozmiaru m/i);
+});
+
+test('size question uses sizes data when available', async () => {
+  const result = await resolveAdvisorOutcome({
+    message: 'czy jest rozmiar M?',
+    shopId: SHOP_A,
+    catalogProducts: buildCatalog([{ id: 'a1', name: 'Sukienka letnia', sizes: ['S', 'M', 'L'] }]),
+    advisorSettings: { maxRecommendations: 3 },
+    conversationMessages: [],
+    aiClient: {
+      isEnabled: () => false,
+      getStylistResponse: async () => ({}),
+    },
+  });
+
+  assert.equal(result.responseType, 'product_explanation');
+  assert.equal(result.intentSubtype, 'product_variant_question');
+  assert.match(result.reply.toLowerCase(), /widzę rozmiar m|widze rozmiar m/i);
 });
 
 test('color question with missing color facts returns safe missing-data reply', async () => {
@@ -209,6 +274,50 @@ test('color question with missing color facts returns safe missing-data reply', 
   assert.match(result.reply, /nie widzę jeszcze informacji o dostępnych kolorach|nie widze jeszcze informacji o dostepnych kolorach/i);
 });
 
+test('color question uses colors data when available', async () => {
+  const result = await resolveAdvisorOutcome({
+    message: 'jakie kolory są dostępne?',
+    shopId: SHOP_A,
+    catalogProducts: buildCatalog([{ id: 'a1', name: 'Sukienka letnia', colors: ['Czarny', 'Granat'] }]),
+    advisorSettings: { maxRecommendations: 3 },
+    conversationMessages: [],
+    aiClient: {
+      isEnabled: () => false,
+      getStylistResponse: async () => ({}),
+    },
+  });
+
+  assert.equal(result.responseType, 'product_explanation');
+  assert.equal(result.intentSubtype, 'product_attribute_question');
+  assert.match(result.reply.toLowerCase(), /czarny/);
+  assert.match(result.reply.toLowerCase(), /granat/);
+});
+
+test('stock question uses stock fields when available', async () => {
+  const result = await resolveAdvisorOutcome({
+    message: 'czy ten produkt jest dostępny na stanie?',
+    shopId: SHOP_A,
+    catalogProducts: buildCatalog([{
+      id: 'a1',
+      name: 'Sukienka letnia',
+      stock_status: 'instock',
+      stock_quantity: 8,
+      is_in_stock: true,
+    }]),
+    advisorSettings: { maxRecommendations: 3 },
+    conversationMessages: [],
+    aiClient: {
+      isEnabled: () => false,
+      getStylistResponse: async () => ({}),
+    },
+  });
+
+  assert.equal(result.responseType, 'product_explanation');
+  assert.equal(result.intentSubtype, 'product_availability');
+  assert.match(result.reply.toLowerCase(), /dostępny|dostepny/);
+  assert.match(result.reply.toLowerCase(), /8/);
+});
+
 test('product explanation for summer remains stylistic without inventing material or stock', async () => {
   const result = await resolveAdvisorOutcome({
     message: 'czy ten produkt nada się na lato?',
@@ -226,6 +335,24 @@ test('product explanation for summer remains stylistic without inventing materia
   assert.equal(result.intentSubtype, 'product_details');
   assert.equal(result.recommendations.length, 0);
   assert.doesNotMatch(result.reply.toLowerCase(), /bawełna|wiskoza|100%|na stanie|dostępny magazynowo/);
+});
+
+test('material question uses real material field when available', async () => {
+  const result = await resolveAdvisorOutcome({
+    message: 'z jakiego materiału jest ten produkt?',
+    shopId: SHOP_A,
+    catalogProducts: buildCatalog([{ id: 'a1', name: 'Sukienka midi', material: 'Wiskoza' }]),
+    advisorSettings: { maxRecommendations: 3 },
+    conversationMessages: [],
+    aiClient: {
+      isEnabled: () => false,
+      getStylistResponse: async () => ({}),
+    },
+  });
+
+  assert.equal(result.responseType, 'product_explanation');
+  assert.equal(result.intentSubtype, 'product_details');
+  assert.match(result.reply.toLowerCase(), /wiskoza/);
 });
 
 test('color advice returns advice-only response with zero recommendations', async () => {

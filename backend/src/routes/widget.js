@@ -19,6 +19,14 @@ const { createAdvisorRouter } = require('./advisor');
 const ALLOWED_CATEGORIES = ['tops', 'bottoms', 'one-pieces', 'outerwear', 'accessories'];
 const mockTryonSessions = new Map();
 const MAX_BATCH_EVENTS = 50;
+const MAX_SHORT_TEXT = 255;
+const MAX_MEDIUM_TEXT = 2000;
+const MAX_LONG_TEXT = 12000;
+const MAX_LIST_SIZE = 64;
+const MAX_GALLERY_IMAGES = 32;
+const MAX_VARIANTS = 120;
+const MAX_JSON_DEPTH = 6;
+const MAX_JSON_NODES = 1500;
 
 function normalizeDomain(value) {
   if (!value) return null;
@@ -28,6 +36,219 @@ function normalizeDomain(value) {
     .replace(/^https?:\/\//, '')
     .replace(/^www\./, '')
     .replace(/\/.*$/, '');
+}
+
+function hasOwn(obj, key) {
+  return Boolean(obj && Object.prototype.hasOwnProperty.call(obj, key));
+}
+
+function sanitizeString(value, maxLen = MAX_MEDIUM_TEXT) {
+  if (value == null) return null;
+  const trimmed = String(value).trim();
+  if (!trimmed) return null;
+  return trimmed.slice(0, maxLen);
+}
+
+function sanitizeUrl(value) {
+  const normalized = sanitizeString(value, MAX_LONG_TEXT);
+  if (!normalized) return null;
+  try {
+    const parsed = new URL(normalized);
+    if (!['http:', 'https:'].includes(parsed.protocol)) return null;
+    return parsed.toString();
+  } catch (_) {
+    return null;
+  }
+}
+
+function sanitizeNumeric(value) {
+  if (value == null || value === '') return null;
+  const asNumber = Number(String(value).replace(',', '.'));
+  if (!Number.isFinite(asNumber)) return null;
+  return Math.round(asNumber * 100) / 100;
+}
+
+function sanitizeInteger(value) {
+  if (value == null || value === '') return null;
+  const asNumber = Number(value);
+  if (!Number.isFinite(asNumber)) return null;
+  return Math.round(asNumber);
+}
+
+function sanitizeBoolean(value) {
+  if (value === true || value === false) return value;
+  if (value == null || value === '') return null;
+  const normalized = String(value).trim().toLowerCase();
+  if (['true', '1', 'yes', 'y', 'tak'].includes(normalized)) return true;
+  if (['false', '0', 'no', 'n', 'nie'].includes(normalized)) return false;
+  return null;
+}
+
+function normalizeJsonNode(value, state, depth = 0) {
+  if (state.count > MAX_JSON_NODES) return null;
+  if (depth > MAX_JSON_DEPTH) return null;
+
+  if (value == null) return null;
+  if (typeof value === 'string') {
+    state.count += 1;
+    return value.slice(0, MAX_LONG_TEXT);
+  }
+  if (typeof value === 'number') {
+    state.count += 1;
+    return Number.isFinite(value) ? value : null;
+  }
+  if (typeof value === 'boolean') {
+    state.count += 1;
+    return value;
+  }
+  if (Array.isArray(value)) {
+    state.count += 1;
+    const out = [];
+    for (const item of value.slice(0, MAX_LIST_SIZE)) {
+      const next = normalizeJsonNode(item, state, depth + 1);
+      if (next !== null) out.push(next);
+    }
+    return out;
+  }
+  if (typeof value === 'object') {
+    state.count += 1;
+    const out = {};
+    const entries = Object.entries(value).slice(0, MAX_LIST_SIZE * 2);
+    for (const [key, item] of entries) {
+      const safeKey = sanitizeString(key, 120);
+      if (!safeKey) continue;
+      const next = normalizeJsonNode(item, state, depth + 1);
+      if (next !== null) out[safeKey] = next;
+    }
+    return out;
+  }
+  return null;
+}
+
+function sanitizeJson(value) {
+  if (value == null) return null;
+  const normalized = normalizeJsonNode(value, { count: 0 }, 0);
+  return normalized == null ? null : normalized;
+}
+
+function sanitizeStringList(value, maxLen = MAX_SHORT_TEXT, maxItems = MAX_LIST_SIZE) {
+  if (!Array.isArray(value)) return null;
+  const out = [];
+  for (const item of value.slice(0, maxItems)) {
+    const clean = sanitizeString(item, maxLen);
+    if (!clean) continue;
+    out.push(clean);
+  }
+  return out.length > 0 ? out : null;
+}
+
+function sanitizeTags(value) {
+  if (!Array.isArray(value)) return null;
+  const out = [];
+  for (const item of value.slice(0, MAX_LIST_SIZE)) {
+    if (item && typeof item === 'object') {
+      const name = sanitizeString(item.name, MAX_SHORT_TEXT);
+      const slug = sanitizeString(item.slug, MAX_SHORT_TEXT);
+      if (name || slug) out.push({ name: name || null, slug: slug || null });
+      continue;
+    }
+    const name = sanitizeString(item, MAX_SHORT_TEXT);
+    if (name) out.push({ name, slug: null });
+  }
+  return out.length > 0 ? out : null;
+}
+
+function sanitizeGalleryImages(value) {
+  if (!Array.isArray(value)) return null;
+  const out = [];
+  for (const item of value.slice(0, MAX_GALLERY_IMAGES)) {
+    if (item && typeof item === 'object') {
+      const src = sanitizeUrl(item.src || item.url || item.image);
+      if (!src) continue;
+      out.push({
+        src,
+        alt: sanitizeString(item.alt, MAX_MEDIUM_TEXT),
+        name: sanitizeString(item.name, MAX_SHORT_TEXT),
+      });
+      continue;
+    }
+    const src = sanitizeUrl(item);
+    if (src) out.push({ src, alt: null, name: null });
+  }
+  return out.length > 0 ? out : null;
+}
+
+function sanitizeVariants(value) {
+  if (!value) return null;
+  if (Array.isArray(value)) {
+    const out = [];
+    for (const item of value.slice(0, MAX_VARIANTS)) {
+      if (!item || typeof item !== 'object') continue;
+      const normalized = {
+        id: sanitizeString(item.id || item.external_id || item.externalId, MAX_SHORT_TEXT),
+        price: sanitizeNumeric(item.price),
+        regular_price: sanitizeNumeric(item.regular_price),
+        sale_price: sanitizeNumeric(item.sale_price),
+        stock_status: sanitizeString(item.stock_status, MAX_SHORT_TEXT),
+        stock_quantity: sanitizeInteger(item.stock_quantity),
+        is_in_stock: sanitizeBoolean(item.is_in_stock != null ? item.is_in_stock : item.in_stock),
+        attributes: sanitizeJson(item.attributes),
+      };
+      const hasAnyValue = Object.values(normalized).some((field) => field !== null && field !== '');
+      if (hasAnyValue) out.push(normalized);
+    }
+    return out.length > 0 ? out : null;
+  }
+  if (typeof value === 'object') {
+    return sanitizeJson(value);
+  }
+  return null;
+}
+
+function sanitizeSourceUpdatedAt(value) {
+  if (value == null || value === '') return null;
+  const timestamp = Date.parse(String(value));
+  if (!Number.isFinite(timestamp)) return null;
+  return new Date(timestamp).toISOString();
+}
+
+function buildProductSyncRow(product, shopId) {
+  if (!product || product.external_id == null) return null;
+
+  const row = {
+    shop_id: shopId,
+    external_id: String(product.external_id),
+    is_synced: true,
+    last_synced_at: new Date().toISOString(),
+  };
+
+  if (hasOwn(product, 'name')) row.name = sanitizeString(product.name, MAX_SHORT_TEXT);
+  if (hasOwn(product, 'category')) {
+    const normalizedCategory = sanitizeString(product.category, MAX_SHORT_TEXT);
+    row.category = normalizedCategory && ALLOWED_CATEGORIES.includes(normalizedCategory) ? normalizedCategory : null;
+  }
+  if (hasOwn(product, 'garment_image_url')) row.garment_image_url = sanitizeUrl(product.garment_image_url);
+  if (hasOwn(product, 'product_url')) row.product_url = sanitizeUrl(product.product_url);
+  if (hasOwn(product, 'variants')) row.variants = sanitizeVariants(product.variants);
+
+  if (hasOwn(product, 'price')) row.price = sanitizeNumeric(product.price);
+  if (hasOwn(product, 'regular_price')) row.regular_price = sanitizeNumeric(product.regular_price);
+  if (hasOwn(product, 'sale_price')) row.sale_price = sanitizeNumeric(product.sale_price);
+  if (hasOwn(product, 'currency')) row.currency = sanitizeString(product.currency, 16);
+  if (hasOwn(product, 'stock_status')) row.stock_status = sanitizeString(product.stock_status, 40);
+  if (hasOwn(product, 'stock_quantity')) row.stock_quantity = sanitizeInteger(product.stock_quantity);
+  if (hasOwn(product, 'is_in_stock')) row.is_in_stock = sanitizeBoolean(product.is_in_stock);
+  if (hasOwn(product, 'attributes')) row.attributes = sanitizeJson(product.attributes);
+  if (hasOwn(product, 'colors')) row.colors = sanitizeStringList(product.colors, 80);
+  if (hasOwn(product, 'sizes')) row.sizes = sanitizeStringList(product.sizes, 80);
+  if (hasOwn(product, 'material')) row.material = sanitizeString(product.material, MAX_SHORT_TEXT);
+  if (hasOwn(product, 'description')) row.description = sanitizeString(product.description, MAX_LONG_TEXT);
+  if (hasOwn(product, 'short_description')) row.short_description = sanitizeString(product.short_description, MAX_MEDIUM_TEXT);
+  if (hasOwn(product, 'tags')) row.tags = sanitizeTags(product.tags) || sanitizeJson(product.tags);
+  if (hasOwn(product, 'gallery_images')) row.gallery_images = sanitizeGalleryImages(product.gallery_images);
+  if (hasOwn(product, 'source_updated_at')) row.source_updated_at = sanitizeSourceUpdatedAt(product.source_updated_at);
+
+  return row;
 }
 
 function normalizeEvent(input) {
@@ -162,18 +383,8 @@ router.post('/products/sync', async (req, res) => {
   }
 
   const rows = products
-    .filter((p) => p && p.external_id != null)
-    .map((p) => ({
-      shop_id: shopId,
-      external_id: String(p.external_id),
-      name: p.name || null,
-      category: ALLOWED_CATEGORIES.includes(p.category) ? p.category : null,
-      garment_image_url: p.garment_image_url || null,
-      product_url: p.product_url || null,
-      variants: p.variants || null,
-      is_synced: true,
-      last_synced_at: new Date().toISOString(),
-    }));
+    .map((p) => buildProductSyncRow(p, shopId))
+    .filter(Boolean);
 
   if (rows.length === 0) return res.json({ synced: 0 });
 

@@ -1,5 +1,6 @@
 const fetch = require('node-fetch');
 const { supabase } = require('./supabase');
+const { URL } = require('url');
 
 // Best-effort mapping of WooCommerce category names/slugs to FashionFit categories.
 function mapCategory(wcCategories = []) {
@@ -21,6 +22,169 @@ function baseUrl(shop) {
 
 function sanitizeLabel(value) {
   return String(value || '').trim().toLowerCase();
+}
+
+function toFiniteNumber(value) {
+  if (value == null || value === '') return null;
+  const parsed = Number(String(value).replace(',', '.'));
+  if (!Number.isFinite(parsed)) return null;
+  return Math.round(parsed * 100) / 100;
+}
+
+function toInteger(value) {
+  if (value == null || value === '') return null;
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return null;
+  return Math.round(parsed);
+}
+
+function toIsoTimestamp(value) {
+  if (!value) return null;
+  const parsed = Date.parse(String(value));
+  if (!Number.isFinite(parsed)) return null;
+  return new Date(parsed).toISOString();
+}
+
+function normalizeUrl(value) {
+  if (!value) return null;
+  try {
+    const parsed = new URL(String(value));
+    if (!['http:', 'https:'].includes(parsed.protocol)) return null;
+    return parsed.toString();
+  } catch (_) {
+    return null;
+  }
+}
+
+function normalizeList(values, maxItems = 64, maxLen = 120) {
+  if (!Array.isArray(values)) return null;
+  const out = [];
+  for (const value of values.slice(0, maxItems)) {
+    const clean = String(value || '').trim();
+    if (!clean) continue;
+    out.push(clean.slice(0, maxLen));
+  }
+  return out.length > 0 ? out : null;
+}
+
+function normalizeAttributes(attributes = []) {
+  if (!Array.isArray(attributes)) return null;
+  const out = [];
+  for (const attr of attributes.slice(0, 80)) {
+    if (!attr || typeof attr !== 'object') continue;
+    const name = String(attr.name || '').trim();
+    const slug = String(attr.slug || '').trim();
+    const options = normalizeList(attr.options || [], 80, 120);
+    const entry = {
+      id: toInteger(attr.id),
+      name: name || null,
+      slug: slug || null,
+      visible: typeof attr.visible === 'boolean' ? attr.visible : null,
+      variation: typeof attr.variation === 'boolean' ? attr.variation : null,
+      options,
+    };
+    if (entry.name || entry.slug || (entry.options && entry.options.length > 0)) {
+      out.push(entry);
+    }
+  }
+  return out.length > 0 ? out : null;
+}
+
+function extractAttributeOptions(attributes, patterns) {
+  const list = Array.isArray(attributes) ? attributes : [];
+  const out = new Set();
+  for (const attr of list) {
+    const hay = `${String(attr && attr.name || '').toLowerCase()} ${String(attr && attr.slug || '').toLowerCase()}`;
+    if (!patterns.some((pattern) => pattern.test(hay))) continue;
+    for (const option of attr.options || []) {
+      const value = String(option || '').trim();
+      if (value) out.add(value);
+    }
+  }
+  return [...out];
+}
+
+function extractMaterial(attributes = [], description = '', shortDescription = '') {
+  const fromAttributes = extractAttributeOptions(attributes, [/(materia|fabric|material|skład|sklad)/i]);
+  if (fromAttributes.length > 0) return fromAttributes[0];
+
+  const hay = `${String(description || '')} ${String(shortDescription || '')}`;
+  const match = hay.match(/\b(bawełna|bawelna|wełna|welna|wiskoza|len|jedwab|poliester|akryl|lyocell|modal)\b/i);
+  return match ? match[1] : null;
+}
+
+function mapGalleryImages(images = []) {
+  if (!Array.isArray(images)) return null;
+  const out = [];
+  for (const image of images.slice(0, 32)) {
+    const src = normalizeUrl(image && image.src);
+    if (!src) continue;
+    out.push({
+      src,
+      alt: String(image && image.alt || '').trim() || null,
+      name: String(image && image.name || '').trim() || null,
+      position: toInteger(image && image.position),
+    });
+  }
+  return out.length > 0 ? out : null;
+}
+
+function mapTags(tags = []) {
+  if (!Array.isArray(tags)) return null;
+  const out = [];
+  for (const tag of tags.slice(0, 64)) {
+    if (!tag || typeof tag !== 'object') continue;
+    const name = String(tag.name || '').trim();
+    const slug = String(tag.slug || '').trim();
+    if (!name && !slug) continue;
+    out.push({ id: toInteger(tag.id), name: name || null, slug: slug || null });
+  }
+  return out.length > 0 ? out : null;
+}
+
+function mapVariants(product) {
+  if (Array.isArray(product && product.variations) && product.variations.length > 0) {
+    // TODO(M6.4B-2): fetch full variation payloads with pagination and map per-variant
+    // price/stock/attributes. M6.4B-1 keeps backward-compatible variation id mapping.
+    return { variation_ids: product.variations.slice(0, 200).map((id) => String(id)) };
+  }
+  return null;
+}
+
+function mapProductToSyncRow(product, shop) {
+  const attributes = normalizeAttributes(product.attributes);
+  const colors = extractAttributeOptions(attributes || [], [/(kolor|color|barwa)/i]);
+  const sizes = extractAttributeOptions(attributes || [], [/(rozmiar|size)/i]);
+  const description = String(product.description || '').trim() || null;
+  const shortDescription = String(product.short_description || '').trim() || null;
+
+  return {
+    shop_id: shop.id,
+    external_id: String(product.id),
+    name: product.name || null,
+    category: mapCategory(product.categories),
+    garment_image_url: selectGarmentImage(product.images),
+    product_url: normalizeUrl(product.permalink),
+    variants: mapVariants(product),
+    price: toFiniteNumber(product.price),
+    regular_price: toFiniteNumber(product.regular_price),
+    sale_price: toFiniteNumber(product.sale_price),
+    currency: String(product.currency || shop.currency || '').trim() || null,
+    stock_status: String(product.stock_status || '').trim() || null,
+    stock_quantity: toInteger(product.stock_quantity),
+    is_in_stock: typeof product.in_stock === 'boolean' ? product.in_stock : null,
+    attributes,
+    colors: colors.length > 0 ? colors : null,
+    sizes: sizes.length > 0 ? sizes : null,
+    material: extractMaterial(attributes || [], description, shortDescription),
+    description,
+    short_description: shortDescription,
+    tags: mapTags(product.tags),
+    gallery_images: mapGalleryImages(product.images),
+    source_updated_at: toIsoTimestamp(product.date_modified_gmt || product.date_modified),
+    is_synced: true,
+    last_synced_at: new Date().toISOString(),
+  };
 }
 
 function scoreGarmentImageCandidate(image) {
@@ -77,17 +241,7 @@ async function fetchProducts(shop, { perPage = 100, maxPages = 50 } = {}) {
 async function syncShopProducts(shop) {
   const products = await fetchProducts(shop);
 
-  const rows = products.map((p) => ({
-    shop_id: shop.id,
-    external_id: String(p.id),
-    name: p.name || null,
-    category: mapCategory(p.categories),
-    garment_image_url: selectGarmentImage(p.images),
-    product_url: p.permalink || null,
-    variants: Array.isArray(p.variations) && p.variations.length ? { variation_ids: p.variations } : null,
-    is_synced: true,
-    last_synced_at: new Date().toISOString(),
-  }));
+  const rows = products.map((p) => mapProductToSyncRow(p, shop));
 
   if (rows.length === 0) {
     return { synced: 0 };
@@ -107,4 +261,5 @@ module.exports = {
   mapCategory,
   selectGarmentImage,
   scoreGarmentImageCandidate,
+  mapProductToSyncRow,
 };

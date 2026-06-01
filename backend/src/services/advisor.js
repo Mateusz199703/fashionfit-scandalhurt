@@ -303,6 +303,9 @@ function getProductText(product) {
   return [
     String(product && product.name || '').toLowerCase(),
     String(product && product.category || '').toLowerCase(),
+    JSON.stringify((product && product.attributes) || null).toLowerCase(),
+    JSON.stringify((product && product.colors) || null).toLowerCase(),
+    JSON.stringify((product && product.sizes) || null).toLowerCase(),
     JSON.stringify((product && product.variants) || null).toLowerCase(),
   ].join(' ');
 }
@@ -365,6 +368,114 @@ function extractVariantValuesByKeys(variants, keyRegex) {
     if (value != null) values.push(String(value).trim());
   }
   return values.filter(Boolean);
+}
+
+function normalizeValuesList(list, maxItems = 64) {
+  if (!Array.isArray(list)) return [];
+  const out = [];
+  for (const item of list.slice(0, maxItems)) {
+    const value = String(item || '').trim();
+    if (value) out.push(value);
+  }
+  return out;
+}
+
+function extractAttributeValuesByKeys(attributes, keyRegex) {
+  if (!attributes) return [];
+
+  if (Array.isArray(attributes)) {
+    const values = [];
+    for (const attribute of attributes) {
+      const hay = `${String(attribute && attribute.name || '').toLowerCase()} ${String(attribute && attribute.slug || '').toLowerCase()}`;
+      if (!keyRegex.test(hay)) continue;
+      values.push(...normalizeValuesList(attribute && attribute.options));
+    }
+    return values;
+  }
+
+  if (typeof attributes === 'object') {
+    const values = [];
+    for (const [key, value] of Object.entries(attributes)) {
+      if (!keyRegex.test(String(key).toLowerCase())) continue;
+      if (Array.isArray(value)) {
+        values.push(...normalizeValuesList(value));
+      } else if (value && typeof value === 'object') {
+        values.push(...normalizeValuesList(Object.values(value)));
+      } else {
+        const normalized = String(value || '').trim();
+        if (normalized) values.push(normalized);
+      }
+    }
+    return values;
+  }
+
+  return [];
+}
+
+function extractVariantAttributeValues(variants, keyRegex) {
+  if (!variants) return [];
+  const values = [];
+
+  if (Array.isArray(variants)) {
+    for (const variant of variants) {
+      if (!variant || typeof variant !== 'object') continue;
+      values.push(...extractAttributeValuesByKeys(variant.attributes, keyRegex));
+    }
+    return values;
+  }
+
+  if (typeof variants === 'object') {
+    return extractVariantValuesByKeys(variants, keyRegex);
+  }
+
+  return [];
+}
+
+function dedupeLower(values) {
+  const out = [];
+  const seen = new Set();
+  for (const raw of values || []) {
+    const value = String(raw || '').trim();
+    if (!value) continue;
+    const key = value.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(value);
+  }
+  return out;
+}
+
+function extractKnownMaterialFromDescription(description) {
+  const hay = String(description || '').toLowerCase();
+  if (!hay) return null;
+  const match = hay.match(/\b(bawełna|bawelna|wełna|welna|wiskoza|len|jedwab|poliester|akryl|lyocell|modal)\b/u);
+  return match ? match[1] : null;
+}
+
+function getVariantStockStatusSummary(variants) {
+  if (!Array.isArray(variants)) return null;
+  let hasInStock = false;
+  let hasOutOfStock = false;
+  let knownCount = 0;
+
+  for (const variant of variants) {
+    if (!variant || typeof variant !== 'object') continue;
+    const status = String(variant.stock_status || '').toLowerCase();
+    const inStock = variant.is_in_stock;
+    if (status === 'instock' || status === 'in_stock' || inStock === true) {
+      hasInStock = true;
+      knownCount += 1;
+    } else if (status === 'outofstock' || status === 'out_of_stock' || inStock === false) {
+      hasOutOfStock = true;
+      knownCount += 1;
+    }
+  }
+
+  if (knownCount === 0) return null;
+  if (hasInStock && hasOutOfStock) return 'mixed';
+  if (hasInStock) return 'in_stock';
+  if (hasOutOfStock) return 'out_of_stock';
+  return null;
 }
 
 function buildRecommendation(product, reason) {
@@ -532,7 +643,7 @@ async function insertMessage({ db, conversationId, role, content, recommendation
 async function fetchShopProducts({ db, shopId }) {
   const { data, error } = await db
     .from('products')
-    .select('id, shop_id, external_id, name, category, garment_image_url, product_url, variants, is_synced, created_at')
+    .select('id, shop_id, external_id, name, category, garment_image_url, product_url, variants, is_synced, created_at, price, regular_price, sale_price, currency, stock_status, stock_quantity, is_in_stock, attributes, colors, sizes, material, description, short_description, tags, gallery_images, source_updated_at')
     .eq('shop_id', shopId)
     .eq('is_synced', true)
     .order('created_at', { ascending: false })
@@ -655,11 +766,27 @@ function resolveProductFactOutcome({
 }) {
   const contextProduct = pickContextProduct({ relevantCandidates, browseCandidates });
   const requestedSize = extractRequestedSize(message);
+  const normalizedSizes = dedupeLower([
+    ...normalizeValuesList(contextProduct && contextProduct.sizes),
+    ...extractAttributeValuesByKeys(contextProduct && contextProduct.attributes, /(rozmiar|size)/u),
+    ...extractVariantAttributeValues(contextProduct && contextProduct.variants, /(rozmiar|size)/u),
+  ]);
+  const normalizedColors = dedupeLower([
+    ...normalizeValuesList(contextProduct && contextProduct.colors),
+    ...extractAttributeValuesByKeys(contextProduct && contextProduct.attributes, /(kolor|color|barwa)/u),
+    ...extractVariantAttributeValues(contextProduct && contextProduct.variants, /(kolor|color|barwa)/u),
+  ]);
 
   if (subtype === 'product_price') {
     const source = contextProduct || {};
-    const rawPrice = source.price != null ? source.price : source.sale_price;
-    if (rawPrice == null || rawPrice === '') {
+    const salePrice = source.sale_price != null ? Number(source.sale_price) : null;
+    const regularPrice = source.regular_price != null ? Number(source.regular_price) : null;
+    const basePrice = source.price != null ? Number(source.price) : null;
+    const hasSale = Number.isFinite(salePrice);
+    const hasRegular = Number.isFinite(regularPrice);
+    const hasBase = Number.isFinite(basePrice);
+
+    if (!hasSale && !hasRegular && !hasBase) {
       return {
         responseType: 'product_explanation',
         intentSubtype: 'product_price',
@@ -670,9 +797,19 @@ function resolveProductFactOutcome({
       };
     }
 
-    const currency = String(source.currency || '').trim().toUpperCase();
+    const currency = String(source.currency || '').trim().toUpperCase() || 'PLN';
     const label = source.name ? `„${source.name}”` : 'Ten produkt';
-    const priceText = `${rawPrice}${currency ? ` ${currency}` : ''}`.trim();
+    let priceText = '';
+    if (hasSale && hasRegular) {
+      priceText = `w promocji ${salePrice.toFixed(2)} ${currency} (cena regularna ${regularPrice.toFixed(2)} ${currency})`;
+    } else if (hasSale) {
+      priceText = `${salePrice.toFixed(2)} ${currency}`;
+    } else if (hasRegular) {
+      priceText = `${regularPrice.toFixed(2)} ${currency}`;
+    } else {
+      priceText = `${basePrice.toFixed(2)} ${currency}`;
+    }
+
     return {
       responseType: 'product_explanation',
       intentSubtype: 'product_price',
@@ -684,10 +821,13 @@ function resolveProductFactOutcome({
   }
 
   if (subtype === 'product_variant_question') {
-    const variantValues = normalizeVariantStrings(contextProduct && contextProduct.variants);
+    const variantValues = dedupeLower([
+      ...normalizedSizes,
+      ...normalizeVariantStrings(contextProduct && contextProduct.variants),
+    ]);
     const containsSize = requestedSize
-      ? variantValues.some((item) => item === requestedSize.toLowerCase())
-      : false;
+      ? variantValues.some((item) => String(item).toLowerCase() === requestedSize.toLowerCase())
+      : variantValues.length > 0;
 
     if (!containsSize) {
       return {
@@ -700,10 +840,21 @@ function resolveProductFactOutcome({
       };
     }
 
+    if (!requestedSize && normalizedSizes.length > 0) {
+      return {
+        responseType: 'product_explanation',
+        intentSubtype: 'product_variant_question',
+        reply: `W danych produktu widzę dostępne rozmiary: ${normalizedSizes.slice(0, 8).join(', ')}.`,
+        recommendations: [],
+        maxRecommendations: recommendationLimit,
+        usedAi: false,
+      };
+    }
+
     return {
       responseType: 'product_explanation',
       intentSubtype: 'product_variant_question',
-      reply: `Widzę wariant rozmiaru ${requestedSize} w danych produktu, ale nie widzę jeszcze bieżącej dostępności magazynowej tego rozmiaru.`,
+      reply: `Widzę rozmiar ${requestedSize} w danych produktu. Nie widzę jednak jeszcze dokładnej dostępności magazynowej per rozmiar.`,
       recommendations: [],
       maxRecommendations: recommendationLimit,
       usedAi: false,
@@ -711,7 +862,7 @@ function resolveProductFactOutcome({
   }
 
   if (subtype === 'product_attribute_question') {
-    const colorValues = extractVariantValuesByKeys(contextProduct && contextProduct.variants, /(kolor|color|barwa)/u);
+    const colorValues = normalizedColors;
     if (colorValues.length === 0) {
       return {
         responseType: 'product_explanation',
@@ -723,11 +874,10 @@ function resolveProductFactOutcome({
       };
     }
 
-    const uniqueColors = [...new Set(colorValues.map((item) => item.toLowerCase()))];
     return {
       responseType: 'product_explanation',
       intentSubtype: 'product_attribute_question',
-      reply: `W danych sklepu widzę następujące kolory: ${uniqueColors.slice(0, 6).join(', ')}.`,
+      reply: `W danych sklepu widzę następujące kolory: ${colorValues.slice(0, 8).join(', ')}.`,
       recommendations: [],
       maxRecommendations: recommendationLimit,
       usedAi: false,
@@ -736,8 +886,32 @@ function resolveProductFactOutcome({
 
   if (subtype === 'product_availability') {
     const source = contextProduct || {};
-    if (source.stock_status || source.stock != null || source.stock_quantity != null) {
+    const variantStatus = getVariantStockStatusSummary(source.variants);
+    if (source.stock_status || source.is_in_stock != null || source.stock_quantity != null || variantStatus) {
       const status = String(source.stock_status || '').toLowerCase();
+      const quantity = Number.isFinite(Number(source.stock_quantity)) ? Number(source.stock_quantity) : null;
+      if (source.is_in_stock === true || status === 'instock' || status === 'in_stock' || variantStatus === 'in_stock') {
+        const quantitySuffix = quantity != null ? ` (sztuk: ${quantity})` : '';
+        return {
+          responseType: 'product_explanation',
+          intentSubtype: 'product_availability',
+          reply: `Według danych sklepu ten produkt jest obecnie dostępny${quantitySuffix}.`,
+          recommendations: [],
+          maxRecommendations: recommendationLimit,
+          usedAi: false,
+        };
+      }
+      if (source.is_in_stock === false || status === 'outofstock' || status === 'out_of_stock' || variantStatus === 'out_of_stock') {
+        return {
+          responseType: 'product_explanation',
+          intentSubtype: 'product_availability',
+          reply: 'Według danych sklepu ten produkt jest obecnie niedostępny.',
+          recommendations: [],
+          maxRecommendations: recommendationLimit,
+          usedAi: false,
+        };
+      }
+
       if (status === 'instock' || status === 'in_stock') {
         return {
           responseType: 'product_explanation',
@@ -773,14 +947,19 @@ function resolveProductFactOutcome({
   if (subtype === 'product_details') {
     const name = contextProduct && contextProduct.name ? `„${contextProduct.name}”` : 'Ten produkt';
     const category = contextProduct && contextProduct.category ? String(contextProduct.category) : null;
-    const unknownMaterial = /(materiał|material|tkanin|skład|sklad)/u.test(String(message || '').toLowerCase());
+    const messageLower = String(message || '').toLowerCase();
+    const unknownMaterial = /(materiał|material|tkanin|skład|sklad)/u.test(messageLower);
+    const material = String(contextProduct && contextProduct.material || '').trim()
+      || extractAttributeValuesByKeys(contextProduct && contextProduct.attributes, /(materia|fabric|material|skład|sklad)/u)[0]
+      || extractKnownMaterialFromDescription(`${contextProduct && contextProduct.description || ''} ${contextProduct && contextProduct.short_description || ''}`);
+    const shortDescription = String(contextProduct && contextProduct.short_description || '').trim();
 
     return {
       responseType: 'product_explanation',
       intentSubtype: 'product_details',
       reply: unknownMaterial
-        ? buildMissingFactReply('product_details', message)
-        : `${name}${category ? ` z kategorii ${category}` : ''} może sprawdzić się na lato, jeśli zależy Ci na lżejszej i przewiewnej stylizacji. Jeśli chcesz, podpowiem jaki fason i kolor najlepiej dobrać do okazji.`,
+        ? (material ? `W danych sklepu widzę materiał: ${material}.` : buildMissingFactReply('product_details', message))
+        : `${name}${category ? ` z kategorii ${category}` : ''}${material ? ` ma materiał: ${material}.` : ''}${shortDescription ? ` ${shortDescription.slice(0, 220)}` : ''} Może sprawdzić się na lato, jeśli zależy Ci na lżejszej i przewiewnej stylizacji.`,
       recommendations: [],
       maxRecommendations: recommendationLimit,
       usedAi: false,
