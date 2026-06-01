@@ -5,10 +5,10 @@ import { useAuth } from '../auth/AuthContext';
 import { PlanBadge } from './ui';
 
 const NAV = [
-  { to: '/dashboard', label: 'Pulpit', icon: LayoutDashboard, group: 'Wzrost' },
-  { to: '/shops', label: 'Sklepy', icon: Store, group: 'Wzrost' },
-  { to: '/billing', label: 'Billing', icon: CreditCard, group: 'Wzrost' },
-  { to: '/settings', label: 'Ustawienia', icon: Settings, group: 'Studio' },
+  { to: '/dashboard', label: 'Pulpit', icon: LayoutDashboard, group: 'Studio' },
+  { to: '/shops', label: 'Sklepy', icon: Store, group: 'Studio' },
+  { to: '/billing', label: 'Płatności', icon: CreditCard, group: 'Studio' },
+  { to: '/settings', label: 'Ustawienia', icon: Settings, group: 'System' },
 ];
 
 export function Layout() {
@@ -25,125 +25,94 @@ export function Layout() {
     .slice(0, 2)
     .map((chunk) => chunk[0]?.toUpperCase() || '')
     .join('') || 'FF';
-  const navGroups = ['Wzrost', 'Studio'] as const;
+  const navGroups = ['Studio', 'System'] as const;
 
   return (
-    <div className="ff-studio-shell min-h-screen pb-20 md:pb-0">
-      <header className="ff-studio-appbar">
-        <div className="ff-studio-brand">
-          <span className="ff-studio-brand-core" aria-hidden="true">
+    <div className="ff-dashboard-ref">
+      <header className="appbar">
+        <div className="brand">
+          <span className="coremark" aria-hidden="true">
             <Shirt size={15} />
           </span>
-          <span>
-            <strong>
-              FashionFit <span>AI</span>
-            </strong>
-            <small>Studio</small>
-          </span>
+          <span>FashionFit <span className="sp">AI</span> <small>Studio</small></span>
         </div>
 
-        <nav className="ff-studio-tabs" aria-label="Nawigacja Studio">
+        <nav className="tabs" aria-label="Nawigacja Studio">
           {NAV.map(({ to, label }) => (
             <NavLink
               key={to}
               to={to}
-              className={({ isActive }) =>
-                `ff-studio-tab ${isActive ? 'ff-studio-tab-active' : ''}`
-              }
+              className={({ isActive }) => `tab ${isActive ? 'on' : ''}`}
             >
               {label}
             </NavLink>
           ))}
         </nav>
 
-        <div className="ff-studio-appbar-right">
+        <div className="bar-actions">
           {client && (
-            <div className="ff-studio-user">
+            <div className="bar-user">
               <b>{client.name}</b>
               <span>{client.email}</span>
             </div>
           )}
-          <button onClick={handleLogout} className="ff-btn ff-studio-logout" type="button" aria-label="Wyloguj">
+          <button onClick={handleLogout} className="barbtn logout" type="button" aria-label="Wyloguj">
             <LogOut size={16} />
-            <span>Wyloguj</span>
           </button>
         </div>
       </header>
 
-      <div className="ff-studio-layout">
-        <aside className="ff-studio-side">
-          <button type="button" className="ff-studio-store">
-            <span className="ff-studio-store-avatar">{storeInitials}</span>
-            <span>
-              <span className="ff-studio-store-meta">
-                <b>{client?.name || 'FashionFit Store'}</b>
-                <span>{client?.email || 'Sklep aktywny'}</span>
-              </span>
+      <div className="shell">
+        <aside className="side">
+          <button type="button" className="store">
+            <span className="av">{storeInitials}</span>
+            <span className="store-meta">
+              <b>{client?.name || 'FashionFit Store'}</b>
+              <span>{client?.email || 'Sklep aktywny'}</span>
             </span>
           </button>
 
-          <nav className="ff-studio-nav" aria-label="Nawigacja boczna">
+          <nav aria-label="Nawigacja boczna">
             {navGroups.map((groupName) => (
               <div key={groupName}>
-                <div className="ff-studio-nav-group">{groupName}</div>
+                <div className="navg">{groupName}</div>
                 {NAV.filter((entry) => entry.group === groupName).map(({ to, label, icon: Icon }) => (
                   <NavLink
                     key={to}
                     to={to}
-                    className={({ isActive }) =>
-                      `ff-nav-link ${isActive ? 'ff-nav-link-active' : 'ff-nav-link-idle'}`
-                    }
+                    className={({ isActive }) => `nav-i ${isActive ? 'on' : ''}`}
                   >
                     <Icon size={17} />
                     <span>{label}</span>
-                    {label === 'Sklepy' ? <span className="badge">AI</span> : null}
+                    {label === 'Sklepy' ? <span className="badge soft">live</span> : null}
                   </NavLink>
                 ))}
               </div>
             ))}
           </nav>
 
-          <div className="ff-studio-planbox">
+          <div className="planbox">
             {client && (
               <>
-                <div className="ff-studio-planmeta">
+                <div className="planmeta">
                   <b>Plan aktywny</b>
-                  <p className="ff-studio-planname">Twoje centrum FashionFit Studio</p>
+                  <p>Twoje centrum FashionFit Studio</p>
                 </div>
-                <div className="ff-studio-planbadge">
+                <div className="planbadge">
                   <PlanBadge plan={client.plan} />
                 </div>
               </>
             )}
-            <button onClick={handleLogout} className="ff-btn ff-studio-planlogout" type="button">
+            <button onClick={handleLogout} className="up" type="button">
               Wyloguj
             </button>
           </div>
         </aside>
 
-        <main className="ff-studio-main">
-          <div className="ff-studio-main-wrap">
-            <Outlet />
-          </div>
+        <main className="main">
+          <Outlet />
         </main>
       </div>
-
-      <nav className="ff-studio-bottomnav md:hidden" aria-label="Dolna nawigacja">
-        <div className="grid grid-cols-4 gap-1.5">
-          {NAV.map(({ to, label, icon: Icon }) => (
-            <NavLink
-              key={to}
-              to={to}
-              className={({ isActive }) =>
-                `ff-studio-bottomlink ${isActive ? 'ff-studio-bottomlink-active' : ''}`
-              }
-            >
-              <Icon size={16} />
-              {label}
-            </NavLink>
-          ))}
-        </div>
-      </nav>
     </div>
   );
 }
